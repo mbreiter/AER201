@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -57,7 +57,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00018     local      Again
                       00019 
                       00020     clrf databyte
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -73,33 +73,36 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00028     call write_rtc ;sets registers 0-6 to zero
                       00029     endm
                       00030 
-                      00031 rtc_set macro addliteral,datliteral
-                      00032 ;input: addliteral: value of address
-                      00033 ; datliteral: value of data
-                      00034 ;output: none
-                      00035 ;desc: loads the data in datliteral into the
-                      00036 ; address specified by addliteral in the RTC
-                      00037 
-                      00038     movlw addliteral
-                      00039     movwf regaddress
-                      00040     movlw datliteral
-                      00041     movwf databyte
-                      00042     call write_rtc
-                      00043     endm
-                      00044 
-                      00045 rtc_read macro addliteral
-                      00046 ;input: addliteral
-                      00047 ;output: datachar, tens_digit, ones_digit
-                      00048 ;desc: From the selected register in the RTC, read the data
-                      00049 ; and load it into 0x75. 0x75 is also converted into
-                      00050 ; ASCII characters and the tens digit is placed into
-                      00051 ; 0x77 and the ones digit is placed in 0x78
-                      00052     movlw addliteral
-                      00053     movwf regaddress
-                      00054     call read_rtc
-                      00055     movf datachar,w
-                      00056     call rtc_convert
-                      00057     endm
+                      00031 
+                      00032 
+                      00033 
+                      00034 rtc_set macro addliteral,datliteral
+                      00035 ;input: addliteral: value of address
+                      00036 ; datliteral: value of data
+                      00037 ;output: none
+                      00038 ;desc: loads the data in datliteral into the
+                      00039 ; address specified by addliteral in the RTC
+                      00040 
+                      00041     movlw addliteral
+                      00042     movwf regaddress
+                      00043     movlw datliteral
+                      00044     movwf databyte
+                      00045     call write_rtc
+                      00046     endm
+                      00047 
+                      00048 rtc_read macro addliteral
+                      00049 ;input: addliteral
+                      00050 ;output: datachar, tens_digit, ones_digit
+                      00051 ;desc: From the selected register in the RTC, read the data
+                      00052 ; and load it into 0x75. 0x75 is also converted into
+                      00053 ; ASCII characters and the tens digit is placed into
+                      00054 ; 0x77 and the ones digit is placed in 0x78
+                      00055     movlw addliteral
+                      00056     movwf regaddress
+                      00057     call read_rtc
+                      00058     movf datachar,w
+                      00059     call rtc_convert
+                      00060     endm
                       00017     List    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
                       00018 
                       00019     CONFIG OSC=HS, FCMEN=OFF, IESO=OFF
@@ -118,305 +121,307 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00032 ;*******************************************************************************
                       00033 ; variable and constants
                       00034 ;*******************************************************************************
-                      00035 
-                      00036 ; pin configurations
-                      00037 #define     RS          LATD, 2     ; LCD
-                      00038 #define     E           LATD, 3     ; LCD
-                      00039     
-                      00040 ; timers
-                      00041             CODE
-                      00042 #define     timer_H     0x9E
-                      00043 #define     timer_L     0x58
-  00000010            00044 OP_sec      equ         0x10
-  00000011            00045 OP_INT      equ         0x11
-                      00046 
-                      00047 ; keys
-  00000000            00048 key1        equ         d'0'
-  00000001            00049 key2        equ         d'1'
-  00000002            00050 key3        equ         d'2'
-  00000003            00051 keyA        equ         d'3'
-  00000004            00052 key4        equ         d'4'
-  00000005            00053 key5        equ         d'5'
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  3
+                      00035     
+                      00036 ; timers
+                      00037             CODE
+                      00038 #define     timer_H     0x9E
+                      00039 #define     timer_L     0x58
+  00000010            00040 OP_sec      equ         0x10
+  00000011            00041 OP_INT      equ         0x11
+                      00042 
+                      00043 ; keys
+  00000000            00044 key1        equ         d'0'
+  00000001            00045 key2        equ         d'1'
+  00000002            00046 key3        equ         d'2'
+  00000003            00047 keyA        equ         d'3'
+  00000004            00048 key4        equ         d'4'
+  00000005            00049 key5        equ         d'5'
+  00000006            00050 key6        equ         d'6'
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-  00000006            00054 key6        equ         d'6'
-  00000007            00055 keyB        equ         d'7'
-  00000008            00056 key7        equ         d'8'
-  00000009            00057 key8        equ         d'9'
-  0000000A            00058 key9        equ         d'10'
-  0000000B            00059 keyC        equ         d'11'
-  0000000C            00060 keyS        equ         d'12'
-  0000000D            00061 key0        equ         d'13'
-  0000000E            00062 keyH        equ         d'14'
-  0000000F            00063 keyD        equ         d'15'
+  00000007            00051 keyB        equ         d'7'
+  00000008            00052 key7        equ         d'8'
+  00000009            00053 key8        equ         d'9'
+  0000000A            00054 key9        equ         d'10'
+  0000000B            00055 keyC        equ         d'11'
+  0000000C            00056 keyS        equ         d'12'
+  0000000D            00057 key0        equ         d'13'
+  0000000E            00058 keyH        equ         d'14'
+  0000000F            00059 keyD        equ         d'15'
+                      00060 
+  00000050            00061 KEY         equ         0x50
+  00000051            00062 temp_KEY    equ         0x51
+  00000052            00063 KEY_ISR     equ         0x52
                       00064 
-  00000050            00065 KEY         equ         0x50
-  00000051            00066 temp_KEY    equ         0x51
-  00000052            00067 KEY_ISR     equ         0x52
-                      00068 
-                      00069 ; temporary variable used in isrs
-  00000000            00070 temp_ISR    equ         0x00
-                      00071 
-                      00072 ; temporary registers to save W and status
-  00000001            00073 temp_S      equ         0x01
-  00000002            00074 temp_W      equ         0x02
-  00000003            00075 counter     equ         0x03
-  00000004            00076 counter2    equ         0x04
-                      00077 
-                      00078 ; delays for timers
-  00000028            00079 delayR      equ         0x28        ; primary delay register
-  00000029            00080 d5us        equ         0x29        ; 5 us delay
-  00000030            00081 d200us      equ         0x30        ; 200 us delay
-  00000031            00082 d50ms       equ         0x31        ; 50 ms delay
-                      00083                     
-                      00084 ; EEPROM
-                      00085 #define     temp_EE     d'220'
-                      00086 #define     last_log    d'168'
-  00000070            00087 clear_EE    equ         0x70
-  00000071            00088 H_EE        equ         0x71
-  00000072            00089 L_EE        equ         0x72
-  00000073            00090 REG_EE      equ         0x73
-  00000074            00091 tempH_EE    equ         0x74
-  00000075            00092 tempL_EE    equ         0x75
-  00000076            00093 MAX_EE      equ         0x76
-  00000077            00094 READ_EE     equ         0x77
-                      00095 
-                      00096 ; pc interface
-                      00097 ; rtc
-Warning[205]: Found directive in column 1. (extern)
-  0000                00098 extern      tens_digit
-Warning[205]: Found directive in column 1. (extern)
-  0000                00099 extern      ones_digit
-                      00100 
-                      00101 ;*******************************************************************************
-                      00102 ; tables
-                      00103 ;*******************************************************************************
-000000 6F62 4C74 0000 00104 Welcome         db          "botL", 0
-000006 726D 6820 206C 00105 Team            db          "mr hl hg", 0
+                      00065 ; temporary variable used in isrs
+  00000000            00066 temp_ISR    equ         0x00
+                      00067 
+                      00068 ; temporary registers to save W and status
+  00000001            00069 temp_S      equ         0x01
+  00000002            00070 temp_W      equ         0x02
+  00000003            00071 counter     equ         0x03
+  00000004            00072 counter2    equ         0x04
+                      00073 
+                      00074 ; delays for timers
+  00000028            00075 delayR      equ         0x28        ; primary delay register
+  00000029            00076 d5us        equ         0x29        ; 5 us delay
+  00000030            00077 d200us      equ         0x30        ; 200 us delay
+  00000031            00078 d50ms       equ         0x31        ; 50 ms delay
+                      00079                     
+                      00080 ; EEPROM
+                      00081 #define     temp_EE     d'220'
+                      00082 #define     last_log    d'168'
+  00000070            00083 clear_EE    equ         0x70
+  00000071            00084 H_EE        equ         0x71
+  00000072            00085 L_EE        equ         0x72
+  00000073            00086 REG_EE      equ         0x73
+  00000074            00087 tempH_EE    equ         0x74
+  00000075            00088 tempL_EE    equ         0x75
+  00000076            00089 MAX_EE      equ         0x76
+  00000077            00090 READ_EE     equ         0x77
+                      00091 
+                      00092 ; pc interface
+                      00093 ; rtc
+  0000                00094     extern          tens_digit
+  0000                00095     extern          ones_digit
+                      00096 
+                      00097 ;*******************************************************************************
+                      00098 ; tables
+                      00099 ;*******************************************************************************
+000000 6F62 4C74 0000 00100 Welcome         db          "botL", 0
+000006 726D 6820 206C 00101 Team            db          "mr hl hg", 0
        6768 0000 
-000010 7453 6E61 6264 00106 StandBy         db          "Standby", 0
+000010 7453 6E61 6264 00102 StandBy         db          "Standby", 0
        0079 
-000018 6F53 7472 6E69 00107 Log             db          "Sorting Stats",0
+000018 6F53 7472 6E69 00103 Log             db          "Sorting Stats",0
        2067 7453 7461 
        0073 
-000026 6F53 7472 6E69 00108 Exe             db          "Sorting...", 0
+000026 6F53 7472 6E69 00104 Exe             db          "Sorting...", 0
        2E67 2E2E 0000 
-000032 7453 706F 6570 00109 Stopped         db          "Stopped", 0
+000032 7453 706F 6570 00105 Stopped         db          "Stopped", 0
        0064 
-00003A 6954 656D 203A 00110 Op_Time         db          "Time: ", 0
+00003A 6954 656D 203A 00106 Op_Time         db          "Time: ", 0
        0000 
-000042 6153 6976 676E 00111 Save            db          "Saving...", 0
+000042 6153 6976 676E 00107 Save            db          "Saving...", 0
        2E2E 002E 
-00004C 7254 6E61 6673 00112 Transfer        db          "Transferring...", 0
+00004C 7254 6E61 6673 00108 Transfer        db          "Transferring...", 0
        7265 6972 676E 
        2E2E 002E 
-00005C 6153 6566 7974 00113 Safety          db          "Safety check...", 0                
+00005C 6153 6566 7974 00109 Safety          db          "Safety check...", 0                
        6320 6568 6B63 
        2E2E 002E 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  4
+                      00110             
+                      00111 ;*******************************************************************************
+                      00112 ; macros
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00114             
-                      00115 ;*******************************************************************************
-                      00116 ; macros
-                      00117 ;*******************************************************************************
-                      00118 
-                      00119 movMSB  macro   port
-                      00120         andlw   0xF0
-                      00121         iorwf   port, f
-                      00122         iorlw   0x0F
-                      00123         andwf   port, f
-                      00124         endm
-                      00125 
-                      00126 Delay50N macro count, N
-                      00127         local   loop
-                      00128         movlw   N
-                      00129         movwf   count
-                      00130 
-                      00131 loop
-                      00132         call    Delay50ms
-                      00133         decfsz  count
-                      00134         goto    loop
-                      00135         endm
-                      00136 
-                      00137 Display macro   Message
-                      00138         local   loop
-                      00139         movlw   upper Message   ; Move Table<20:16>
-                      00140         movwf   TBLPTRU
-                      00141         movlw   high Message    ; Move Table<15:8> 
-                      00142         movwf   TBLPTRH
-                      00143         movlw   low Message     ; Move Table<7:0>
-                      00144         movwf   TBLPTRL
-                      00145         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-                      00146         movf    TABLAT, W
-                      00147 loop
-                      00148         call    WR_DATA         ; write to LCD
-                      00149         tblrd+*                 ; next row in table
-                      00150         movf    TABLAT, W 
-                      00151         bnz     loop
-                      00152         endm 
-                      00153 
-                      00154 WriteRTC    macro
-                      00155         movff   tens_digit, WREG
-                      00156         call    WR_DATA
-                      00157         movff   ones_digit, WREG
-                      00158         call    WR_DATA
-                      00159         endm
-                      00160         
-                      00161 WriteEE     macro   word, addH, addL
-                      00162         movff   addH, EEADRH    ; High address
-                      00163         movff   addL, EEADRH    ; Low address
-                      00164         movff   word, EEDATA    ; set word
-                      00165 
-                      00166         btfsc   EECON1, WR          ; test if WR=0, skip if so
-                      00167         bra         $-2
-                      00168 
-                      00169         bcf         EECON1, EEPGD   ; Point to data memory
-                      00170         bcf         EECON1, CFGS    ; Access EEPROM
-                      00171         bsf         EECON1, WREN    ; enable write
-                      00172         bcf         EECON1, GIE     ; disable interrupts during write
-                      00173         bcf         PIR2, EEIF
-                      00174 
-                      00175         movlw   0x55
-                      00176         movwf   EECON2      ; write 55h
-                      00177         movlw   0xAA        
-                      00178         movwf   EECON2      ; write 0xAA
-                      00179         bsf         EECON1, WR      ; begin write
-                      00180         btfsc   EECON1, WR          
-                      00181         bra         $-2
+                      00113 ;*******************************************************************************
+                      00114 
+                      00115 movMSB  macro   port
+                      00116         andlw   0xF0
+                      00117         iorwf   port, f
+                      00118         iorlw   0x0F
+                      00119         andwf   port, f
+                      00120         endm
+                      00121 
+                      00122 Delay50N macro count, N
+                      00123         local   loop
+                      00124         movlw   N
+                      00125         movwf   count
+                      00126 
+                      00127 loop
+                      00128         call    Delay50ms
+                      00129         decfsz  count
+                      00130         goto    loop
+                      00131         endm
+                      00132 
+                      00133 Display macro   Message
+                      00134         local   loop
+                      00135         movlw   upper Message   ; Move Table<20:16>
+                      00136         movwf   TBLPTRU
+                      00137         movlw   high Message    ; Move Table<15:8> 
+                      00138         movwf   TBLPTRH
+                      00139         movlw   low Message     ; Move Table<7:0>
+                      00140         movwf   TBLPTRL
+                      00141         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+                      00142         movf    TABLAT, W
+                      00143 loop
+                      00144         call    WR_DATA         ; write to LCD
+                      00145         tblrd+*                 ; next row in table
+                      00146         movf    TABLAT, W 
+                      00147         bnz     loop
+                      00148         endm 
+                      00149 
+                      00150 WriteRTC    macro
+                      00151         movff   tens_digit, WREG
+                      00152         call    WR_DATA
+                      00153         movff   ones_digit, WREG
+                      00154         call    WR_DATA
+                      00155         endm
+                      00156         
+                      00157 WriteEE     macro   word, addH, addL
+                      00158         movff   addH, EEADRH    ; High address
+                      00159         movff   addL, EEADRH    ; Low address
+                      00160         movff   word, EEDATA    ; set word
+                      00161 
+                      00162         btfsc   EECON1, WR          ; test if WR=0, skip if so
+                      00163         bra         $-2
+                      00164 
+                      00165         bcf         EECON1, EEPGD   ; Point to data memory
+                      00166         bcf         EECON1, CFGS    ; Access EEPROM
+                      00167         bsf         EECON1, WREN    ; enable write
+                      00168         bcf         EECON1, GIE     ; disable interrupts during write
+                      00169         bcf         PIR2, EEIF
+                      00170 
+                      00171         movlw   0x55
+                      00172         movwf   EECON2      ; write 55h
+                      00173         movlw   0xAA        
+                      00174         movwf   EECON2      ; write 0xAA
+                      00175         bsf         EECON1, WR      ; begin write
+                      00176         btfsc   EECON1, WR          
+                      00177         bra         $-2
+                      00178 
+                      00179         bsf         EECON1, GIE     ; enable interrupts after write
+                      00180         bcf      ECON1, WREN        ; disable writes
+                      00181         endm
                       00182 
-                      00183         bsf         EECON1, GIE     ; enable interrupts after write
-                      00184         bcf      ECON1, WREN        ; disable writes
-                      00185         endm
-                      00186 
-                      00187 READEE      macro   file, addH, addL
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  5
+                      00183 READEE      macro   file, addH, addL
+                      00184         movff   addH, EEADRH        ; read to high
+                      00185         movff   addL, EEADR         ; read to low
+                      00186         bcf     EECON1, EEPGD       ; point to data memory
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00188         movff   addH, EEADRH        ; read to high
-                      00189         movff   addL, EEADR         ; read to low
-                      00190         bcf     EECON1, EEPGD       ; point to data memory
-                      00191         bcf     EECON1, CFGS        ; access to EEPROM
-                      00192         bsf     EECON1, RD          ; read EEPROM
-                      00193         movff   EEDATA, file        ; put data into file
-                      00194         endm
-                      00195 
-                      00196 ChangeMode  macro   ModeId, NextMode
-                      00197         local Next, Exit
-                      00198         
-                      00199         movlw   ModeId              ; poll for mode
-                      00200         cpfseq  KEY                 ; check this against key press
-                      00201         goto    Exit
-                      00202 
-                      00203 Next    
-                      00204         clrf    LATA                ; clear pins before proceeding
-                      00205         clrf    LATB
-                      00206         clrf    LATC
-                      00207         clrf    LATD
-                      00208         goto    NextMode
+                      00187         bcf     EECON1, CFGS        ; access to EEPROM
+                      00188         bsf     EECON1, RD          ; read EEPROM
+                      00189         movff   EEDATA, file        ; put data into file
+                      00190         endm
+                      00191 
+                      00192 ChangeMode  macro   ModeId, NextMode
+                      00193         local Next, Exit
+                      00194         
+                      00195         movlw   ModeId              ; poll for mode
+                      00196         cpfseq  KEY                 ; check this against key press
+                      00197         goto    Exit
+                      00198 
+                      00199 Next    
+                      00200         clrf    LATA                ; clear pins before proceeding
+                      00201         clrf    LATB
+                      00202         clrf    LATC
+                      00203         clrf    LATD
+                      00204         goto    NextMode
+                      00205 
+                      00206 Exit
+                      00207         nop
+                      00208         endm
                       00209 
-                      00210 Exit
-                      00211         nop
-                      00212         endm
-                      00213 
-                      00214 ;*******************************************************************************
-                      00215 ; reset vector and isrs
-                      00216 ;*******************************************************************************
-                      00217         ORG     0x000               ; processor reset vector
-000000 EF?? F???      00218         goto    INIT                ; go to beginning of program
-                      00219 
-                      00220         ORG     0x008
-000008 EF?? F???      00221         goto    ISR_High
-                      00222 
-                      00223         ORG     0x018
-000018 EF?? F???      00224         goto    ISR_LOW
-                      00225     
-00001C                00226 ISR_High
-00001C 6E02           00227         movwf   temp_W              ; save current W
-00001E CFD8 F001      00228         movff   STATUS, temp_S      ; save status
-                      00229         
-                      00230         ; ISR_High routines
-000022 C001 FFD8      00231         movff   temp_S, STATUS      ; retreive status
-000026 3A02           00232         swapf   temp_W, f
-000028 3802           00233         swapf   temp_W, w           ; restore W
-00002A 0010           00234         retfie
-                      00235 
-00002C                00236 ISR_LOW
-00002C 6E02           00237         movwf   temp_W              ; save current W
-00002E CFD8 F001      00238         movff   STATUS, temp_S      ; save status
-                      00239         
-                      00240         ; ISR_Low routines
-000032 C001 FFD8      00241         movff   temp_S, STATUS      ; retreive status
-000036 3A02           00242         swapf   temp_W, f
-000038 3802           00243         swapf   temp_W, w           ; restore W
-00003A 0010           00244         retfie
-                      00245         
-                      00246 ;*******************************************************************************
-                      00247 ; main
-                      00248 ;*******************************************************************************
-00003C                00249 INIT
-                      00250         ; i/o
-00003C 0E00           00251         movlw   b'00000000'
-00003E 6E92           00252         movwf   TRISA
-000040 0EFF           00253         movlw   b'11111111'
-000042 6E93           00254         movwf   TRISB               ; keypads
-000044 0EBF           00255         movlw   b'10111111'
-000046 6E94           00256         movwf   TRISC
-000048 0E00           00257         movlw   b'00000000'
-00004A 6E95           00258         movwf   TRISD
-00004C 0E07           00259         movlw   b'00000111'
-00004E 6E96           00260         movwf   TRISE
-                      00261         
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  6
+                      00210 ;*******************************************************************************
+                      00211 ; reset vector and isrs
+                      00212 ;*******************************************************************************
+                      00213         ORG     0x000               ; processor reset vector
+000000 EF?? F???      00214         goto    INIT                ; go to beginning of program
+                      00215 
+                      00216         ORG     0x008
+000008 EF?? F???      00217         goto    ISR_High
+                      00218 
+                      00219         ORG     0x018
+000018 EF?? F???      00220         goto    ISR_LOW
+                      00221     
+00001C                00222 ISR_High
+00001C 6E02           00223         movwf   temp_W              ; save current W
+00001E CFD8 F001      00224         movff   STATUS, temp_S      ; save status
+                      00225         
+                      00226         ; ISR_High routines
+000022 C001 FFD8      00227         movff   temp_S, STATUS      ; retreive status
+000026 3A02           00228         swapf   temp_W, f
+000028 3802           00229         swapf   temp_W, w           ; restore W
+00002A 0010           00230         retfie
+                      00231 
+00002C                00232 ISR_LOW
+00002C 6E02           00233         movwf   temp_W              ; save current W
+00002E CFD8 F001      00234         movff   STATUS, temp_S      ; save status
+                      00235         
+                      00236         ; ISR_Low routines
+000032 C001 FFD8      00237         movff   temp_S, STATUS      ; retreive status
+000036 3A02           00238         swapf   temp_W, f
+000038 3802           00239         swapf   temp_W, w           ; restore W
+00003A 0010           00240         retfie
+                      00241         
+                      00242 ;*******************************************************************************
+                      00243 ; main
+                      00244 ;*******************************************************************************
+00003C                00245 INIT
+                      00246         ; i/o
+00003C 0E00           00247         movlw   b'00000000'
+00003E 6E92           00248         movwf   TRISA
+000040 0EFF           00249         movlw   b'11111111'
+000042 6E93           00250         movwf   TRISB               ; keypad
+000044 0EBF           00251         movlw   b'10111111'
+000046 6E94           00252         movwf   TRISC
+000048 0E00           00253         movlw   b'00000000'
+00004A 6E95           00254         movwf   TRISD
+00004C 0E07           00255         movlw   b'00000111'
+00004E 6E96           00256         movwf   TRISE
+                      00257         
+                      00258         ; analog/digital pins
+000050 0E0F           00259         movlw       b'00001111'     ; Set all AN pins to Digital
+000052 6EC1           00260         movwf       ADCON1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00262         ; analog/digital pins
-000050 0E0F           00263         movlw       b'00001111'     ; Set all AN pins to Digital
-000052 6EC1           00264         movwf       ADCON1
-                      00265         
-                      00266         ; clear Ports
-000054 6A89           00267         clrf    LATA
-000056 6A8A           00268         clrf    LATB
-000058 6A8B           00269         clrf    LATC
-00005A 6A8C           00270         clrf    LATD
-00005C 6A8D           00271         clrf    LATE
-                      00272         
-                      00273         ; initializations
-00005E EC?? F???      00274         call    InitLCD
-000062 EC?? F???      00275         call    i2c_common_setup
-000066 EC?? F???      00276         call    initRTC             ; uncomment to change the date settings
-                      00277         ;call   initUSART
-                      00278         ;call   initEEPROM
-                      00279         
-00006A 0E08           00280         movlw   b'00001000'
-00006C 6ED5           00281         movwf   T0CON
-                      00282         
-                      00283         ; interrupts
-00006E 6AD0           00284         clrf    RCON
-000070 6AF2           00285         clrf    INTCON
-000072 6AF1           00286         clrf    INTCON2
-000074 6AF0           00287         clrf    INTCON3
-000076 8ED0           00288         bsf     RCON, IPEN          ; priority mode
-000078 8EF2           00289         bsf     INTCON, GIEH        ; permit global interrupts
-00007A 8CF2           00290         bsf     INTCON, GIEL
-00007C 8AF1           00291         bsf     INTCON2, INTEDG1    ; INTEDG1 on rising edge
-00007E 8AF2           00292         bsf     INTCON, TMR0IE
-000080 84F1           00293         bsf     INTCON2, TMR0IP     ; set to high priority
-                      00294         
-                      00295         Display Welcome
+                      00261         
+                      00262         ; clear Ports
+000054 6A89           00263         clrf    LATA
+000056 6A8A           00264         clrf    LATB
+000058 6A8B           00265         clrf    LATC
+00005A 6A8C           00266         clrf    LATD
+00005C 6A8D           00267         clrf    LATE
+                      00268         
+                      00269         ; initializations
+00005E EC?? F???      00270         call    InitLCD
+000062 EC?? F???      00271         call    i2c_common_setup
+000066 EC?? F???      00272         call    Delay50ms       
+                      00273         ;call   initUSART
+                      00274         ;call   initEEPROM
+                      00275         
+00006A 0E08           00276         movlw   b'00001000'
+00006C 6ED5           00277         movwf   T0CON
+                      00278         
+                      00279         ; interrupts
+00006E 6AD0           00280         clrf    RCON
+000070 6AF2           00281         clrf    INTCON
+000072 6AF1           00282         clrf    INTCON2
+000074 6AF0           00283         clrf    INTCON3
+000076 8ED0           00284         bsf     RCON, IPEN          ; priority mode
+000078 8EF2           00285         bsf     INTCON, GIEH        ; permit global interrupts
+00007A 8CF2           00286         bsf     INTCON, GIEL
+00007C 8AF1           00287         bsf     INTCON2, INTEDG1    ; INTEDG1 on rising edge
+00007E 8AF2           00288         bsf     INTCON, TMR0IE
+000080 84F1           00289         bsf     INTCON2, TMR0IP     ; set to high priority
+                      00290         
+                      00291 ;       rtcresetAll ;<---- This causes cancer!!!!! Fix by loading sample code.
+                      00292 ;       rtc_set 0x00, b'00000000'               ; Set seconds to 0
+                      00293 ;       rtc_set 0x01, b'00011000'               ; Set minutes (18)
+                      00294 ;       rtc_set 0x02, b'00000011'               ; Set hours (3) (24hour)
+                      00295 ;       rtc_set 0x04, b'00000100'               ; Set day (4)
+                      00296 ;       rtc_set 0x05, b'00000010'               ; Set month (2)
+                      00297 ;       rtc_set 0x06, b'00010111'               ; Set year (17)
+                      00298         
+                      00299         Display Welcome
   0000                    M         local   loop
 000082 0E??               M         movlw   upper Welcome   ; Move Table<20:16>
 000084 6EF8               M         movwf   TBLPTRU
@@ -431,8 +436,8 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000096 000B               M         tblrd+*                 ; next row in table
 000098 50F5               M         movf    TABLAT, W 
 00009A E1??               M         bnz     loop
-00009C EC?? F???      00296         call LCD_L2
-                      00297         Display Team
+00009C EC?? F???      00300         call LCD_L2
+                      00301         Display Team
   0000                    M         local   loop
 0000A0 0E??               M         movlw   upper Team      ; Move Table<20:16>
 0000A2 6EF8               M         movwf   TBLPTRU
@@ -447,28 +452,28 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000B4 000B               M         tblrd+*                 ; next row in table
 0000B6 50F5               M         movf    TABLAT, W 
 0000B8 E1??               M         bnz     loop
-                      00298         Delay50N delayR, 0x3C
+                      00302         Delay50N delayR, 0x3C
   0000                    M         local   loop
 0000BA 0E3C               M         movlw   0x3C
 0000BC 6E28               M         movwf   delayR
                           M 
-0000BE                    M loop
-0000BE EC?? F???          M         call    Delay50ms
-0000C2 2E28               M         decfsz  delayR
-0000C4 EF?? F???          M         goto    loop
-                      00299         
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  7
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00300 ;*******************************************************************************
-                      00301 ; standby mode
-                      00302 ;*******************************************************************************
-0000C8                00303 STANDBY
-0000C8 EC?? F???      00304         call    ClrLCD
-                      00305         Display StandBy
+0000BE                    M loop
+0000BE EC?? F???          M         call    Delay50ms
+0000C2 2E28               M         decfsz  delayR
+0000C4 EF?? F???          M         goto    loop
+                      00303         
+                      00304 ;*******************************************************************************
+                      00305 ; standby mode
+                      00306 ;*******************************************************************************
+0000C8                00307 STANDBY
+0000C8 EC?? F???      00308         call    ClrLCD
+                      00309         Display StandBy
   0000                    M         local   loop
 0000CC 0E??               M         movlw   upper StandBy   ; Move Table<20:16>
 0000CE 6EF8               M         movwf   TBLPTRU
@@ -483,349 +488,197 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000E0 000B               M         tblrd+*                 ; next row in table
 0000E2 50F5               M         movf    TABLAT, W 
 0000E4 E1??               M         bnz     loop
-                      00306         
-0000E6                00307 HOLD_STANDBY
-0000E6 EC?? F???      00308         call    READ_KEY_RTC
-                      00309         ;ChangeMode keyA, EXE
-                      00310         ChangeMode keyB, LOG
-  0000                    M         local Next, Exit
-                          M         
-0000EA 0E07               M         movlw   keyB                ; poll for mode
-0000EC 6250               M         cpfseq  KEY                 ; check this against key press
-0000EE EF?? F???          M         goto    Exit
-                          M 
-0000F2                    M Next    
-0000F2 6A89               M         clrf    LATA                ; clear pins before proceeding
-0000F4 6A8A               M         clrf    LATB
-0000F6 6A8B               M         clrf    LATC
-0000F8 6A8C               M         clrf    LATD
-0000FA EF?? F???          M         goto    LOG
-                          M 
-0000FE                    M Exit
-0000FE 0000               M         nop
-                      00311         ;ChangeMode keyC, PLOG
-                      00312         ;ChangeMode keyD, PC
-000100 D???           00313         bra     HOLD_STANDBY
-                      00314 
-                      00315 ;*******************************************************************************
-                      00316 ; sorting statistics log mode
-                      00317 ;*******************************************************************************
-000102                00318 LOG
-000102 EC?? F???      00319         call ClrLCD
-                      00320         Display Log
-  0000                    M         local   loop
-000106 0E??               M         movlw   upper Log       ; Move Table<20:16>
-000108 6EF8               M         movwf   TBLPTRU
-00010A 0E??               M         movlw   high Log        ; Move Table<15:8> 
-00010C 6EF7               M         movwf   TBLPTRH
-00010E 0E??               M         movlw   low Log         ; Move Table<7:0>
-000110 6EF6               M         movwf   TBLPTRL
-000112 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-000114 50F5               M         movf    TABLAT, W
-000116                    M loop
-000116 EC?? F???          M         call    WR_DATA         ; write to LCD
-00011A 000B               M         tblrd+*                 ; next row in table
-00011C 50F5               M         movf    TABLAT, W 
-00011E E1??               M         bnz     loop
-                      00321         
-000120                00322 HOLD_LOG
-000120 EC?? F???      00323         call    READ_KEY
-                      00324         ChangeMode key0, STANDBY
-  0000                    M         local Next, Exit
-                          M         
-000124 0E0D               M         movlw   key0                ; poll for mode
-000126 6250               M         cpfseq  KEY                 ; check this against key press
-000128 EF?? F???          M         goto    Exit
-                          M 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  8
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-00012C                    M Next    
-00012C 6A89               M         clrf    LATA                ; clear pins before proceeding
-00012E 6A8A               M         clrf    LATB
-000130 6A8B               M         clrf    LATC
-000132 6A8C               M         clrf    LATD
-000134 EF?? F???          M         goto    STANDBY
-                          M 
-000138                    M Exit
-000138 0000               M         nop
-00013A D???           00325         bra     HOLD_LOG
-                      00326         
-                      00327 ;*******************************************************************************
-                      00328 ; initializations
-                      00329 ;*******************************************************************************
-                      00330 
-00013C                00331 initRTC
-                      00332         rtc_resetAll
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: Resets all the time keeping registers on the RTC to zero
-                          M 
-  0000                    M     local      Again
-                          M 
-00013C 6A??               M     clrf databyte
-00013E 0E06               M     movlw 6
-000140 6E??               M     movwf regaddress ;start at 6 and go down, and set all to 0
-                          M 
-000142                    M Again
-000142 EC?? F???          M     call write_rtc
-000146 2E??               M     decfsz regaddress
-000148 D???               M     bra Again
-00014A EC?? F???          M     call write_rtc ;sets registers 0-6 to zero
-                      00333         rtc_set     0x00, b'00000000' ;0 s
-                          M ;input: addliteral: value of address
-                          M ; datliteral: value of data
-                          M ;output: none
-                          M ;desc: loads the data in datliteral into the
-                          M ; address specified by addliteral in the RTC
-                          M 
-00014E 0E00               M     movlw 0x00
-000150 6E??               M     movwf regaddress
-000152 0E00               M     movlw b'00000000'
-000154 6E??               M     movwf databyte
-000156 EC?? F???          M     call write_rtc
-                      00334         rtc_set     0x01, b'0010101' ;24 min
-                          M ;input: addliteral: value of address
-                          M ; datliteral: value of data
-                          M ;output: none
-                          M ;desc: loads the data in datliteral into the
-                          M ; address specified by addliteral in the RTC
-                          M 
-00015A 0E01               M     movlw 0x01
-00015C 6E??               M     movwf regaddress
-00015E 0E15               M     movlw b'0010101'
-000160 6E??               M     movwf databyte
-000162 EC?? F???          M     call write_rtc
-                      00335         rtc_set     0x02, b'00000001' ;1h
-                          M ;input: addliteral: value of address
-                          M ; datliteral: value of data
-                          M ;output: none
-                          M ;desc: loads the data in datliteral into the
-                          M ; address specified by addliteral in the RTC
-                          M 
-000166 0E02               M     movlw 0x02
-000168 6E??               M     movwf regaddress
-00016A 0E01               M     movlw b'00000001'
-00016C 6E??               M     movwf databyte
-00016E EC?? F???          M     call write_rtc
-                      00336         rtc_set     0x04, b'00000100' ;4th day
-                          M ;input: addliteral: value of address
-                          M ; datliteral: value of data
-                          M ;output: none
-                          M ;desc: loads the data in datliteral into the
-                          M ; address specified by addliteral in the RTC
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE  9
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                          M 
-000172 0E04               M     movlw 0x04
-000174 6E??               M     movwf regaddress
-000176 0E04               M     movlw b'00000100'
-000178 6E??               M     movwf databyte
-00017A EC?? F???          M     call write_rtc
-                      00337         rtc_set     0x05, b'00000010' ;February
-                          M ;input: addliteral: value of address
-                          M ; datliteral: value of data
-                          M ;output: none
-                          M ;desc: loads the data in datliteral into the
-                          M ; address specified by addliteral in the RTC
-                          M 
-00017E 0E05               M     movlw 0x05
-000180 6E??               M     movwf regaddress
-000182 0E02               M     movlw b'00000010'
-000184 6E??               M     movwf databyte
-000186 EC?? F???          M     call write_rtc
-                      00338         rtc_set     0x06, b'00010111' ;2017
-                          M ;input: addliteral: value of address
-                          M ; datliteral: value of data
-                          M ;output: none
-                          M ;desc: loads the data in datliteral into the
-                          M ; address specified by addliteral in the RTC
-                          M 
-00018A 0E06               M     movlw 0x06
-00018C 6E??               M     movwf regaddress
-00018E 0E17               M     movlw b'00010111'
-000190 6E??               M     movwf databyte
-000192 EC?? F???          M     call write_rtc
-000196 0012           00339         return
-                      00340 
-                      00341 ;*******************************************************************************
-                      00342 ; subroutines
-                      00343 ;*******************************************************************************
+                      00310         
+0000E6                00311 HOLD_STANDBY
+0000E6 EC?? F???      00312         call    READ_KEY_RTC
+                      00313         ;ChangeMode keyA, EXE
+                      00314         ;ChangeMode keyB, LOG
+                      00315         ;ChangeMode keyC, PLOG
+                      00316         ;ChangeMode keyD, PC
+0000EA D???           00317         bra     HOLD_STANDBY
+                      00318 
+                      00319 ;*******************************************************************************
+                      00320 ; sorting statistics log mode
+                      00321 ;*******************************************************************************
+                      00322 ;LOG
+                      00323 ;       call ClrLCD
+                      00324 ;       Display Log
+                      00325 ;       
+                      00326 ;HOLD_LOG
+                      00327 ;       call    READ_KEY
+                      00328 ;       ChangeMode key0, STANDBY
+                      00329 ;       bra     HOLD_LOG
+                      00330         
+                      00331 ;*******************************************************************************
+                      00332 ; subroutines
+                      00333 ;*******************************************************************************
+                      00334 
+0000EC                00335 Delay5us
+0000EC 0E78           00336         movlw   d'120'
+0000EE 6E29           00337         movwf   d5us
+                      00338         
+0000F0                00339 loop5us
+0000F0 2E29           00340         decfsz  d5us
+0000F2 EF?? F???      00341         goto    loop5us
+0000F6 0000           00342         nop
+0000F8 0012           00343         return
                       00344 
-000198                00345 Delay5us
-000198 0E78           00346         movlw   d'120'
-00019A 6E29           00347         movwf   d5us
-                      00348         
-00019C                00349 loop5us
-00019C 2E29           00350         decfsz  d5us
-00019E EF?? F???      00351         goto    loop5us
-0001A2 0000           00352         nop
-0001A4 0012           00353         return
+0000FA                00345 Delay200us
+0000FA 0EA4           00346         movlw   0xA4
+0000FC 6E30           00347         movwf   d200us
+                      00348 
+0000FE                00349 loop200us
+0000FE 2E30           00350         decfsz  d200us
+000100 EF?? F???      00351         goto    loop200us
+000104 0000           00352         nop
+000106 0012           00353         return
                       00354 
-0001A6                00355 Delay200us
-0001A6 0EA4           00356         movlw   0xA4
-0001A8 6E30           00357         movwf   d200us
-                      00358 
-0001AA                00359 loop200us
-0001AA 2E30           00360         decfsz  d200us
-0001AC EF?? F???      00361         goto    loop200us
-0001B0 0000           00362         nop
-0001B2 0012           00363         return
-                      00364 
-0001B4                00365 Delay50ms
-0001B4 0EF9           00366         movlw   0xF9
-0001B6 6E31           00367         movwf   d50ms
-                      00368         
-0001B8                00369 loop50ms
-0001B8 EC?? F???      00370         call    Delay200us
-0001BC 2E31           00371         decfsz  d50ms
-                      00372 
-0001BE                00373 Cycles
-0001BE EF?? F???      00374         goto    loop50ms
-0001C2 EC?? F???      00375         call    Delay200us
-0001C6 0012           00376         return
-                      00377 
-0001C8                00378 READ_KEY
-0001C8                00379 HOLD_KEY
-0001C8 A281           00380         btfss   PORTB, 1        ; check for keypad interrupt
-0001CA EF?? F???      00381         goto    HOLD_KEY
-0001CE 3881           00382         swapf   PORTB, W
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE 10
+000108                00355 Delay50ms
+000108 0EF9           00356         movlw   0xF9
+00010A 6E31           00357         movwf   d50ms
+                      00358         
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0001D0 0B0F           00383         andlw   0x0F
-0001D2 6E50           00384         movwf   KEY
-0001D4 B281           00385         btfsc   PORTB, 1
-0001D6 EF?? F???      00386         goto    $-2
-0001DA 0012           00387         return
-                      00388         
-0001DC                00389 READ_KEY_RTC
-0001DC                00390 HOLD_KEY_RTC
-0001DC EC?? F???      00391         call    LCD_L2          ; go to second line to print RTC
-                      00392         rtc_read    0x02        ; get hours first
+00010C                00359 loop50ms
+00010C EC?? F???      00360         call    Delay200us
+000110 2E31           00361         decfsz  d50ms
+                      00362 
+000112                00363 Cycles
+000112 EF?? F???      00364         goto    loop50ms
+000116 EC?? F???      00365         call    Delay200us
+00011A 0012           00366         return
+                      00367 
+                      00368 ;READ_KEY
+                      00369 ;HOLD_KEY
+                      00370 ;       btfss   PORTB, 1        ; check for keypad interrupt
+                      00371 ;       goto    HOLD_KEY
+                      00372 ;       swapf   PORTB, W
+                      00373 ;       andlw   0x0F
+                      00374 ;       movwf   KEY
+                      00375 ;       btfsc   PORTB, 1
+                      00376 ;       goto    $-2
+                      00377 ;       return
+                      00378         
+00011C                00379 READ_KEY_RTC
+00011C                00380 HOLD_KEY_RTC
+00011C EC?? F???      00381         call    LCD_L2          ; go to second line to print RTC
+                      00382         rtc_read    0x02        ; get hours first
                           M ;input: addliteral
                           M ;output: datachar, tens_digit, ones_digit
                           M ;desc: From the selected register in the RTC, read the data
                           M ; and load it into 0x75. 0x75 is also converted into
                           M ; ASCII characters and the tens digit is placed into
                           M ; 0x77 and the ones digit is placed in 0x78
-0001E0 0E02               M     movlw 0x02
-0001E2 6E??               M     movwf regaddress
-0001E4 EC?? F???          M     call read_rtc
-0001E8 50??               M     movf datachar,w
-0001EA EC?? F???          M     call rtc_convert
-0001EE 50??           00393         movf    tens_digit, W
-0001F0 EC?? F???      00394         call    WR_DATA
-0001F4 50??           00395         movf    ones_digit, W
-0001F6 EC?? F???      00396         call    WR_DATA
+000120 0E02               M     movlw 0x02
+000122 6E??               M     movwf regaddress
+000124 EC?? F???          M     call read_rtc
+000128 50??               M     movf datachar,w
+00012A EC?? F???          M     call rtc_convert
+00012E 50??           00383         movf    tens_digit, W
+000130 EC?? F???      00384         call    WR_DATA
+000134 50??           00385         movf    ones_digit, W
+000136 EC?? F???      00386         call    WR_DATA
+                      00387         
+                      00388         rtc_read    0x01        ; get minutes
+                          M ;input: addliteral
+                          M ;output: datachar, tens_digit, ones_digit
+                          M ;desc: From the selected register in the RTC, read the data
+                          M ; and load it into 0x75. 0x75 is also converted into
+                          M ; ASCII characters and the tens digit is placed into
+                          M ; 0x77 and the ones digit is placed in 0x78
+00013A 0E01               M     movlw 0x01
+00013C 6E??               M     movwf regaddress
+00013E EC?? F???          M     call read_rtc
+000142 50??               M     movf datachar,w
+000144 EC?? F???          M     call rtc_convert
+                      00389         WriteRTC
+000148 C??? FFE8          M         movff   tens_digit, WREG
+00014C EC?? F???          M         call    WR_DATA
+000150 C??? FFE8          M         movff   ones_digit, WREG
+000154 EC?? F???          M         call    WR_DATA
+000158 0E20           00390         movlw   " "
+00015A EC?? F???      00391         call    WR_DATA
+                      00392         
+                      00393         rtc_read    0x05        ; month
+                          M ;input: addliteral
+                          M ;output: datachar, tens_digit, ones_digit
+                          M ;desc: From the selected register in the RTC, read the data
+                          M ; and load it into 0x75. 0x75 is also converted into
+                          M ; ASCII characters and the tens digit is placed into
+                          M ; 0x77 and the ones digit is placed in 0x78
+00015E 0E05               M     movlw 0x05
+000160 6E??               M     movwf regaddress
+000162 EC?? F???          M     call read_rtc
+000166 50??               M     movf datachar,w
+000168 EC?? F???          M     call rtc_convert
+                      00394         WriteRTC
+00016C C??? FFE8          M         movff   tens_digit, WREG
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  3:18:19         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000170 EC?? F???          M         call    WR_DATA
+000174 C??? FFE8          M         movff   ones_digit, WREG
+000178 EC?? F???          M         call    WR_DATA
+00017C 0E2F           00395         movlw   0x2F            ; ascii code for forward slash
+00017E EC?? F???      00396         call    WR_DATA
                       00397         
-                      00398         rtc_read    0x01        ; get minutes
+                      00398         rtc_read    0x04
                           M ;input: addliteral
                           M ;output: datachar, tens_digit, ones_digit
                           M ;desc: From the selected register in the RTC, read the data
                           M ; and load it into 0x75. 0x75 is also converted into
                           M ; ASCII characters and the tens digit is placed into
                           M ; 0x77 and the ones digit is placed in 0x78
-0001FA 0E01               M     movlw 0x01
-0001FC 6E??               M     movwf regaddress
-0001FE EC?? F???          M     call read_rtc
-000202 50??               M     movf datachar,w
-000204 EC?? F???          M     call rtc_convert
-                      00399         WriteRTC
-000208 C??? FFE8          M         movff   tens_digit, WREG
-00020C EC?? F???          M         call    WR_DATA
-000210 C??? FFE8          M         movff   ones_digit, WREG
-000214 EC?? F???          M         call    WR_DATA
-000218 0E20           00400         movlw   " "
-00021A EC?? F???      00401         call    WR_DATA
+000182 0E04               M     movlw 0x04
+000184 6E??               M     movwf regaddress
+000186 EC?? F???          M     call read_rtc
+00018A 50??               M     movf datachar,w
+00018C EC?? F???          M     call rtc_convert
+                      00399         WriteRTC   
+000190 C??? FFE8          M         movff   tens_digit, WREG
+000194 EC?? F???          M         call    WR_DATA
+000198 C??? FFE8          M         movff   ones_digit, WREG
+00019C EC?? F???          M         call    WR_DATA
+0001A0 0E2F           00400         movlw   0x2F            ; ascii code for forward slash
+0001A2 EC?? F???      00401         call    WR_DATA
                       00402         
-                      00403         rtc_read    0x05        ; month
+                      00403         rtc_read    0x06        ; display year
                           M ;input: addliteral
                           M ;output: datachar, tens_digit, ones_digit
                           M ;desc: From the selected register in the RTC, read the data
                           M ; and load it into 0x75. 0x75 is also converted into
                           M ; ASCII characters and the tens digit is placed into
                           M ; 0x77 and the ones digit is placed in 0x78
-00021E 0E05               M     movlw 0x05
-000220 6E??               M     movwf regaddress
-000222 EC?? F???          M     call read_rtc
-000226 50??               M     movf datachar,w
-000228 EC?? F???          M     call rtc_convert
+0001A6 0E06               M     movlw 0x06
+0001A8 6E??               M     movwf regaddress
+0001AA EC?? F???          M     call read_rtc
+0001AE 50??               M     movf datachar,w
+0001B0 EC?? F???          M     call rtc_convert
                       00404         WriteRTC
-00022C C??? FFE8          M         movff   tens_digit, WREG
-000230 EC?? F???          M         call    WR_DATA
-000234 C??? FFE8          M         movff   ones_digit, WREG
-000238 EC?? F???          M         call    WR_DATA
-00023C 0E2F           00405         movlw   0x2F            ; ascii code for forward slash
-00023E EC?? F???      00406         call    WR_DATA
-                      00407         
-                      00408         rtc_read    0x04
-                          M ;input: addliteral
-                          M ;output: datachar, tens_digit, ones_digit
-                          M ;desc: From the selected register in the RTC, read the data
-                          M ; and load it into 0x75. 0x75 is also converted into
-                          M ; ASCII characters and the tens digit is placed into
-                          M ; 0x77 and the ones digit is placed in 0x78
-000242 0E04               M     movlw 0x04
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:24:51         PAGE 11
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000244 6E??               M     movwf regaddress
-000246 EC?? F???          M     call read_rtc
-00024A 50??               M     movf datachar,w
-00024C EC?? F???          M     call rtc_convert
-                      00409         WriteRTC   
-000250 C??? FFE8          M         movff   tens_digit, WREG
-000254 EC?? F???          M         call    WR_DATA
-000258 C??? FFE8          M         movff   ones_digit, WREG
-00025C EC?? F???          M         call    WR_DATA
-000260 0E2F           00410         movlw   0x2F            ; ascii code for forward slash
-000262 EC?? F???      00411         call    WR_DATA
-                      00412         
-                      00413         rtc_read    0x06        ; display year
-                          M ;input: addliteral
-                          M ;output: datachar, tens_digit, ones_digit
-                          M ;desc: From the selected register in the RTC, read the data
-                          M ; and load it into 0x75. 0x75 is also converted into
-                          M ; ASCII characters and the tens digit is placed into
-                          M ; 0x77 and the ones digit is placed in 0x78
-000266 0E06               M     movlw 0x06
-000268 6E??               M     movwf regaddress
-00026A EC?? F???          M     call read_rtc
-00026E 50??               M     movf datachar,w
-000270 EC?? F???          M     call rtc_convert
-                      00414         WriteRTC
-000274 C??? FFE8          M         movff   tens_digit, WREG
-000278 EC?? F???          M         call    WR_DATA
-00027C C??? FFE8          M         movff   ones_digit, WREG
-000280 EC?? F???          M         call    WR_DATA
-                      00415         
-000284 A281           00416         btfss   PORTB, 1        ; keypad interrupt
-000286 EF?? F???      00417         goto    HOLD_KEY_RTC
-00028A 3881           00418         swapf   PORTB, W        ; copy PORTB7:4 to W3:0
-00028C 0B0F           00419         andlw   0x0F            ; only want W3:0
-00028E 6E50           00420         movwf   KEY             ; write this value to the KEY
-000290 B281           00421         btfsc   PORTB, 1        ; wait for release
-000292 EF?? F???      00422         goto    $-2             ; go back one instruction
-000296 0012           00423         return  
-Warning[205]: Found directive in column 1. (end)
-                      00424 end
+0001B4 C??? FFE8          M         movff   tens_digit, WREG
+0001B8 EC?? F???          M         call    WR_DATA
+0001BC C??? FFE8          M         movff   ones_digit, WREG
+0001C0 EC?? F???          M         call    WR_DATA
+                      00405         
+0001C4 A281           00406         btfss   PORTB, 1        ; keypad interrupt
+0001C6 EF?? F???      00407         goto    HOLD_KEY_RTC
+0001CA 3881           00408         swapf   PORTB, W        ; copy PORTB7:4 to W3:0
+0001CC 0B0F           00409         andlw   0x0F            ; only want W3:0
+0001CE 6E50           00410         movwf   KEY             ; write this value to the KEY
+0001D0 B281           00411         btfsc   PORTB, 1        ; wait for release
+0001D2 EF?? F???      00412         goto    $-2             ; go back one instruction
+0001D6 0012           00413         return  
+                      00414     end
 
 Errors   :     0
-Warnings :     3 reported,     0 suppressed
+Warnings :     0 reported,     0 suppressed
 Messages :     0 reported,     0 suppressed
 
 

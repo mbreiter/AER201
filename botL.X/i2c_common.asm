@@ -274,5 +274,3 @@ rtc_convert
 
 
     end
-
-

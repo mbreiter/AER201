@@ -10,8 +10,8 @@ E 	equ 3
 lcd_tmp		equ		0x20
 lcd_d1		equ		0x21
 lcd_d2		equ		0x22
-temp_lcd	equ     0x23           ; buffer for Instruction
-dat			equ     0x24           ; buffer for data
+temp_lcd	equ		0x23           ; buffer for Instruction
+dat		equ		0x24           ; buffer for data
 delay1		equ		0x25
 delay2		equ		0x26
 delay3		equ		0x27

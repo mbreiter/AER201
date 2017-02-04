@@ -28,6 +28,9 @@ Again
     call write_rtc ;sets registers 0-6 to zero
     endm
 
+
+
+
 rtc_set macro addliteral,datliteral
 ;input: addliteral: value of address
 ; datliteral: value of data

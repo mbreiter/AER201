@@ -32,10 +32,6 @@
 ;*******************************************************************************
 ; variable and constants
 ;*******************************************************************************
-
-; pin configurations
-#define	    RS		LATD, 2	    ; LCD
-#define	    E		LATD, 3	    ; LCD
     
 ; timers
 	    CODE
@@ -95,8 +91,8 @@ READ_EE	    equ		0x77
 
 ; pc interface
 ; rtc
-extern	    tens_digit
-extern	    ones_digit
+    extern	    tens_digit
+    extern	    ones_digit
 
 ;*******************************************************************************
 ; tables
@@ -251,7 +247,7 @@ INIT
 	movlw	b'00000000'
 	movwf	TRISA
 	movlw	b'11111111'
-	movwf	TRISB		    ; keypads
+	movwf	TRISB		    ; keypad
 	movlw	b'10111111'
 	movwf	TRISC
 	movlw	b'00000000'
@@ -273,7 +269,7 @@ INIT
 	; initializations
 	call	InitLCD
 	call	i2c_common_setup
-	call	initRTC		    ; uncomment to change the date settings
+	call	Delay50ms	
 	;call	initUSART
 	;call	initEEPROM
 	
@@ -292,6 +288,14 @@ INIT
 	bsf	INTCON, TMR0IE
 	bsf	INTCON2, TMR0IP	    ; set to high priority
 	
+;	rtcresetAll ;<---- This causes cancer!!!!! Fix by loading sample code.
+;	rtc_set 0x00, b'00000000'		; Set seconds to 0
+;	rtc_set 0x01, b'00011000'		; Set minutes (18)
+;	rtc_set	0x02, b'00000011'		; Set hours (3) (24hour)
+;	rtc_set 0x04, b'00000100'		; Set day (4)
+;	rtc_set	0x05, b'00000010'		; Set month (2)
+;	rtc_set 0x06, b'00010111'		; Set year (17)
+	
 	Display	Welcome
 	call LCD_L2
 	Display	Team
@@ -307,7 +311,7 @@ STANDBY
 HOLD_STANDBY
 	call	READ_KEY_RTC
 	;ChangeMode keyA, EXE
-	ChangeMode keyB, LOG
+	;ChangeMode keyB, LOG
 	;ChangeMode keyC, PLOG
 	;ChangeMode keyD, PC
 	bra	HOLD_STANDBY
@@ -315,29 +319,15 @@ HOLD_STANDBY
 ;*******************************************************************************
 ; sorting statistics log mode
 ;*******************************************************************************
-LOG
-	call ClrLCD
-	Display Log
+;LOG
+;	call ClrLCD
+;	Display Log
+;	
+;HOLD_LOG
+;	call	READ_KEY
+;	ChangeMode key0, STANDBY
+;	bra	HOLD_LOG
 	
-HOLD_LOG
-	call	READ_KEY
-	ChangeMode key0, STANDBY
-	bra	HOLD_LOG
-	
-;*******************************************************************************
-; initializations
-;*******************************************************************************
-
-initRTC
-	rtc_resetAll
-	rtc_set	    0x00, b'00000000' ;0 s
-	rtc_set	    0x01, b'0010101' ;24 min
-	rtc_set	    0x02, b'00000001' ;1h
-	rtc_set	    0x04, b'00000100' ;4th day
-	rtc_set	    0x05, b'00000010' ;February
-	rtc_set	    0x06, b'00010111' ;2017
-	return
-
 ;*******************************************************************************
 ; subroutines
 ;*******************************************************************************
@@ -375,16 +365,16 @@ Cycles
 	call	Delay200us
 	return
 
-READ_KEY
-HOLD_KEY
-	btfss	PORTB, 1	; check for keypad interrupt
-	goto	HOLD_KEY
-	swapf	PORTB, W
-	andlw	0x0F
-	movwf	KEY
-	btfsc	PORTB, 1
-	goto	$-2
-	return
+;READ_KEY
+;HOLD_KEY
+;	btfss	PORTB, 1	; check for keypad interrupt
+;	goto	HOLD_KEY
+;	swapf	PORTB, W
+;	andlw	0x0F
+;	movwf	KEY
+;	btfsc	PORTB, 1
+;	goto	$-2
+;	return
 	
 READ_KEY_RTC
 HOLD_KEY_RTC
@@ -421,4 +411,4 @@ HOLD_KEY_RTC
 	btfsc	PORTB, 1	; wait for release
 	goto	$-2		; go back one instruction
 	return	
-end
+    end
