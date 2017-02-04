@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -57,7 +57,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00040         ;bsf PORTD,E     ;E default high        
                       00041         ;Wait for LCD POR to finish (~15ms)
 000000 EC?? F???      00042         call lcdLongDelay
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -116,7 +116,7 @@ Warning[202]: Argument out of range.  Least significant bits used.
 000068 6E8C           00086                 movwf   LATD                            ; send 4 bits LSB
 00006A 868C           00087                 bsf             LCD_E                                   ; pulse enable high
 00006C 968C           00088                 bcf             LCD_E
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  3
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -175,7 +175,7 @@ Warning[202]: Argument out of range.  Least significant bits used.
 0000B8 0012           00135     return
                       00136 
                       00137 ; ClkLCD: Pulse the E line low
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  4
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -203,69 +203,66 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000D4 0EC0           00153                 movlw           B'11000000'
 0000D6 EC?? F???      00154                 call            WR_INS
 0000DA 0012           00155                 return
-                      00156 
-                      00157 
-                      00158 
-                      00159 ; ****************************************************************************
-                      00160 ; EXTRA HELPER SUBROUTINES
-                      00161 ; ****************************************************************************
-                      00162 ;MovMSB: Move MSB of W to PORTD, without disturbing LSB
-0000DC                00163 MovMSB
-0000DC 0BF0           00164     andlw 0xF0
-0000DE 1283           00165     iorwf PORTD,f
-0000E0 090F           00166     iorlw 0x0F
-0000E2 1683           00167     andwf PORTD,f
-0000E4 0012           00168     return
-                      00169 
-                      00170     ;Delay: ~5ms
-0000E6                00171 lcdLongDelay
-0000E6 0E50           00172     movlw d'80'
-0000E8 6E22           00173     movwf lcd_d2
-0000EA                00174 LLD_LOOP
-                      00175     LCD_DELAY
+                      00156 ; ****************************************************************************
+                      00157 ; EXTRA HELPER SUBROUTINES
+                      00158 ; ****************************************************************************
+                      00159 ;MovMSB: Move MSB of W to PORTD, without disturbing LSB
+0000DC                00160 MovMSB
+0000DC 0BF0           00161     andlw 0xF0
+0000DE 1283           00162     iorwf PORTD,f
+0000E0 090F           00163     iorlw 0x0F
+0000E2 1683           00164     andwf PORTD,f
+0000E4 0012           00165     return
+                      00166 
+                      00167     ;Delay: ~5ms
+0000E6                00168 lcdLongDelay
+0000E6 0E50           00169     movlw d'80'
+0000E8 6E22           00170     movwf lcd_d2
+0000EA                00171 LLD_LOOP
+                      00172     LCD_DELAY
 0000EA 0E23               M         movlw   0x23
 0000EC 6E21               M         movwf   lcd_d1
 0000EE 2E21               M         decfsz  lcd_d1,f
 0000F0 EF?? F???          M         goto    $-2
-0000F4 2E22           00176     decfsz lcd_d2,f
-0000F6 EF?? F???      00177     goto LLD_LOOP
-0000FA 0012           00178     return
-                      00179 
-                      00180 ;******************************************************************************
-                      00181 ; Delay44us (): wait exactly  110 cycles (44 us)
-                      00182 ; <www.piclist.org>
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  5
+0000F4 2E22           00173     decfsz lcd_d2,f
+0000F6 EF?? F???      00174     goto LLD_LOOP
+0000FA 0012           00175     return
+                      00176 
+                      00177 ;******************************************************************************
+                      00178 ; Delay44us (): wait exactly  110 cycles (44 us)
+                      00179 ; <www.piclist.org>
+                      00180 
+0000FC                00181 delay44us
+0000FC 0E23           00182                 movlw   0x23
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00183 
-0000FC                00184 delay44us
-0000FC 0E23           00185                 movlw   0x23
-0000FE 6E25           00186                 movwf   delay1, 0
-                      00187 
-000100                00188 Delay44usLoop
-                      00189 
-000100 2E25           00190                 decfsz  delay1, f
-000102 EF?? F???      00191                 goto    Delay44usLoop
-000106 0012           00192                 return
-                      00193 
-000108                00194 delay5ms
-000108 0EC2           00195                 movlw   0xC2
-00010A 6E25           00196                 movwf   delay1,0
-00010C 0E0A           00197                 movlw   0x0A
-00010E 6E26           00198                 movwf   delay2,0
-                      00199 
-000110                00200 Delay5msLoop
-000110 2E25           00201                 decfsz  delay1, f
-000112 EF?? F???      00202                 goto    d2
-000116 2E26           00203                 decfsz  delay2, f
-000118 EF?? F???      00204 d2              goto    Delay5msLoop
-00011C 0012           00205                 return
-                      00206 
-                      00207     end
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  6
+0000FE 6E25           00183                 movwf   delay1, 0
+                      00184 
+000100                00185 Delay44usLoop
+                      00186 
+000100 2E25           00187                 decfsz  delay1, f
+000102 EF?? F???      00188                 goto    Delay44usLoop
+000106 0012           00189                 return
+                      00190 
+000108                00191 delay5ms
+000108 0EC2           00192                 movlw   0xC2
+00010A 6E25           00193                 movwf   delay1,0
+00010C 0E0A           00194                 movlw   0x0A
+00010E 6E26           00195                 movwf   delay2,0
+                      00196 
+000110                00197 Delay5msLoop
+000110 2E25           00198                 decfsz  delay1, f
+000112 EF?? F???      00199                 goto    d2
+000116 2E26           00200                 decfsz  delay2, f
+000118 EF?? F???      00201 d2              goto    Delay5msLoop
+00011C 0012           00202                 return
+                      00203 
+                      00204     end
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  6
 
 
 SYMBOL TABLE
@@ -324,7 +321,7 @@ C1OUT                             00000006
 C2INV                             00000005
 C2OUT                             00000007
 CCP1                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  7
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  7
 
 
 SYMBOL TABLE
@@ -383,7 +380,7 @@ CVR2                              00000002
 CVR3                              00000003
 CVRCON                            00000FB5
 CVREN                             00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  8
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  8
 
 
 SYMBOL TABLE
@@ -442,7 +439,7 @@ GIE                               00000007
 GIEH                              00000007
 GIEL                              00000006
 GIE_GIEH                          00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE  9
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE  9
 
 
 SYMBOL TABLE
@@ -501,7 +498,7 @@ IRCF0                             00000004
 IRCF1                             00000005
 IRCF2                             00000006
 IRVST                             00000005
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 10
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 10
 
 
 SYMBOL TABLE
@@ -560,7 +557,7 @@ LCD_L2                            000000D4
 LCD_RS                            LATD, 2
 LLD_LOOP                          000000EA
 LVDCON                            00000FD2
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 11
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 11
 
 
 SYMBOL TABLE
@@ -619,7 +616,7 @@ PC                                00000FF9
 PCFG0                             00000000
 PCFG1                             00000001
 PCFG2                             00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 12
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 12
 
 
 SYMBOL TABLE
@@ -678,7 +675,7 @@ PSP2                              00000002
 PSP3                              00000003
 PSP4                              00000004
 PSP5                              00000005
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 13
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 13
 
 
 SYMBOL TABLE
@@ -737,7 +734,7 @@ RD                                00000000
 RD0                               00000000
 RD1                               00000001
 RD16                              00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 14
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 14
 
 
 SYMBOL TABLE
@@ -796,7 +793,7 @@ SSPIF                             00000003
 SSPIP                             00000003
 SSPM0                             00000000
 SSPM1                             00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 15
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 15
 
 
 SYMBOL TABLE
@@ -855,7 +852,7 @@ T3CON                             00000FB1
 T3SYNC                            00000002
 TABLAT                            00000FF5
 TBLPTR                            00000FF6
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 16
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 16
 
 
 SYMBOL TABLE
@@ -914,7 +911,7 @@ TRISB3                            00000003
 TRISB4                            00000004
 TRISB5                            00000005
 TRISB6                            00000006
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 17
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 17
 
 
 SYMBOL TABLE
@@ -973,7 +970,7 @@ WREN                              00000002
 WRERR                             00000003
 WRT_LCD                           
 WR_DATA                           00000074
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 18
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 18
 
 
 SYMBOL TABLE
@@ -1032,7 +1029,7 @@ _EBTR3_OFF_7L                     000000FF
 _EBTR3_ON_7L                      000000F7
 _EBTRB_OFF_7H                     000000FF
 _EBTRB_ON_7H                      000000BF
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 19
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 19
 
 
 SYMBOL TABLE
@@ -1091,7 +1088,7 @@ _WDTPS_8_2H                       000000E7
 _WDT_OFF_2H                       000000FE
 _WDT_ON_2H                        000000FF
 _WRT0_OFF_6L                      000000FF
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-3-2017  23:52:54         PAGE 20
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-4-2017  1:19:42         PAGE 20
 
 
 SYMBOL TABLE

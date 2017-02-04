@@ -93,7 +93,10 @@ tempL_EE    equ		0x75
 MAX_EE      equ		0x76
 READ_EE	    equ		0x77
 
-; pc interface	
+; pc interface
+; rtc
+extern	    tens_digit
+extern	    ones_digit
 
 ;*******************************************************************************
 ; tables
@@ -101,11 +104,11 @@ READ_EE	    equ		0x77
 Welcome		db	    "botL", 0
 Team		db	    "mr hl hg", 0
 StandBy		db	    "Standby", 0
-OpExe		db	    "Sorting...", 0
-OpStop		db	    "Stopped", 0
+Log		db	    "Sorting Stats",0
+Exe		db	    "Sorting...", 0
+Stopped		db	    "Stopped", 0
 Op_Time		db	    "Time: ", 0
-Op_RTC		db	    "hhmmss, mm/dd/yy", 0
-Save		db	    "Saving Logs...", 0
+Save		db	    "Saving...", 0
 Transfer	db	    "Transferring...", 0
 Safety		db	    "Safety check...", 0		
 	    
@@ -147,7 +150,14 @@ loop
 	movf    TABLAT, W 
 	bnz	loop
 	endm 
-	    
+
+WriteRTC    macro
+	movff	tens_digit, WREG
+	call	WR_DATA
+	movff	ones_digit, WREG
+	call	WR_DATA
+	endm
+	
 WriteEE	    macro   word, addH, addL
 	movff   addH, EEADRH    ; High address
 	movff   addL, EEADRH    ; Low address
@@ -183,11 +193,26 @@ READEE	    macro   file, addH, addL
 	movff   EEDATA, file	    ; put data into file
 	endm
 
-ChangeMode  macro   Key, Next
+ChangeMode  macro   ModeId, NextMode
+	local Next, Exit
+	
+	movlw	ModeId		    ; poll for mode
+	cpfseq	KEY		    ; check this against key press
+	goto	Exit
+
+Next	
+	clrf	LATA		    ; clear pins before proceeding
+	clrf	LATB
+	clrf	LATC
+	clrf	LATD
+	goto	NextMode
+
+Exit
+	nop
 	endm
 
 ;*******************************************************************************
-; Reset Vector and ISRs
+; reset vector and isrs
 ;*******************************************************************************
 	ORG	0x000		    ; processor reset vector
 	goto    INIT		    ; go to beginning of program
@@ -235,6 +260,8 @@ INIT
 	movwf	TRISE
 	
 	; analog/digital pins
+	movlw       b'00001111'     ; Set all AN pins to Digital
+        movwf       ADCON1
 	
 	; clear Ports
 	clrf	LATA
@@ -246,7 +273,7 @@ INIT
 	; initializations
 	call	InitLCD
 	call	i2c_common_setup
-	;call	initRTC
+	call	initRTC		    ; uncomment to change the date settings
 	;call	initUSART
 	;call	initEEPROM
 	
@@ -266,17 +293,36 @@ INIT
 	bsf	INTCON2, TMR0IP	    ; set to high priority
 	
 	Display	Welcome
+	call LCD_L2
+	Display	Team
 	Delay50N delayR, 0x3C
-	call	ClrLCD
-	Display	StandBy
 	
 ;*******************************************************************************
 ; standby mode
 ;*******************************************************************************
 STANDBY
-	bra	STANDBY
-WAIT
+	call	ClrLCD
+	Display	StandBy
 	
+HOLD_STANDBY
+	call	READ_KEY_RTC
+	;ChangeMode keyA, EXE
+	ChangeMode keyB, LOG
+	;ChangeMode keyC, PLOG
+	;ChangeMode keyD, PC
+	bra	HOLD_STANDBY
+
+;*******************************************************************************
+; sorting statistics log mode
+;*******************************************************************************
+LOG
+	call ClrLCD
+	Display Log
+	
+HOLD_LOG
+	call	READ_KEY
+	ChangeMode key0, STANDBY
+	bra	HOLD_LOG
 	
 ;*******************************************************************************
 ; initializations
@@ -285,11 +331,11 @@ WAIT
 initRTC
 	rtc_resetAll
 	rtc_set	    0x00, b'00000000' ;0 s
-	rtc_set	    0x01, b'00010111' ;21 min
-	rtc_set	    0x02, b'00100000' ;18h
-	rtc_set	    0x04, b'00000011' ;3rd day
+	rtc_set	    0x01, b'0010101' ;24 min
+	rtc_set	    0x02, b'00000001' ;1h
+	rtc_set	    0x04, b'00000100' ;4th day
 	rtc_set	    0x05, b'00000010' ;February
-	rtc_set	    0x06, b'00010001' ;2017
+	rtc_set	    0x06, b'00010111' ;2017
 	return
 
 ;*******************************************************************************
@@ -312,7 +358,7 @@ Delay200us
 
 loop200us
 	decfsz	d200us
-	goto loop200us
+	goto	loop200us
 	nop
 	return
 
@@ -328,5 +374,51 @@ Cycles
 	goto	loop50ms
 	call	Delay200us
 	return
+
+READ_KEY
+HOLD_KEY
+	btfss	PORTB, 1	; check for keypad interrupt
+	goto	HOLD_KEY
+	swapf	PORTB, W
+	andlw	0x0F
+	movwf	KEY
+	btfsc	PORTB, 1
+	goto	$-2
+	return
 	
-	end
+READ_KEY_RTC
+HOLD_KEY_RTC
+	call	LCD_L2		; go to second line to print RTC
+	rtc_read    0x02	; get hours first
+	movf	tens_digit, W
+	call	WR_DATA
+	movf	ones_digit, W
+	call	WR_DATA
+	
+	rtc_read    0x01	; get minutes
+	WriteRTC
+	movlw	" "
+	call	WR_DATA
+	
+	rtc_read    0x05	; month
+	WriteRTC
+	movlw	0x2F		; ascii code for forward slash
+	call	WR_DATA
+	
+	rtc_read    0x04
+	WriteRTC   
+	movlw	0x2F		; ascii code for forward slash
+	call	WR_DATA
+	
+	rtc_read    0x06	; display year
+	WriteRTC
+	
+	btfss	PORTB, 1	; keypad interrupt
+	goto	HOLD_KEY_RTC
+	swapf	PORTB, W	; copy PORTB7:4 to W3:0
+	andlw	0x0F		; only want W3:0
+	movwf	KEY		; write this value to the KEY
+	btfsc	PORTB, 1	; wait for release
+	goto	$-2		; go back one instruction
+	return	
+end
