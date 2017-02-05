@@ -17,6 +17,8 @@
       <itemPath>lcd.asm</itemPath>
       <itemPath>rtc.inc</itemPath>
       <itemPath>i2c_common.asm</itemPath>
+      <itemPath>i2c.asm</itemPath>
+      <itemPath>i2c.inc</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

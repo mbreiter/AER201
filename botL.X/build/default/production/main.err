@@ -1,0 +1,7 @@
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 13 : Found directive in column 1. (list)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 2 : Found directive in column 1. (extern)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 11 : Found directive in column 1. (variable)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 29 : Found directive in column 1. (endm)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 44 : Found directive in column 1. (endm)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 58 : Found directive in column 1. (endm)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 634 : Found directive in column 1. (end)
