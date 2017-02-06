@@ -1,5 +1,5 @@
 MPLINK 5.08, LINKER
-Linker Map File - Created Mon Feb  6 12:26:27 2017
+Linker Map File - Created Mon Feb  6 13:02:43 2017
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -7,8 +7,8 @@ Linker Map File - Created Mon Feb  6 12:26:27 2017
                    .org_0       code   0x000000    program   0x000004
                    .cinit    romdata   0x000004    program   0x000002
                    .org_1       code   0x000008    program   0x000004
-                   .org_2       code   0x000018    program   0x000688
-                    .code       code   0x0006a0    program   0x000302
+                   .org_2       code   0x000018    program   0x0007ca
+                    .code       code   0x0007e2    program   0x000336
 .config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
 .config_300002_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300002    program   0x000001
 .config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
@@ -29,162 +29,182 @@ Linker Map File - Created Mon Feb  6 12:26:27 2017
                            ---------   ---------      
                             0x000000    0x000005      
                             0x000008    0x00000b      
-                            0x000018    0x0009a1      
+                            0x000018    0x000b17      
                             0x300001    0x300003      
                             0x300005    0x300006      
                             0x300008    0x30000d      
-            2463 out of 66584 program addresses used, program memory utilization is 3%
+            2837 out of 66584 program addresses used, program memory utilization is 4%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-           ClearEEPROM_21   0x0004de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                ClearNext   0x0004e6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   ClkLCD   0x0007ea    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   ClrLCD   0x0007dc    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   Cycles   0x000476    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-               Delay200us   0x00045e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-            Delay44usLoop   0x000830    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                Delay50ms   0x00046c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             Delay5msLoop   0x000840    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                 Delay5us   0x000450    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                DispOpRTC   0x0005c2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-         DispOpRTC_Helper   0x000666    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-              DisplayTime   0x000550    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+           ClearEEPROM_21   0x000620    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                ClearNext   0x000628    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   ClkLCD   0x000960    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   ClrLCD   0x000952    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   Cycles   0x0005b8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+               Delay200us   0x0005a0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            Delay44usLoop   0x0009a6    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                Delay50ms   0x0005ae    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             Delay5msLoop   0x0009b6    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                 Delay5us   0x000592    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                DispOpRTC   0x000704    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+         DispOpRTC_Helper   0x0007a8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+              DisplayTime   0x000692    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
              END_ISR_HIGH   0x00008c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
               END_ISR_LOW   0x0000b2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                EXECUTION   0x0001b2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 EXIT_EXE   0x000210    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Exe1   0x0006de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Exe2   0x0006ea    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 HOLD_EXE   0x0001f4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 HOLD_KEY   0x000524    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             HOLD_KEY_RTC   0x000538    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 HOLD_LOG   0x0003c6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-            HOLD_LOG_INFO   0x000434    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                EXECUTION   0x0001c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 EXIT_EXE   0x000234    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Exe1   0x00083c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Exe2   0x000848    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 HOLD_EXE   0x000218    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 HOLD_KEY   0x000666    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             HOLD_KEY_RTC   0x00067a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 HOLD_LOG   0x0003ea    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            HOLD_LOG_INFO   0x000458    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            HOLD_PERM_LOG   0x0004b0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                HOLD_PLOG   0x000576    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
              HOLD_STANDBY   0x000180    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                I2C_ACKDT   0x00094c    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_INIT   0x00094c    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_READ   0x00098a    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-        I2C_Master_RSTART   0x000972    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-         I2C_Master_START   0x00096a    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_STOP   0x00097a    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_WAIT   0x000962    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-         I2C_Master_WRITE   0x000982    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-                 I2C_temp   0x00094c    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+                I2C_ACKDT   0x000ac2    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_INIT   0x000ac2    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_READ   0x000b00    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+        I2C_Master_RSTART   0x000ae8    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+         I2C_Master_START   0x000ae0    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_STOP   0x000af0    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_WAIT   0x000ad8    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+         I2C_Master_WRITE   0x000af8    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+                 I2C_temp   0x000ac2    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
                      INIT   0x0000ca    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                  ISR_HIGH   0x00001c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   ISR_LOW   0x000096    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  InitLCD   0x000730    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   LCD_L1   0x0007fc    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   LCD_L2   0x000804    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                 LLD_LOOP   0x00081a    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                      LOG   0x00036e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 LOG_INFO   0x0003f8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Log1   0x0006b8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Log2   0x0006be    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 LogInfo1   0x0006cc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 LogInfo2   0x0006d4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   MovMSB   0x00080c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   NoData   0x00072c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-          NoSkipDispOpRTC   0x000602    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-         NoSkipDispOpTime   0x00058c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Op_Time   0x0006fa    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   RD_END   0x000932    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  RD_ERR1   0x000914    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  RD_ERR2   0x00091e    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  RD_ERR3   0x000928    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                 READ_KEY   0x000524    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             READ_KEY_RTC   0x000538    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     SAVE   0x000702    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  InitLCD   0x0008a6    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   LCD_L1   0x000972    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   LCD_L2   0x00097a    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                 LLD_LOOP   0x000990    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                      LOG   0x000392    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 LOG_INFO   0x00041c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Log1   0x0007fa    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Log2   0x000800    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 LogInfo1   0x00080e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 LogInfo2   0x000816    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   MovMSB   0x000982    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   NoData   0x0008a2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+          NoSkipDispOpRTC   0x000744    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+         NoSkipDispOpTime   0x0006ce    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  Op_Time   0x000880    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                      PC1   0x000850    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                      PC2   0x00085e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+               PCTransfer   0x000868    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 PERM_LOG   0x000474    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     PLOG   0x0004e2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 PermLog1   0x000820    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 PermLog2   0x000830    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   RD_END   0x000aa8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  RD_ERR1   0x000a8a    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  RD_ERR2   0x000a94    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  RD_ERR3   0x000a9e    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                 READ_KEY   0x000666    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             READ_KEY_RTC   0x00067a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     SAVE   0x000888    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   STANDBY   0x000162    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   Safety   0x00071c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 SaveData   0x000272    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                ShiftLoop   0x0002a4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-            SkipDispOpRTC   0x000664    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-           SkipDispOpTime   0x0005c0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  StandBy   0x0006b0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Stopped   0x0006f2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Team   0x0006a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 Transfer   0x00070c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     WAIT   0x000962    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-                  WR_DATA   0x0007a4    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   WR_END   0x0008c0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  WR_ERR1   0x0008a0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  WR_ERR2   0x0008aa    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  WR_ERR3   0x0008b6    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                   WR_INS   0x000788    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                  Welcome   0x0006a0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-              WriteEE_RTC   0x000480    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   WrtLCD   0x0007c6    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-              _.code_0024   0x000872    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0034   0x000882    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0044   0x000892    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0082   0x0008d0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0092   0x0008e0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_00A6   0x0008f4    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_00C6   0x0007f6    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-              _.code_00F0   0x000820    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-             _.org_2_021E   0x00021e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0236   0x000236    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_024C   0x00024c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0264   0x000264    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_02CA   0x0002ca    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_02E2   0x0002e2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_031C   0x00031c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0334   0x000334    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_034A   0x00034a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0362   0x000362    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_048E   0x00048e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04A6   0x0004a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04BC   0x0004bc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04D4   0x0004d4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04F4   0x0004f4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_050C   0x00050c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0532   0x000532    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_054A   0x00054a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   Safety   0x000892    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 SaveData   0x000296    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                ShiftLoop   0x0002c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            SkipDispOpRTC   0x0007a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+           SkipDispOpTime   0x000702    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  StandBy   0x0007f2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  Stopped   0x000878    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Team   0x0007e8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     WAIT   0x000ad8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+                  WR_DATA   0x00091a    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   WR_END   0x000a36    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  WR_ERR1   0x000a16    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  WR_ERR2   0x000a20    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  WR_ERR3   0x000a2c    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                   WR_INS   0x0008fe    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                  Welcome   0x0007e2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+              WriteEE_RTC   0x0005c2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   WrtLCD   0x00093c    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+              _.code_0024   0x0009e8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0034   0x0009f8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0044   0x000a08    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0082   0x000a46    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0092   0x000a56    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_00A6   0x000a6a    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_00C6   0x00096c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+              _.code_00F0   0x000996    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+             _.org_2_0242   0x000242    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_025A   0x00025a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0270   0x000270    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0288   0x000288    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_02EE   0x0002ee    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0306   0x000306    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0340   0x000340    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0358   0x000358    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_036E   0x00036e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0386   0x000386    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_05D0   0x0005d0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_05E8   0x0005e8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_05FE   0x0005fe    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0616   0x000616    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0636   0x000636    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_064E   0x00064e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0674   0x000674    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_068C   0x00068c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _10loop   0x000176    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _11Exit   0x000198    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _11Next   0x00018c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _12Exit   0x0001ae    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _12Next   0x0001a2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _13loop   0x0001c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _14loop   0x0001e6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _15Exit   0x00020c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _15Next   0x000200    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _18loop   0x000286    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _23loop   0x000382    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _26Exit   0x0003de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _26Next   0x0003d2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _27Exit   0x0003f4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _27Next   0x0003e8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _28loop   0x00040c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _29loop   0x00042a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _13Exit   0x0001c4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _13Next   0x0001b8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _14loop   0x0001de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _15loop   0x0001fc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _16Exit   0x000230    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _16Next   0x000224    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _19loop   0x0002aa    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _24loop   0x0003a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _27Exit   0x000402    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _27Next   0x0003f6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _28Exit   0x000418    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _28Next   0x00040c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _29loop   0x000430    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                  _2endBCD   0x000058    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    _2ones   0x000052    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _30Exit   0x00044c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _30Next   0x000440    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _35loop   0x00057a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _37loop   0x0005f0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _30loop   0x00044e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _31Exit   0x000470    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _31Next   0x000464    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _32loop   0x000488    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _33loop   0x0004a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _34Exit   0x0004c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _34Next   0x0004bc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _35Exit   0x0004de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _35Next   0x0004d2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _36loop   0x0004f6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _39Exit   0x00058e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _39Next   0x000582    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                  _3endBCD   0x00008a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    _3ones   0x000084    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _44loop   0x0006bc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _46loop   0x000732    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    _7loop   0x00012c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    _8loop   0x00014a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    _9loop   0x000158    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _waitl0   0x00090a    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                       d2   0x000848    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                delay44us   0x00082c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                 delay5ms   0x000838    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-         i2c_common_setup   0x00084e    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-             lcdLongDelay   0x000816    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                loop200us   0x000462    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 loop50ms   0x000470    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  loop5us   0x000454    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 read_rtc   0x0008c6    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              rtc_convert   0x000938    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                write_rtc   0x000868    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  _waitl0   0x000a80    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                       d2   0x0009be    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                delay44us   0x0009a2    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                 delay5ms   0x0009ae    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+               displayNum   0x00051c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+         i2c_common_setup   0x0009c4    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+             lcdLongDelay   0x00098c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                loop200us   0x0005a4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 loop50ms   0x0005b2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  loop5us   0x000596    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 read_rtc   0x000a3c    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              rtc_convert   0x000aae    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                write_rtc   0x0009de    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
            convert_buffer   0x000085       data     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
                  databyte   0x000081       data     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
                  datachar   0x000082       data     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
@@ -216,132 +236,152 @@ Linker Map File - Created Mon Feb  6 12:26:27 2017
                   _11Exit   0x000198    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _12Next   0x0001a2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   _12Exit   0x0001ae    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                EXECUTION   0x0001b2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _13loop   0x0001c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _14loop   0x0001e6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 HOLD_EXE   0x0001f4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _15Next   0x000200    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _15Exit   0x00020c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 EXIT_EXE   0x000210    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_021E   0x00021e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0236   0x000236    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_024C   0x00024c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0264   0x000264    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 SaveData   0x000272    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _18loop   0x000286    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                ShiftLoop   0x0002a4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_02CA   0x0002ca    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_02E2   0x0002e2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_031C   0x00031c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0334   0x000334    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_034A   0x00034a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0362   0x000362    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                      LOG   0x00036e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _23loop   0x000382    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 HOLD_LOG   0x0003c6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _26Next   0x0003d2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _26Exit   0x0003de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _27Next   0x0003e8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _27Exit   0x0003f4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 LOG_INFO   0x0003f8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _28loop   0x00040c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _29loop   0x00042a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-            HOLD_LOG_INFO   0x000434    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _30Next   0x000440    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _30Exit   0x00044c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 Delay5us   0x000450    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  loop5us   0x000454    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-               Delay200us   0x00045e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                loop200us   0x000462    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                Delay50ms   0x00046c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 loop50ms   0x000470    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   Cycles   0x000476    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-              WriteEE_RTC   0x000480    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_048E   0x00048e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04A6   0x0004a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04BC   0x0004bc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04D4   0x0004d4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-           ClearEEPROM_21   0x0004de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                ClearNext   0x0004e6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_04F4   0x0004f4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_050C   0x00050c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 READ_KEY   0x000524    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 HOLD_KEY   0x000524    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_0532   0x000532    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             READ_KEY_RTC   0x000538    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             HOLD_KEY_RTC   0x000538    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-             _.org_2_054A   0x00054a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-              DisplayTime   0x000550    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _35loop   0x00057a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-         NoSkipDispOpTime   0x00058c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-           SkipDispOpTime   0x0005c0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                DispOpRTC   0x0005c2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  _37loop   0x0005f0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-          NoSkipDispOpRTC   0x000602    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-            SkipDispOpRTC   0x000664    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-         DispOpRTC_Helper   0x000666    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Welcome   0x0006a0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Team   0x0006a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  StandBy   0x0006b0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Log1   0x0006b8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Log2   0x0006be    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 LogInfo1   0x0006cc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 LogInfo2   0x0006d4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Exe1   0x0006de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     Exe2   0x0006ea    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Stopped   0x0006f2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Op_Time   0x0006fa    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                     SAVE   0x000702    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                 Transfer   0x00070c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   Safety   0x00071c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                   NoData   0x00072c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  InitLCD   0x000730    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   WR_INS   0x000788    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                  WR_DATA   0x0007a4    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   WrtLCD   0x0007c6    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   ClrLCD   0x0007dc    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   ClkLCD   0x0007ea    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-              _.code_00C6   0x0007f6    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   LCD_L1   0x0007fc    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   LCD_L2   0x000804    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                   MovMSB   0x00080c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-             lcdLongDelay   0x000816    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                 LLD_LOOP   0x00081a    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-              _.code_00F0   0x000820    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                delay44us   0x00082c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-            Delay44usLoop   0x000830    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                 delay5ms   0x000838    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-             Delay5msLoop   0x000840    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-                       d2   0x000848    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
-         i2c_common_setup   0x00084e    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                write_rtc   0x000868    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0024   0x000872    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0034   0x000882    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0044   0x000892    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  WR_ERR1   0x0008a0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  WR_ERR2   0x0008aa    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  WR_ERR3   0x0008b6    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                   WR_END   0x0008c0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                 read_rtc   0x0008c6    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0082   0x0008d0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_0092   0x0008e0    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              _.code_00A6   0x0008f4    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  _waitl0   0x00090a    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  RD_ERR1   0x000914    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  RD_ERR2   0x00091e    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                  RD_ERR3   0x000928    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                   RD_END   0x000932    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-              rtc_convert   0x000938    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
-                 I2C_temp   0x00094c    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_INIT   0x00094c    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-                I2C_ACKDT   0x00094c    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_WAIT   0x000962    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-                     WAIT   0x000962    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-         I2C_Master_START   0x00096a    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-        I2C_Master_RSTART   0x000972    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_STOP   0x00097a    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-         I2C_Master_WRITE   0x000982    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
-          I2C_Master_READ   0x00098a    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+                  _13Next   0x0001b8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _13Exit   0x0001c4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                EXECUTION   0x0001c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _14loop   0x0001de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _15loop   0x0001fc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 HOLD_EXE   0x000218    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _16Next   0x000224    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _16Exit   0x000230    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 EXIT_EXE   0x000234    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0242   0x000242    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_025A   0x00025a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0270   0x000270    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0288   0x000288    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 SaveData   0x000296    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _19loop   0x0002aa    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                ShiftLoop   0x0002c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_02EE   0x0002ee    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0306   0x000306    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0340   0x000340    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0358   0x000358    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_036E   0x00036e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0386   0x000386    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                      LOG   0x000392    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _24loop   0x0003a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 HOLD_LOG   0x0003ea    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _27Next   0x0003f6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _27Exit   0x000402    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _28Next   0x00040c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _28Exit   0x000418    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 LOG_INFO   0x00041c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _29loop   0x000430    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _30loop   0x00044e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            HOLD_LOG_INFO   0x000458    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _31Next   0x000464    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _31Exit   0x000470    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 PERM_LOG   0x000474    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _32loop   0x000488    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _33loop   0x0004a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            HOLD_PERM_LOG   0x0004b0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _34Next   0x0004bc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _34Exit   0x0004c8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _35Next   0x0004d2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _35Exit   0x0004de    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     PLOG   0x0004e2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _36loop   0x0004f6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+               displayNum   0x00051c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                HOLD_PLOG   0x000576    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _39Next   0x000582    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _39Exit   0x00058e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 Delay5us   0x000592    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  loop5us   0x000596    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+               Delay200us   0x0005a0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                loop200us   0x0005a4    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                Delay50ms   0x0005ae    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 loop50ms   0x0005b2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   Cycles   0x0005b8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+              WriteEE_RTC   0x0005c2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_05D0   0x0005d0    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_05E8   0x0005e8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_05FE   0x0005fe    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0616   0x000616    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+           ClearEEPROM_21   0x000620    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                ClearNext   0x000628    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0636   0x000636    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_064E   0x00064e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 HOLD_KEY   0x000666    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 READ_KEY   0x000666    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_0674   0x000674    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             HOLD_KEY_RTC   0x00067a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             READ_KEY_RTC   0x00067a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+             _.org_2_068C   0x00068c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+              DisplayTime   0x000692    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _44loop   0x0006bc    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+         NoSkipDispOpTime   0x0006ce    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+           SkipDispOpTime   0x000702    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                DispOpRTC   0x000704    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  _46loop   0x000732    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+          NoSkipDispOpRTC   0x000744    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+            SkipDispOpRTC   0x0007a6    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+         DispOpRTC_Helper   0x0007a8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  Welcome   0x0007e2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Team   0x0007e8    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  StandBy   0x0007f2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Log1   0x0007fa    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Log2   0x000800    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 LogInfo1   0x00080e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 LogInfo2   0x000816    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 PermLog1   0x000820    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 PermLog2   0x000830    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Exe1   0x00083c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     Exe2   0x000848    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                      PC1   0x000850    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                      PC2   0x00085e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+               PCTransfer   0x000868    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  Stopped   0x000878    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  Op_Time   0x000880    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                     SAVE   0x000888    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   Safety   0x000892    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                   NoData   0x0008a2    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                  InitLCD   0x0008a6    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   WR_INS   0x0008fe    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                  WR_DATA   0x00091a    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   WrtLCD   0x00093c    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   ClrLCD   0x000952    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   ClkLCD   0x000960    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+              _.code_00C6   0x00096c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   LCD_L1   0x000972    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   LCD_L2   0x00097a    program     extern /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                   MovMSB   0x000982    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+             lcdLongDelay   0x00098c    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                 LLD_LOOP   0x000990    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+              _.code_00F0   0x000996    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                delay44us   0x0009a2    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+            Delay44usLoop   0x0009a6    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                 delay5ms   0x0009ae    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+             Delay5msLoop   0x0009b6    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+                       d2   0x0009be    program     static /Users/mreiter/Desktop/AER201/botL.X/lcd.asm
+         i2c_common_setup   0x0009c4    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                write_rtc   0x0009de    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0024   0x0009e8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0034   0x0009f8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0044   0x000a08    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  WR_ERR1   0x000a16    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  WR_ERR2   0x000a20    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  WR_ERR3   0x000a2c    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                   WR_END   0x000a36    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                 read_rtc   0x000a3c    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0082   0x000a46    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_0092   0x000a56    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              _.code_00A6   0x000a6a    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  _waitl0   0x000a80    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  RD_ERR1   0x000a8a    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  RD_ERR2   0x000a94    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                  RD_ERR3   0x000a9e    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                   RD_END   0x000aa8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+              rtc_convert   0x000aae    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
+                 I2C_temp   0x000ac2    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_INIT   0x000ac2    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+                I2C_ACKDT   0x000ac2    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_WAIT   0x000ad8    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+                     WAIT   0x000ad8    program     static /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+         I2C_Master_START   0x000ae0    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+        I2C_Master_RSTART   0x000ae8    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_STOP   0x000af0    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+         I2C_Master_WRITE   0x000af8    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
+          I2C_Master_READ   0x000b00    program     extern /Users/mreiter/Desktop/AER201/botL.X/i2c.asm
                regaddress   0x000080       data     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
                  databyte   0x000081       data     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm
                  datachar   0x000082       data     extern /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm

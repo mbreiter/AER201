@@ -113,12 +113,17 @@ Log1		db	    "Time:",0
 Log2		db	    "12:00 2/3/14", 0
 LogInfo1	db	    "Saved:", 0
 LogInfo2	db	    "Back <0>", 0
+PermLog1	db	    "Permanent Logs", 0
+PermLog2	db	    "<1> ... <9>", 0	
 Exe1		db	    "Sorting...", 0
 Exe2		db	    "END <*>", 0
+PC1		db	    "PC Interface", 0
+PC2		db	    "Begin <#>", 0
+PCTransfer	db	    "Transferring...", 0
 Stopped		db	    "Stopped", 0
 Op_Time		db	    "Time: ", 0
 SAVE		db	    "Saving...", 0
-Transfer	db	    "Transferring...", 0
+
 Safety		db	    "Safety check...", 0
 NoData		db	    "N/A", 0
 
@@ -414,7 +419,7 @@ INIT
 	clrf	tens_digit
 	clrf	ones_digit
 
-	; set real time clock
+;	; set real time clock
 ;	call	I2C_Master_START
 ;	movlw	'w'
 ;	call	WR_DATA
@@ -453,12 +458,12 @@ HOLD_STANDBY
 	call	READ_KEY_RTC
 	ChangeMode keyA, EXECUTION
 	ChangeMode keyB, LOG
-	;ChangeMode keyC, PLOG
+	ChangeMode keyC, PERM_LOG
 	;ChangeMode keyD, PC
 	bra	HOLD_STANDBY
 
 ;*******************************************************************************
-; sorting statistics log mode
+; execution mode
 ;*******************************************************************************
 
 EXECUTION
@@ -469,13 +474,13 @@ EXECUTION
 	call	    LCD_L2
 	Display	    Exe2
 	
-;	; start timer
-;	movlw	    timer_H				; 1
-;	movwf	    TMR0H
-;	movlw	    timer_L				; 1
-;	movwf	    TMR0L				; 1
-;	bsf	    T0CON, TMR0ON			; Turn on timer
-;	call	    ClearEEPROM_21
+	; start timer
+	movlw	    timer_H				; 1
+	movwf	    TMR0H
+	movlw	    timer_L				; 1
+	movwf	    TMR0L				; 1
+	bsf	    T0CON, TMR0ON			; Turn on timer
+	call	    ClearEEPROM_21
 	
 	; initialize variables
 	clrf	    OP_sec
@@ -560,6 +565,10 @@ ShiftLoop
 	WriteEE		OP_INT, H_EE, L_EE
 	incf		L_EE
 	goto		LOG
+
+;*******************************************************************************
+; sorting statistics log mode
+;*******************************************************************************
 	
 LOG
 	call	ClrLCD
@@ -593,7 +602,78 @@ HOLD_LOG_INFO
 	call	READ_KEY
 	ChangeMode key0, LOG
 	bra	HOLD_LOG
+	
+;*******************************************************************************
+; permanent logs
+;*******************************************************************************
 
+PERM_LOG
+	call	ClrLCD
+	Display	PermLog1
+	call	LCD_L2
+	Display	PermLog2
+	
+HOLD_PERM_LOG
+	call	READ_KEY
+	ChangeMode  key0, STANDBY
+	ChangeMode  key1, PLOG
+;	ChangeMode  key2, PLOG
+;	ChangeMode  key3, PLOG
+;	ChangeMode  key4, PLOG
+;	ChangeMode  key5, PLOG
+;	ChangeMode  key6, PLOG
+;	ChangeMode  key7, PLOG
+;	ChangeMode  key8, PLOG
+;	ChangeMode  key9, PLOG
+	bra HOLD_PERM_LOG
+	
+PLOG
+	call	ClrLCD
+	Display	PermLog1
+	
+	; find the key press value
+	movff	KEY, WREG
+	incf	WREG	    ; W = KEY+1
+	movwf	temp
+	
+	rrncf	WREG	    ; division by 4
+	bcf	WREG, 7	    ; clear last bit, overflow from rotate
+	rrncf	WREG	    
+	bcf	WREG, 7
+	subwf	temp	    ; temp = (KEY+1) - (KEY+1)/4
+	movff	temp, WREG
+	movff	temp, temp_KEY
+	mullw	d'21'	    ; indexed as mutliples of 21
+
+displayNum
+	movff	temp_KEY, WREG
+	addlw	0x30
+	call	WR_DATA
+	movlw	":"
+	call	WR_DATA
+	movlw	" "
+	call	WR_DATA
+	
+	movff	PRODL, L_EE
+	movlw	d'0'
+	addwf	L_EE
+	READEE	OP_sec, H_EE, L_EE
+	incf	L_EE
+	READEE	OP_INT, H_EE, L_EE
+	incf	L_EE
+	call	DisplayTime
+	movff	PRODL, L_EE
+	
+	; reset eeprom to beginning
+	call	LCD_L2
+	movff	PRODL, L_EE
+	call	DispOpRTC
+	
+HOLD_PLOG
+	call	READ_KEY
+	ChangeMode  key0, PERM_LOG	; back to perm log menu
+	bra HOLD_PERM_LOG
+		
 ;*******************************************************************************
 ; subroutines
 ;*******************************************************************************
