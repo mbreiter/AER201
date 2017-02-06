@@ -9,8 +9,7 @@ I2C_ACKDT   res		1
     
 global I2C_Master_INIT, I2C_Master_WAIT,I2C_Master_START,I2C_Master_RSTART,I2C_Master_STOP,I2C_Master_WRITE, I2C_Master_READ 
 global I2C_ACKDT
-    
-    
+
 I2C_Master_INIT
     movlw   b'00000000'
     movwf   SSPSTAT
@@ -23,10 +22,11 @@ I2C_Master_INIT
     bsf	    TRISC, 3
     bsf	    TRISC, 4
     return
-    
+
 I2C_Master_WAIT
 WAIT
-    movf I2C_temp, ((SSPSTAT & 0x04) || (SSPCON2 & 0x1F))
+    movlw ((SSPSTAT & 0x04) || (SSPCON2 & 0x1F))
+    iorlw   0x00
     bnz    WAIT
     return
         
