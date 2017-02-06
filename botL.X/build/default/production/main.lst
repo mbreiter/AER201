@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -78,7 +78,7 @@ Warning[205]: Found directive in column 1. (list)
   00000008            00050 key7        equ         d'8'
   00000009            00051 key8        equ         d'9'
   0000000A            00052 key9        equ         d'10'
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -158,7 +158,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00004A 4E45 2044 2A3C 00117 Exe2            db          "END <*>", 0
        003E 
 000052 7453 706F 6570 00118 Stopped         db          "Stopped", 0
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  3
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -238,7 +238,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00183             ; read EEPROM
                       00184             READEE      REG_EE, addrH, addrL
                       00185             btfsc       REG_EE, 7       ; if bit 7 set then done
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  4
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -248,1154 +248,1261 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00187 Finish
                       00188             endm
                       00189 
-                      00190 WriteRTC    macro
-                      00191         movff   tens_digit, W
-                      00192         call    WR_DATA
-                      00193         movff   ones_digit, W
-                      00194         call    WR_DATA
-                      00195         endm
-                      00196 
-                      00197 WriteEE macro   word, addH, addL
-                      00198         movff   addH, EEADRH    ; High address
-                      00199         movff   addL, EEADRH    ; Low address
-                      00200         movff   word, EEDATA    ; set word
-                      00201 
-                      00202         btfsc   EECON1, WR          ; test if WR=0, skip if so
-                      00203         bra     $-2
-                      00204 
-                      00205         bcf     EECON1, EEPGD   ; Point to data memory
-                      00206         bcf     EECON1, CFGS    ; Access EEPROM
-                      00207         bsf     EECON1, WREN    ; enable write
-                      00208         bcf     EECON1, GIE         ; disable interrupts during write
-                      00209         bcf     PIR2, EEIF
-                      00210 
-                      00211         movlw   0x55
-                      00212         movwf   EECON2      ; write 55h
-                      00213         movlw   0xAA
-                      00214         movwf   EECON2      ; write 0xAA
-                      00215         bsf     EECON1, WR          ; begin write
-                      00216         btfsc   EECON1, WR
-                      00217         bra     $-2
-                      00218 
-                      00219         bsf     EECON1, GIE         ; enable interrupts after write
-                      00220         bcf     EECON1, WREN        ; disable writes
-                      00221         endm
-                      00222 
-                      00223 READEE  macro   file, addH, addL
-                      00224         movff   addH, EEADRH        ; read to high
-                      00225         movff   addL, EEADR         ; read to low
-                      00226         bcf     EECON1, EEPGD       ; point to data memory
-                      00227         bcf     EECON1, CFGS        ; access to EEPROM
-                      00228         bsf     EECON1, RD          ; read EEPROM
-                      00229         movff   EEDATA, file        ; put data into file
-                      00230         endm
+                      00190 incf_BCD    macro   BCD
+                      00191         local ones, endBCD
+                      00192         movff   BCD, temp
+                      00193         
+                      00194         ;process ones digit
+                      00195         movlw   0x0F
+                      00196         andwf   temp
+                      00197         movlw   d'9'
+                      00198         
+                      00199         ;skip if ones digit is 9
+                      00200         cpfseq  temp
+                      00201         goto    ones
+                      00202         
+                      00203         movlw   b'00010000'
+                      00204         addwf   BCD
+                      00205         movlw   0x0F
+                      00206         andwf   BCD
+                      00207         movlw   0xA0
+                      00208         cpfslt  BCD
+                      00209         
+                      00210         clrf    BCD
+                      00211         goto    endBCD
+                      00212         
+                      00213 ones
+                      00214         incf    BCD
+                      00215         goto    endBCD
+                      00216 endBCD
+                      00217         nop
+                      00218         endm
+                      00219 
+                      00220 WriteRTC    macro
+                      00221         movff   tens_digit, W
+                      00222         call    WR_DATA
+                      00223         movff   ones_digit, W
+                      00224         call    WR_DATA
+                      00225         endm
+                      00226 
+                      00227 WriteEE macro   word, addH, addL
+                      00228         movff   addH, EEADRH    ; High address
+                      00229         movff   addL, EEADRH    ; Low address
+                      00230         movff   word, EEDATA    ; set word
                       00231 
-                      00232 ChangeMode  macro   ModeId, NextMode
-                      00233         local Next, Exit
+                      00232         btfsc   EECON1, WR          ; test if WR=0, skip if so
+                      00233         bra     $-2
                       00234 
-                      00235         movlw   ModeId              ; poll for mode
-                      00236         cpfseq  KEY                 ; check this against key press
-                      00237         goto    Exit
-                      00238 
-                      00239 Next
-                      00240         clrf    LATA                ; clear pins before proceeding
-                      00241         clrf    LATB
-                      00242         clrf    LATC
-                      00243         clrf    LATD
-                      00244         goto    NextMode
-                      00245 
-                      00246 Exit
-                      00247         nop
-                      00248         endm
-                      00249 
-                      00250 saveContext macro
-                      00251     movff   STATUS, temp_S          ; save STATUS first
-                      00252     movwf   temp_W                  ; save W
-                      00253     endm
-                      00254 
-                      00255 restContext macro
-                      00256     swapf   temp_W, W               ; restore W first
-                      00257     movff   temp_S, STATUS          ; restore STATUS last without affecting W
-                      00258     endm
-                      00259 ;*******************************************************************************
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  5
+                      00235         bcf     EECON1, EEPGD   ; Point to data memory
+                      00236         bcf     EECON1, CFGS    ; Access EEPROM
+                      00237         bsf     EECON1, WREN    ; enable write
+                      00238         bcf     EECON1, GIE         ; disable interrupts during write
+                      00239         bcf     PIR2, EEIF
+                      00240 
+                      00241         movlw   0x55
+                      00242         movwf   EECON2      ; write 55h
+                      00243         movlw   0xAA
+                      00244         movwf   EECON2      ; write 0xAA
+                      00245         bsf     EECON1, WR          ; begin write
+                      00246         btfsc   EECON1, WR
+                      00247         bra     $-2
+                      00248 
+                      00249         bsf     EECON1, GIE         ; enable interrupts after write
+                      00250         bcf     EECON1, WREN        ; disable writes
+                      00251         endm
+                      00252 
+                      00253 READEE  macro   file, addH, addL
+                      00254         movff   addH, EEADRH        ; read to high
+                      00255         movff   addL, EEADR         ; read to low
+                      00256         bcf     EECON1, EEPGD       ; point to data memory
+                      00257         bcf     EECON1, CFGS        ; access to EEPROM
+                      00258         bsf     EECON1, RD          ; read EEPROM
+                      00259         movff   EEDATA, file        ; put data into file
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00260 ; reset vector and isrs
-                      00261 ;*******************************************************************************
-                      00262         ORG     0x000               ; processor reset vector
-000000 EF?? F???      00263         goto    INIT                ; go to beginning of program
+                      00260         endm
+                      00261 
+                      00262 ChangeMode  macro   ModeId, NextMode
+                      00263         local Next, Exit
                       00264 
-                      00265         ORG     0x008
-000008 EF?? F???      00266         goto    ISR_High
-                      00267 
-                      00268         ORG     0x018
-000018 EF?? F???      00269         goto    ISR_LOW
-                      00270 
-00001C                00271 ISR_High
-00001C 6E02           00272         movwf   temp_W              ; save current W
-00001E CFD8 F001      00273         movff   STATUS, temp_S      ; save status
-                      00274 
-                      00275         ; ISR_High routines
-000022 C001 FFD8      00276         movff   temp_S, STATUS      ; retreive status
-000026 3A02           00277         swapf   temp_W, f
-000028 3802           00278         swapf   temp_W, w           ; restore W
-00002A 0010           00279         retfie
-                      00280 
-00002C                00281 ISR_LOW
-                      00282         saveContext
-00002C CFD8 F001          M     movff   STATUS, temp_S          ; save STATUS first
-000030 6E02               M     movwf   temp_W                  ; save W
-                      00283         ; KEYPAD INTERRUPT
-000032 A0F0           00284         btfss           INTCON3, INT1IF                 ; If KEYPAD interrupt, skip return
-000034 EF?? F???      00285         goto            END_ISR_LOW
-                      00286 
-                      00287         ;Check operation status
-                      00288 ;       movlw           0xFF                                    ; If in operation, skip return
-                      00289 ;       cpfseq          InExecution
-                      00290 ;       goto            END_ISR_LOW
-                      00291 
-                      00292         ; Process KEY
-000038 3881           00293         swapf           PORTB, W                                ; Read PORTB<7:4> into W<3:0>
-00003A 0B0F           00294         andlw           0x0F
-00003C 6E52           00295         movwf           KEY_ISR                                 ; Put W into KEY_ISR
-                      00296 ;       movlw           keyS                                    ; Put keyStar into W to compare to KEY_ISR
-                      00297 ;       cpfseq          KEY_ISR                                 ; If key was '*', skip return
-00003E EF?? F???      00298         goto            END_ISR_LOW
-                      00299 
-                      00300         ; Reset program counter
-000042 6AFF           00301         clrf            TOSU
-000044 6AFE           00302         clrf            TOSH
-000046 6AFD           00303         clrf            TOSL
-                      00304 
-000048                00305 END_ISR_LOW
-000048 90F0           00306     bcf                 INTCON3, INT1IF         ; Clear flag for next interrupt
-                      00307     restContext
-00004A 3802               M     swapf   temp_W, W               ; restore W first
-00004C C001 FFD8          M     movff   temp_S, STATUS          ; restore STATUS last without affecting W
-                      00308 
-000050 6E02           00309         movwf   temp_W              ; save current W
-000052 CFD8 F001      00310         movff   STATUS, temp_S      ; save status
-                      00311 
-                      00312         ; ISR_Low routines
-000056 C001 FFD8      00313         movff   temp_S, STATUS      ; retreive status
-00005A 3A02           00314         swapf   temp_W, f
-00005C 3802           00315         swapf   temp_W, w           ; restore W
-00005E 0010           00316         retfie
-                      00317 
-                      00318 ;*******************************************************************************
-                      00319 ; main
-                      00320 ;*******************************************************************************
-000060                00321 INIT
-                      00322         ; i/o
-000060 0E00           00323         movlw   b'00000000'
-000062 6E92           00324         movwf   TRISA
-000064 0EFF           00325         movlw   b'11111111'
-000066 6E93           00326         movwf   TRISB               ; keypad
-000068 0EBF           00327         movlw   b'10111111'
-00006A 6E94           00328         movwf   TRISC
-00006C 0E00           00329         movlw   b'00000000'
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  6
+                      00265         movlw   ModeId              ; poll for mode
+                      00266         cpfseq  KEY                 ; check this against key press
+                      00267         goto    Exit
+                      00268 
+                      00269 Next
+                      00270         clrf    LATA                ; clear pins before proceeding
+                      00271         clrf    LATB
+                      00272         clrf    LATC
+                      00273         clrf    LATD
+                      00274         goto    NextMode
+                      00275 
+                      00276 Exit
+                      00277         nop
+                      00278         endm
+                      00279 
+                      00280 saveContext macro
+                      00281     movff   STATUS, temp_S          ; save STATUS first
+                      00282     movwf   temp_W                  ; save W
+                      00283     endm
+                      00284 
+                      00285 restoreContext macro
+                      00286     swapf   temp_W, W               ; restore W first
+                      00287     movff   temp_S, STATUS          ; restore STATUS last without affecting W
+                      00288     endm
+                      00289 ;*******************************************************************************
+                      00290 ; reset vector and isrs
+                      00291 ;*******************************************************************************
+                      00292         ORG     0x000               ; processor reset vector
+000000 EF?? F???      00293         goto    INIT                ; go to beginning of program
+                      00294 
+                      00295         ORG     0x008
+000008 EF?? F???      00296         goto    ISR_HIGH
+                      00297 
+                      00298         ORG     0x018
+000018 EF?? F???      00299         goto    ISR_LOW
+                      00300 
+00001C                00301 ISR_HIGH
+                      00302         saveContext
+00001C CFD8 F001          M     movff   STATUS, temp_S          ; save STATUS first
+000020 6E02               M     movwf   temp_W                  ; save W
+                      00303 
+                      00304         ;reset timer
+000022 0E9E           00305         movlw   timer_H
+000024 6ED7           00306         movwf   TMR0H
+000026 0E4F           00307         movlw   timer_L - 9
+000028 6ED6           00308         movwf   TMR0L
+                      00309         
+                      00310         ;timer interrupt
+00002A A4F2           00311         btfss   INTCON, TMR0IF
+00002C EF?? F???      00312         goto    END_ISR_HIGH
+                      00313         incf_BCD    OP_INT
+  0000                    M         local ones, endBCD
+000030 C011 F006          M         movff   OP_INT, temp
+                          M         
+                          M         ;process ones digit
+000034 0E0F               M         movlw   0x0F
+000036 1606               M         andwf   temp
+000038 0E09               M         movlw   d'9'
+                          M         
+                          M         ;skip if ones digit is 9
+00003A 6206               M         cpfseq  temp
+00003C EF?? F???          M         goto    ones
+                          M         
+000040 0E10               M         movlw   b'00010000'
+000042 2611               M         addwf   OP_INT
+000044 0E0F               M         movlw   0x0F
+000046 1611               M         andwf   OP_INT
+000048 0EA0               M         movlw   0xA0
+00004A 6011               M         cpfslt  OP_INT
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00006E 6E95           00330         movwf   TRISD
-000070 0E07           00331         movlw   b'00000111'
-000072 6E96           00332         movwf   TRISE
-                      00333 
-                      00334         ; analog/digital pins
-000074 0E0F           00335         movlw   b'00001111'     ; Set all AN pins to Digital
-000076 6EC1           00336         movwf   ADCON1
-                      00337 
-                      00338         ; clear Ports
-000078 6A89           00339         clrf    LATA
-00007A 6A8A           00340         clrf    LATB
-00007C 6A8B           00341         clrf    LATC
-00007E 6A8C           00342         clrf    LATD
-000080 6A8D           00343         clrf    LATE
-                      00344 
-                      00345         ; initializations
-000082 EC?? F???      00346         call    InitLCD
-000086 EC?? F???      00347         call    I2C_Master_INIT
-00008A EC?? F???      00348         call    Delay50ms
-                      00349         ;call   initUSART
-                      00350         ;call   initEEPROM
-                      00351 
-00008E 0E08           00352         movlw   b'00001000'
-000090 6ED5           00353         movwf   T0CON
+                          M         
+00004C 6A11               M         clrf    OP_INT
+00004E EF?? F???          M         goto    endBCD
+                          M         
+000052                    M ones
+000052 2A11               M         incf    OP_INT
+000054 EF?? F???          M         goto    endBCD
+000058                    M endBCD
+000058 0000               M         nop
+00005A 0E00           00314         movlw   d'0'
+00005C 6211           00315         cpfseq  OP_INT
+00005E EF?? F???      00316         goto    END_ISR_HIGH
+                      00317         incf_BCD    OP_sec
+  0000                    M         local ones, endBCD
+000062 C010 F006          M         movff   OP_sec, temp
+                          M         
+                          M         ;process ones digit
+000066 0E0F               M         movlw   0x0F
+000068 1606               M         andwf   temp
+00006A 0E09               M         movlw   d'9'
+                          M         
+                          M         ;skip if ones digit is 9
+00006C 6206               M         cpfseq  temp
+00006E EF?? F???          M         goto    ones
+                          M         
+000072 0E10               M         movlw   b'00010000'
+000074 2610               M         addwf   OP_sec
+000076 0E0F               M         movlw   0x0F
+000078 1610               M         andwf   OP_sec
+00007A 0EA0               M         movlw   0xA0
+00007C 6010               M         cpfslt  OP_sec
+                          M         
+00007E 6A10               M         clrf    OP_sec
+000080 EF?? F???          M         goto    endBCD
+                          M         
+000084                    M ones
+000084 2A10               M         incf    OP_sec
+000086 EF?? F???          M         goto    endBCD
+00008A                    M endBCD
+00008A 0000               M         nop
+                      00318 
+00008C                00319 END_ISR_HIGH
+00008C 94F2           00320         bcf     INTCON, TMR0IF
+                      00321         restoreContext
+00008E 3802               M     swapf   temp_W, W               ; restore W first
+000090 C001 FFD8          M     movff   temp_S, STATUS          ; restore STATUS last without affecting W
+000094 0010           00322         retfie
+                      00323 
+000096                00324 ISR_LOW
+                      00325         saveContext
+000096 CFD8 F001          M     movff   STATUS, temp_S          ; save STATUS first
+00009A 6E02               M     movwf   temp_W                  ; save W
+                      00326         ; KEYPAD INTERRUPT
+00009C A0F0           00327         btfss           INTCON3, INT1IF                 ; If KEYPAD interrupt, skip return
+00009E EF?? F???      00328         goto            END_ISR_LOW
+                      00329 
+                      00330         ;Check operation status
+                      00331 ;       movlw           0xFF                                    ; If in operation, skip return
+                      00332 ;       cpfseq          InExecution
+                      00333 ;       goto            END_ISR_LOW
+                      00334 
+                      00335         ; Process KEY
+0000A2 3881           00336         swapf           PORTB, W                                ; Read PORTB<7:4> into W<3:0>
+0000A4 0B0F           00337         andlw           0x0F
+0000A6 6E52           00338         movwf           KEY_ISR                                 ; Put W into KEY_ISR
+                      00339 ;       movlw           keyS                                    ; Put keyStar into W to compare to KEY_ISR
+                      00340 ;       cpfseq          KEY_ISR                                 ; If key was '*', skip return
+0000A8 EF?? F???      00341         goto            END_ISR_LOW
+                      00342 
+                      00343         ; Reset program counter
+0000AC 6AFF           00344         clrf            TOSU
+0000AE 6AFE           00345         clrf            TOSH
+0000B0 6AFD           00346         clrf            TOSL
+                      00347 
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0000B2                00348 END_ISR_LOW
+0000B2 90F0           00349         bcf                     INTCON3, INT1IF         ; Clear flag for next interrupt
+                      00350         restoreContext
+0000B4 3802               M     swapf   temp_W, W               ; restore W first
+0000B6 C001 FFD8          M     movff   temp_S, STATUS          ; restore STATUS last without affecting W
+                      00351         
+0000BA 6E02           00352         movwf   temp_W              ; save current W
+0000BC CFD8 F001      00353         movff   STATUS, temp_S      ; save status
                       00354 
-                      00355         ; interrupts
-000092 6AD0           00356         clrf    RCON
-000094 6AF2           00357         clrf    INTCON
-000096 6AF1           00358         clrf    INTCON2
-000098 6AF0           00359         clrf    INTCON3
-00009A 8ED0           00360         bsf     RCON, IPEN          ; priority mode
-00009C 8EF2           00361         bsf     INTCON, GIEH        ; permit global interrupts
-00009E 8CF2           00362         bsf     INTCON, GIEL
-0000A0 8AF1           00363         bsf     INTCON2, INTEDG1    ; INTEDG1 on rising edge
-0000A2 8AF2           00364         bsf     INTCON, TMR0IE
-0000A4 84F1           00365         bsf     INTCON2, TMR0IP     ; set to high priority
-0000A6 86F0           00366         bsf     INTCON3, INT1IE
-0000A8 9CF0           00367         bcf     INTCON3, INT1IP
-                      00368 
-0000AA 6A71           00369         clrf    H_EE
-0000AC 6A72           00370         clrf    L_EE
-0000AE 6B90           00371         clrf    tens_digit
-0000B0 6B91           00372         clrf    ones_digit
-                      00373 
-                      00374         ; set real time clock
-                      00375 ;       call    I2C_Master_START
-                      00376 ;       movlw   'w'
-                      00377 ;       call    WR_DATA
-                      00378 ;       call    Delay50ms
-                      00379 ;       movlw   b'11010000'
-                      00380 ;       call    I2C_Master_WRITE
-                      00381 ;       movlw   0x00                ; memory point to seconds
-                      00382 ;       call    I2C_Master_WRITE
-                      00383 ;
-                      00384 ;       movlw   0x00                ; set seconds to 0
-                      00385 ;       call    I2C_Master_WRITE
-                      00386 ;       movlw   0x40                ; set minutes to 40
-                      00387 ;       call    I2C_Master_WRITE
-                      00388 ;       movlw   0x15                ; set hours to 15
-                      00389 ;       call    I2C_Master_WRITE
-                      00390 ;       movlw   0x5                 ; set day to 5
-                      00391 ;       call    I2C_Master_WRITE
-                      00392 ;       movlw   0x02                ; set month to feb
-                      00393 ;       call    I2C_Master_WRITE
-                      00394 ;       movlw   0x17                ; set year to 17
-                      00395 ;       call    I2C_Master_STOP
-                      00396 
-                      00397         Display Welcome
-  0000                    M         local   loop
-0000B2 0E??               M         movlw   upper Welcome   ; Move Table<20:16>
-0000B4 6EF8               M         movwf   TBLPTRU
-0000B6 0E??               M         movlw   high Welcome    ; Move Table<15:8>
-0000B8 6EF7               M         movwf   TBLPTRH
-0000BA 0E??               M         movlw   low Welcome     ; Move Table<7:0>
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  7
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0000BC 6EF6               M         movwf   TBLPTRL
-0000BE 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-0000C0 50F5               M         movf    TABLAT, W
-0000C2                    M loop
-0000C2 EC?? F???          M         call    WR_DATA         ; write to LCD
-0000C6 000B               M         tblrd+*                 ; next row in table
-0000C8 50F5               M         movf    TABLAT, W
-0000CA E1??               M         bnz     loop
-0000CC EC?? F???      00398         call LCD_L2
-                      00399         Display Team
-  0000                    M         local   loop
-0000D0 0E??               M         movlw   upper Team      ; Move Table<20:16>
-0000D2 6EF8               M         movwf   TBLPTRU
-0000D4 0E??               M         movlw   high Team       ; Move Table<15:8>
-0000D6 6EF7               M         movwf   TBLPTRH
-0000D8 0E??               M         movlw   low Team        ; Move Table<7:0>
-0000DA 6EF6               M         movwf   TBLPTRL
-0000DC 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-0000DE 50F5               M         movf    TABLAT, W
-0000E0                    M loop
-0000E0 EC?? F???          M         call    WR_DATA         ; write to LCD
-0000E4 000B               M         tblrd+*                 ; next row in table
-0000E6 50F5               M         movf    TABLAT, W
-0000E8 E1??               M         bnz     loop
-                      00400         Delay50N delayR, 0x3C
-  0000                    M         local   loop
-0000EA 0E3C               M         movlw   0x3C
-0000EC 6E28               M         movwf   delayR
-                          M 
-0000EE                    M loop
-0000EE EC?? F???          M         call    Delay50ms
-0000F2 2E28               M         decfsz  delayR
-0000F4 EF?? F???          M         goto    loop
-                      00401 
-                      00402 ;*******************************************************************************
-                      00403 ; standby mode
-                      00404 ;*******************************************************************************
-0000F8                00405 STANDBY
-0000F8 EC?? F???      00406         call    ClrLCD
-                      00407         Display StandBy
-  0000                    M         local   loop
-0000FC 0E??               M         movlw   upper StandBy   ; Move Table<20:16>
-0000FE 6EF8               M         movwf   TBLPTRU
-000100 0E??               M         movlw   high StandBy    ; Move Table<15:8>
-000102 6EF7               M         movwf   TBLPTRH
-000104 0E??               M         movlw   low StandBy     ; Move Table<7:0>
-000106 6EF6               M         movwf   TBLPTRL
-000108 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-00010A 50F5               M         movf    TABLAT, W
-00010C                    M loop
-00010C EC?? F???          M         call    WR_DATA         ; write to LCD
-000110 000B               M         tblrd+*                 ; next row in table
-000112 50F5               M         movf    TABLAT, W
-000114 E1??               M         bnz     loop
-                      00408 
-000116                00409 HOLD_STANDBY
-000116 EC?? F???      00410         call    READ_KEY_RTC
-                      00411         ChangeMode keyA, EXECUTION
-  0000                    M         local Next, Exit
-                          M 
-00011A 0E03               M         movlw   keyA                ; poll for mode
-00011C 6250               M         cpfseq  KEY                 ; check this against key press
-00011E EF?? F???          M         goto    Exit
-                          M 
-000122                    M Next
-000122 6A89               M         clrf    LATA                ; clear pins before proceeding
-000124 6A8A               M         clrf    LATB
-000126 6A8B               M         clrf    LATC
-000128 6A8C               M         clrf    LATD
-00012A EF?? F???          M         goto    EXECUTION
-                          M 
-00012E                    M Exit
-00012E 0000               M         nop
-                      00412         ChangeMode keyB, LOG
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  8
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-  0000                    M         local Next, Exit
-                          M 
-000130 0E07               M         movlw   keyB                ; poll for mode
-000132 6250               M         cpfseq  KEY                 ; check this against key press
-000134 EF?? F???          M         goto    Exit
-                          M 
-000138                    M Next
-000138 6A89               M         clrf    LATA                ; clear pins before proceeding
-00013A 6A8A               M         clrf    LATB
-00013C 6A8B               M         clrf    LATC
-00013E 6A8C               M         clrf    LATD
-000140 EF?? F???          M         goto    LOG
-                          M 
-000144                    M Exit
-000144 0000               M         nop
-                      00413         ;ChangeMode keyC, PLOG
-                      00414         ;ChangeMode keyD, PC
-000146 D???           00415         bra     HOLD_STANDBY
+                      00355         ; ISR_Low routines
+0000C0 C001 FFD8      00356         movff   temp_S, STATUS      ; retreive status
+0000C4 3A02           00357         swapf   temp_W, f
+0000C6 3802           00358         swapf   temp_W, w           ; restore W
+0000C8 0010           00359         retfie
+                      00360 
+                      00361 ;*******************************************************************************
+                      00362 ; main
+                      00363 ;*******************************************************************************
+0000CA                00364 INIT
+                      00365         ; i/o
+0000CA 0E00           00366         movlw   b'00000000'
+0000CC 6E92           00367         movwf   TRISA
+0000CE 0EFF           00368         movlw   b'11111111'
+0000D0 6E93           00369         movwf   TRISB               ; keypad
+0000D2 0EBF           00370         movlw   b'10111111'
+0000D4 6E94           00371         movwf   TRISC
+0000D6 0E00           00372         movlw   b'00000000'
+0000D8 6E95           00373         movwf   TRISD
+0000DA 0E07           00374         movlw   b'00000111'
+0000DC 6E96           00375         movwf   TRISE
+                      00376 
+                      00377         ; analog/digital pins
+0000DE 0E0F           00378         movlw   b'00001111'     ; Set all AN pins to Digital
+0000E0 6EC1           00379         movwf   ADCON1
+                      00380 
+                      00381         ; clear Ports
+0000E2 6A89           00382         clrf    LATA
+0000E4 6A8A           00383         clrf    LATB
+0000E6 6A8B           00384         clrf    LATC
+0000E8 6A8C           00385         clrf    LATD
+0000EA 6A8D           00386         clrf    LATE
+                      00387 
+                      00388         ; initializations
+0000EC EC?? F???      00389         call    InitLCD
+0000F0 EC?? F???      00390         call    I2C_Master_INIT
+0000F4 EC?? F???      00391         call    Delay50ms
+                      00392         ;call   initUSART
+                      00393         ;call   initEEPROM
+                      00394 
+0000F8 0E08           00395         movlw   b'00001000'
+0000FA 6ED5           00396         movwf   T0CON
+                      00397 
+                      00398         ; interrupts
+0000FC 6AD0           00399         clrf    RCON
+0000FE 6AF2           00400         clrf    INTCON
+000100 6AF1           00401         clrf    INTCON2
+000102 6AF0           00402         clrf    INTCON3
+000104 8ED0           00403         bsf     RCON, IPEN          ; priority mode
+000106 8EF2           00404         bsf     INTCON, GIEH        ; permit global interrupts
+000108 8CF2           00405         bsf     INTCON, GIEL
+00010A 8AF1           00406         bsf     INTCON2, INTEDG1    ; INTEDG1 on rising edge
+00010C 8AF2           00407         bsf     INTCON, TMR0IE
+00010E 84F1           00408         bsf     INTCON2, TMR0IP     ; set to high priority
+000110 86F0           00409         bsf     INTCON3, INT1IE
+000112 9CF0           00410         bcf     INTCON3, INT1IP
+                      00411 
+000114 6A71           00412         clrf    H_EE
+000116 6A72           00413         clrf    L_EE
+000118 6B90           00414         clrf    tens_digit
+00011A 6B91           00415         clrf    ones_digit
                       00416 
-                      00417 ;*******************************************************************************
-                      00418 ; sorting statistics log mode
-                      00419 ;*******************************************************************************
-                      00420 
-000148                00421 EXECUTION
-                      00422         ; display
-000148 6860           00423         setf        inExecution
-00014A EC?? F???      00424         call        ClrLCD
-                      00425         Display     Exe1
-  0000                    M         local   loop
-00014E 0E??               M         movlw   upper Exe1      ; Move Table<20:16>
-000150 6EF8               M         movwf   TBLPTRU
-000152 0E??               M         movlw   high Exe1       ; Move Table<15:8>
-000154 6EF7               M         movwf   TBLPTRH
-000156 0E??               M         movlw   low Exe1        ; Move Table<7:0>
-000158 6EF6               M         movwf   TBLPTRL
-00015A 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-00015C 50F5               M         movf    TABLAT, W
-00015E                    M loop
-00015E EC?? F???          M         call    WR_DATA         ; write to LCD
-000162 000B               M         tblrd+*                 ; next row in table
-000164 50F5               M         movf    TABLAT, W
-000166 E1??               M         bnz     loop
-000168 EC?? F???      00426         call        LCD_L2
-                      00427         Display     Exe2
-  0000                    M         local   loop
-00016C 0E??               M         movlw   upper Exe2      ; Move Table<20:16>
-00016E 6EF8               M         movwf   TBLPTRU
-000170 0E??               M         movlw   high Exe2       ; Move Table<15:8>
-000172 6EF7               M         movwf   TBLPTRH
-000174 0E??               M         movlw   low Exe2        ; Move Table<7:0>
-000176 6EF6               M         movwf   TBLPTRL
-000178 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-00017A 50F5               M         movf    TABLAT, W
-00017C                    M loop
-00017C EC?? F???          M         call    WR_DATA         ; write to LCD
-000180 000B               M         tblrd+*                 ; next row in table
-000182 50F5               M         movf    TABLAT, W
-000184 E1??               M         bnz     loop
-                      00428         
-                      00429 ;       ; start timer
-                      00430 ;       movlw       timer_H                             ; 1
-                      00431 ;       movwf       TMR0H
-                      00432 ;       movlw       timer_L                             ; 1
-                      00433 ;       movwf       TMR0L                               ; 1
-                      00434 ;       bsf         T0CON, TMR0ON                       ; Turn on timer
-                      00435 ;       call        ClearEEPROM_21
-                      00436         
-                      00437         ; initialize variables
-000186 6A10           00438         clrf        OP_sec
-000188 6A11           00439         clrf        OP_INT
-                      00440 
-00018A                00441 HOLD_EXE
-00018A EC?? F???      00442         call        READ_KEY
-                      00443         ChangeMode  keyS, EXIT_EXE
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE  9
+                      00417         ; set real time clock
+                      00418 ;       call    I2C_Master_START
+                      00419 ;       movlw   'w'
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+                      00420 ;       call    WR_DATA
+                      00421 ;       call    Delay50ms
+                      00422 ;       movlw   b'11010000'
+                      00423 ;       call    I2C_Master_WRITE
+                      00424 ;       movlw   0x00                ; memory point to seconds
+                      00425 ;       call    I2C_Master_WRITE
+                      00426 ;
+                      00427 ;       movlw   0x00                ; set seconds to 0
+                      00428 ;       call    I2C_Master_WRITE
+                      00429 ;       movlw   0x40                ; set minutes to 40
+                      00430 ;       call    I2C_Master_WRITE
+                      00431 ;       movlw   0x15                ; set hours to 15
+                      00432 ;       call    I2C_Master_WRITE
+                      00433 ;       movlw   0x5                 ; set day to 5
+                      00434 ;       call    I2C_Master_WRITE
+                      00435 ;       movlw   0x02                ; set month to feb
+                      00436 ;       call    I2C_Master_WRITE
+                      00437 ;       movlw   0x17                ; set year to 17
+                      00438 ;       call    I2C_Master_STOP
+                      00439 
+                      00440         Display Welcome
+  0000                    M         local   loop
+00011C 0E??               M         movlw   upper Welcome   ; Move Table<20:16>
+00011E 6EF8               M         movwf   TBLPTRU
+000120 0E??               M         movlw   high Welcome    ; Move Table<15:8>
+000122 6EF7               M         movwf   TBLPTRH
+000124 0E??               M         movlw   low Welcome     ; Move Table<7:0>
+000126 6EF6               M         movwf   TBLPTRL
+000128 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+00012A 50F5               M         movf    TABLAT, W
+00012C                    M loop
+00012C EC?? F???          M         call    WR_DATA         ; write to LCD
+000130 000B               M         tblrd+*                 ; next row in table
+000132 50F5               M         movf    TABLAT, W
+000134 E1??               M         bnz     loop
+000136 EC?? F???      00441         call LCD_L2
+                      00442         Display Team
+  0000                    M         local   loop
+00013A 0E??               M         movlw   upper Team      ; Move Table<20:16>
+00013C 6EF8               M         movwf   TBLPTRU
+00013E 0E??               M         movlw   high Team       ; Move Table<15:8>
+000140 6EF7               M         movwf   TBLPTRH
+000142 0E??               M         movlw   low Team        ; Move Table<7:0>
+000144 6EF6               M         movwf   TBLPTRL
+000146 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+000148 50F5               M         movf    TABLAT, W
+00014A                    M loop
+00014A EC?? F???          M         call    WR_DATA         ; write to LCD
+00014E 000B               M         tblrd+*                 ; next row in table
+000150 50F5               M         movf    TABLAT, W
+000152 E1??               M         bnz     loop
+                      00443         Delay50N delayR, 0x3C
+  0000                    M         local   loop
+000154 0E3C               M         movlw   0x3C
+000156 6E28               M         movwf   delayR
+                          M 
+000158                    M loop
+000158 EC?? F???          M         call    Delay50ms
+00015C 2E28               M         decfsz  delayR
+00015E EF?? F???          M         goto    loop
+                      00444 
+                      00445 ;*******************************************************************************
+                      00446 ; standby mode
+                      00447 ;*******************************************************************************
+000162                00448 STANDBY
+000162 EC?? F???      00449         call    ClrLCD
+                      00450         Display StandBy
+  0000                    M         local   loop
+000166 0E??               M         movlw   upper StandBy   ; Move Table<20:16>
+000168 6EF8               M         movwf   TBLPTRU
+00016A 0E??               M         movlw   high StandBy    ; Move Table<15:8>
+00016C 6EF7               M         movwf   TBLPTRH
+00016E 0E??               M         movlw   low StandBy     ; Move Table<7:0>
+000170 6EF6               M         movwf   TBLPTRL
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000172 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+000174 50F5               M         movf    TABLAT, W
+000176                    M loop
+000176 EC?? F???          M         call    WR_DATA         ; write to LCD
+00017A 000B               M         tblrd+*                 ; next row in table
+00017C 50F5               M         movf    TABLAT, W
+00017E E1??               M         bnz     loop
+                      00451 
+000180                00452 HOLD_STANDBY
+000180 EC?? F???      00453         call    READ_KEY_RTC
+                      00454         ChangeMode keyA, EXECUTION
   0000                    M         local Next, Exit
                           M 
-00018E 0E0C               M         movlw   keyS                ; poll for mode
-000190 6250               M         cpfseq  KEY                 ; check this against key press
-000192 EF?? F???          M         goto    Exit
+000184 0E03               M         movlw   keyA                ; poll for mode
+000186 6250               M         cpfseq  KEY                 ; check this against key press
+000188 EF?? F???          M         goto    Exit
                           M 
-000196                    M Next
-000196 6A89               M         clrf    LATA                ; clear pins before proceeding
-000198 6A8A               M         clrf    LATB
-00019A 6A8B               M         clrf    LATC
-00019C 6A8C               M         clrf    LATD
-00019E EF?? F???          M         goto    EXIT_EXE
+00018C                    M Next
+00018C 6A89               M         clrf    LATA                ; clear pins before proceeding
+00018E 6A8A               M         clrf    LATB
+000190 6A8B               M         clrf    LATC
+000192 6A8C               M         clrf    LATD
+000194 EF?? F???          M         goto    EXECUTION
                           M 
-0001A2                    M Exit
-0001A2 0000               M         nop
-0001A4 D???           00444         bra         HOLD_EXE
-                      00445 
-0001A6                00446 EXIT_EXE
-                      00447         WriteEE     OP_sec, H_EE, L_EE
-0001A6 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-0001AA C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-0001AE C010 FFA8          M         movff   OP_sec, EEDATA  ; set word
+000198                    M Exit
+000198 0000               M         nop
+                      00455         ChangeMode keyB, LOG
+  0000                    M         local Next, Exit
                           M 
-0001B2 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-0001B4 D???               M         bra     $-2
+00019A 0E07               M         movlw   keyB                ; poll for mode
+00019C 6250               M         cpfseq  KEY                 ; check this against key press
+00019E EF?? F???          M         goto    Exit
                           M 
-0001B6 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-0001B8 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-0001BA 84A6               M         bsf     EECON1, WREN    ; enable write
-0001BC 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-0001BE 98A1               M         bcf     PIR2, EEIF
+0001A2                    M Next
+0001A2 6A89               M         clrf    LATA                ; clear pins before proceeding
+0001A4 6A8A               M         clrf    LATB
+0001A6 6A8B               M         clrf    LATC
+0001A8 6A8C               M         clrf    LATD
+0001AA EF?? F???          M         goto    LOG
                           M 
-0001C0 0E55               M         movlw   0x55
-0001C2 6EA7               M         movwf   EECON2      ; write 55h
-0001C4 0EAA               M         movlw   0xAA
-0001C6 6EA7               M         movwf   EECON2      ; write 0xAA
-0001C8 82A6               M         bsf     EECON1, WR          ; begin write
-0001CA B2A6               M         btfsc   EECON1, WR
-0001CC D???               M         bra     $-2
-                          M 
-0001CE 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-0001D0 94A6               M         bcf     EECON1, WREN        ; disable writes
-0001D2 2A72           00448         incf        L_EE
-                      00449         WriteEE     OP_INT, H_EE, L_EE
-0001D4 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-0001D8 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-0001DC C011 FFA8          M         movff   OP_INT, EEDATA  ; set word
-                          M 
-0001E0 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-0001E2 D???               M         bra     $-2
-                          M 
-0001E4 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-0001E6 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-0001E8 84A6               M         bsf     EECON1, WREN    ; enable write
-0001EA 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-0001EC 98A1               M         bcf     PIR2, EEIF
-                          M 
-0001EE 0E55               M         movlw   0x55
-0001F0 6EA7               M         movwf   EECON2      ; write 55h
-0001F2 0EAA               M         movlw   0xAA
-0001F4 6EA7               M         movwf   EECON2      ; write 0xAA
-0001F6 82A6               M         bsf     EECON1, WR          ; begin write
-0001F8 B2A6               M         btfsc   EECON1, WR
-0001FA D???               M         bra     $-2
-                          M 
-0001FC 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-0001FE 94A6               M         bcf     EECON1, WREN        ; disable writes
-000200 2A72           00450         incf        L_EE
-                      00451         
-                      00452 ;       movlw       0x02
-                      00453 ;       call        I2C_Master_READ                                     ; Hours
-                      00454 ;       call        WriteEE_RTC
-                      00455 ;       
-                      00456 ;       movlw       0x01
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 10
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00457 ;       call        I2C_Master_READ                                     ; Minutes
-                      00458 ;       call        WriteEE_RTC
-                      00459 ;       
-                      00460 ;       movlw       0x05
-                      00461 ;       call        I2C_Master_READ                                     ; Month
-                      00462 ;       call        WriteEE_RTC
-                      00463 ;       
-                      00464 ;       movlw       0x04
-                      00465 ;       call        I2C_Master_READ                                     ; Day
-                      00466 ;       call        WriteEE_RTC
-                      00467 ;       
-                      00468 ;       movlw       0x06
-                      00469 ;       call        I2C_Master_READ                                     ; Year
-                      00470 ;       call        WriteEE_RTC
-                      00471         
-                      00472         ; Clear InOperation flag to stop '*' interrupts
-000202 6A60           00473         clrf        inExecution
-000204 EF?? F???      00474         goto        SaveData
-                      00475 
-000208                00476 SaveData
-000208 EC?? F???      00477         call        ClrLCD
-                      00478         Display     SAVE
+0001AE                    M Exit
+0001AE 0000               M         nop
+                      00456         ;ChangeMode keyC, PLOG
+                      00457         ;ChangeMode keyD, PC
+0001B0 D???           00458         bra     HOLD_STANDBY
+                      00459 
+                      00460 ;*******************************************************************************
+                      00461 ; sorting statistics log mode
+                      00462 ;*******************************************************************************
+                      00463 
+0001B2                00464 EXECUTION
+                      00465         ; display
+0001B2 6860           00466         setf        inExecution
+0001B4 EC?? F???      00467         call        ClrLCD
+                      00468         Display     Exe1
   0000                    M         local   loop
-00020C 0E??               M         movlw   upper SAVE      ; Move Table<20:16>
-00020E 6EF8               M         movwf   TBLPTRU
-000210 0E??               M         movlw   high SAVE       ; Move Table<15:8>
-000212 6EF7               M         movwf   TBLPTRH
-000214 0E??               M         movlw   low SAVE        ; Move Table<7:0>
-000216 6EF6               M         movwf   TBLPTRL
-000218 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-00021A 50F5               M         movf    TABLAT, W
-00021C                    M loop
-00021C EC?? F???          M         call    WR_DATA         ; write to LCD
-000220 000B               M         tblrd+*                 ; next row in table
-000222 50F5               M         movf    TABLAT, W
-000224 E1??               M         bnz     loop
-000226 0E00           00479         movlw       d'0'
-000228 6E71           00480         movwf       H_EE
-00022A C0A8 F072      00481         movff       last_log, L_EE
-00022E 0E00           00482         movlw       d'0'
-000230 6E74           00483         movwf       tempH_EE
-000232 C082 F075      00484         movff       tempL_EEC, tempL_EE
-000236 6A04           00485         clrf        counter2
-000238 6A03           00486         clrf        counter
-                      00487 
-00023A                00488 ShiftLoop
-00023A 2A03           00489         incf            counter
-                      00490         READEE          REG_EE, H_EE, L_EE
-00023C C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-000240 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-000244 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-000246 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-000248 80A6               M         bsf     EECON1, RD          ; read EEPROM
-00024A CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-00024E 0E15           00491         movlw           d'21'
-000250 2672           00492         addwf           L_EE
-                      00493         WriteEE         REG_EE, H_EE, L_EE
-000252 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-000256 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-00025A C073 FFA8          M         movff   REG_EE, EEDATA  ; set word
-                          M 
-00025E B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-000260 D???               M         bra     $-2
-                          M 
-000262 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-000264 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-000266 84A6               M         bsf     EECON1, WREN    ; enable write
-000268 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-00026A 98A1               M         bcf     PIR2, EEIF
-                          M 
-00026C 0E55               M         movlw   0x55
-00026E 6EA7               M         movwf   EECON2      ; write 55h
-000270 0EAA               M         movlw   0xAA
-000272 6EA7               M         movwf   EECON2      ; write 0xAA
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 11
+0001B8 0E??               M         movlw   upper Exe1      ; Move Table<20:16>
+0001BA 6EF8               M         movwf   TBLPTRU
+0001BC 0E??               M         movlw   high Exe1       ; Move Table<15:8>
+0001BE 6EF7               M         movwf   TBLPTRH
+0001C0 0E??               M         movlw   low Exe1        ; Move Table<7:0>
+0001C2 6EF6               M         movwf   TBLPTRL
+0001C4 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+0001C6 50F5               M         movf    TABLAT, W
+0001C8                    M loop
+0001C8 EC?? F???          M         call    WR_DATA         ; write to LCD
+0001CC 000B               M         tblrd+*                 ; next row in table
+0001CE 50F5               M         movf    TABLAT, W
+0001D0 E1??               M         bnz     loop
+0001D2 EC?? F???      00469         call        LCD_L2
+                      00470         Display     Exe2
+  0000                    M         local   loop
+0001D6 0E??               M         movlw   upper Exe2      ; Move Table<20:16>
+0001D8 6EF8               M         movwf   TBLPTRU
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-000274 82A6               M         bsf     EECON1, WR          ; begin write
-000276 B2A6               M         btfsc   EECON1, WR
-000278 D???               M         bra     $-2
+0001DA 0E??               M         movlw   high Exe2       ; Move Table<15:8>
+0001DC 6EF7               M         movwf   TBLPTRH
+0001DE 0E??               M         movlw   low Exe2        ; Move Table<7:0>
+0001E0 6EF6               M         movwf   TBLPTRL
+0001E2 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+0001E4 50F5               M         movf    TABLAT, W
+0001E6                    M loop
+0001E6 EC?? F???          M         call    WR_DATA         ; write to LCD
+0001EA 000B               M         tblrd+*                 ; next row in table
+0001EC 50F5               M         movf    TABLAT, W
+0001EE E1??               M         bnz     loop
+                      00471         
+                      00472 ;       ; start timer
+                      00473 ;       movlw       timer_H                             ; 1
+                      00474 ;       movwf       TMR0H
+                      00475 ;       movlw       timer_L                             ; 1
+                      00476 ;       movwf       TMR0L                               ; 1
+                      00477 ;       bsf         T0CON, TMR0ON                       ; Turn on timer
+                      00478 ;       call        ClearEEPROM_21
+                      00479         
+                      00480         ; initialize variables
+0001F0 6A10           00481         clrf        OP_sec
+0001F2 6A11           00482         clrf        OP_INT
+                      00483 
+0001F4                00484 HOLD_EXE
+0001F4 EC?? F???      00485         call        READ_KEY
+                      00486         ChangeMode  keyS, EXIT_EXE
+  0000                    M         local Next, Exit
                           M 
-00027A 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-00027C 94A6               M         bcf     EECON1, WREN        ; disable writes
-00027E 0E14           00494         movlw           d'20'
-000280 5E72           00495         subwf           L_EE
-000282 0E15           00496         movlw           d'21'
-000284 6203           00497         cpfseq          counter
-000286 EF?? F???      00498         goto            ShiftLoop
-                      00499         
-                      00500         ; Set EEPROM address to the previous 21 byte block, and reset TempEEPROM address
-00028A 0E2A           00501         movlw           d'42'
-00028C 5E72           00502         subwf           L_EE
-00028E C082 F075      00503         movff           tempL_EEC, tempL_EE
-000292 6A03           00504         clrf            counter
-000294 2A04           00505         incf            counter2
-000296 0E09           00506         movlw           d'9'
-000298 6204           00507         cpfseq          counter2                                        ; Skip if 9 shifts were made
-00029A EF?? F???      00508         goto            ShiftLoop
-                      00509         
-                      00510         ; Finish Saving Data
-                      00511         ;Stop Timer and goto OpLog
-00029E 9ED5           00512         bcf             T0CON, TMR0ON
-0002A0 0E09           00513         movlw           d'9'
-0002A2 6E72           00514         movwf           L_EE
-                      00515         WriteEE         OP_sec, H_EE, L_EE
-0002A4 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-0002A8 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-0002AC C010 FFA8          M         movff   OP_sec, EEDATA  ; set word
+0001F8 0E0C               M         movlw   keyS                ; poll for mode
+0001FA 6250               M         cpfseq  KEY                 ; check this against key press
+0001FC EF?? F???          M         goto    Exit
                           M 
-0002B0 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-0002B2 D???               M         bra     $-2
+000200                    M Next
+000200 6A89               M         clrf    LATA                ; clear pins before proceeding
+000202 6A8A               M         clrf    LATB
+000204 6A8B               M         clrf    LATC
+000206 6A8C               M         clrf    LATD
+000208 EF?? F???          M         goto    EXIT_EXE
                           M 
-0002B4 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-0002B6 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-0002B8 84A6               M         bsf     EECON1, WREN    ; enable write
-0002BA 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-0002BC 98A1               M         bcf     PIR2, EEIF
+00020C                    M Exit
+00020C 0000               M         nop
+00020E D???           00487         bra         HOLD_EXE
+                      00488 
+000210                00489 EXIT_EXE
+                      00490         WriteEE     OP_sec, H_EE, L_EE
+000210 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+000214 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+000218 C010 FFA8          M         movff   OP_sec, EEDATA  ; set word
                           M 
-0002BE 0E55               M         movlw   0x55
-0002C0 6EA7               M         movwf   EECON2      ; write 55h
-0002C2 0EAA               M         movlw   0xAA
-0002C4 6EA7               M         movwf   EECON2      ; write 0xAA
-0002C6 82A6               M         bsf     EECON1, WR          ; begin write
-0002C8 B2A6               M         btfsc   EECON1, WR
+00021C B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+00021E D???               M         bra     $-2
+                          M 
+000220 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+000222 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+000224 84A6               M         bsf     EECON1, WREN    ; enable write
+000226 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+000228 98A1               M         bcf     PIR2, EEIF
+                          M 
+00022A 0E55               M         movlw   0x55
+00022C 6EA7               M         movwf   EECON2      ; write 55h
+00022E 0EAA               M         movlw   0xAA
+000230 6EA7               M         movwf   EECON2      ; write 0xAA
+000232 82A6               M         bsf     EECON1, WR          ; begin write
+000234 B2A6               M         btfsc   EECON1, WR
+000236 D???               M         bra     $-2
+                          M 
+000238 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+00023A 94A6               M         bcf     EECON1, WREN        ; disable writes
+00023C 2A72           00491         incf        L_EE
+                      00492         WriteEE     OP_INT, H_EE, L_EE
+00023E C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+000242 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+000246 C011 FFA8          M         movff   OP_INT, EEDATA  ; set word
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M 
+00024A B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+00024C D???               M         bra     $-2
+                          M 
+00024E 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+000250 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+000252 84A6               M         bsf     EECON1, WREN    ; enable write
+000254 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+000256 98A1               M         bcf     PIR2, EEIF
+                          M 
+000258 0E55               M         movlw   0x55
+00025A 6EA7               M         movwf   EECON2      ; write 55h
+00025C 0EAA               M         movlw   0xAA
+00025E 6EA7               M         movwf   EECON2      ; write 0xAA
+000260 82A6               M         bsf     EECON1, WR          ; begin write
+000262 B2A6               M         btfsc   EECON1, WR
+000264 D???               M         bra     $-2
+                          M 
+000266 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+000268 94A6               M         bcf     EECON1, WREN        ; disable writes
+00026A 2A72           00493         incf        L_EE
+                      00494         
+                      00495 ;       movlw       0x02
+                      00496 ;       call        I2C_Master_READ                                     ; Hours
+                      00497 ;       call        WriteEE_RTC
+                      00498 ;       
+                      00499 ;       movlw       0x01
+                      00500 ;       call        I2C_Master_READ                                     ; Minutes
+                      00501 ;       call        WriteEE_RTC
+                      00502 ;       
+                      00503 ;       movlw       0x05
+                      00504 ;       call        I2C_Master_READ                                     ; Month
+                      00505 ;       call        WriteEE_RTC
+                      00506 ;       
+                      00507 ;       movlw       0x04
+                      00508 ;       call        I2C_Master_READ                                     ; Day
+                      00509 ;       call        WriteEE_RTC
+                      00510 ;       
+                      00511 ;       movlw       0x06
+                      00512 ;       call        I2C_Master_READ                                     ; Year
+                      00513 ;       call        WriteEE_RTC
+                      00514         
+                      00515         ; Clear InOperation flag to stop '*' interrupts
+00026C 6A60           00516         clrf        inExecution
+00026E EF?? F???      00517         goto        SaveData
+                      00518 
+000272                00519 SaveData
+000272 EC?? F???      00520         call        ClrLCD
+                      00521         Display     SAVE
+  0000                    M         local   loop
+000276 0E??               M         movlw   upper SAVE      ; Move Table<20:16>
+000278 6EF8               M         movwf   TBLPTRU
+00027A 0E??               M         movlw   high SAVE       ; Move Table<15:8>
+00027C 6EF7               M         movwf   TBLPTRH
+00027E 0E??               M         movlw   low SAVE        ; Move Table<7:0>
+000280 6EF6               M         movwf   TBLPTRL
+000282 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+000284 50F5               M         movf    TABLAT, W
+000286                    M loop
+000286 EC?? F???          M         call    WR_DATA         ; write to LCD
+00028A 000B               M         tblrd+*                 ; next row in table
+00028C 50F5               M         movf    TABLAT, W
+00028E E1??               M         bnz     loop
+000290 0E00           00522         movlw       d'0'
+000292 6E71           00523         movwf       H_EE
+000294 C0A8 F072      00524         movff       last_log, L_EE
+000298 0E00           00525         movlw       d'0'
+00029A 6E74           00526         movwf       tempH_EE
+00029C C082 F075      00527         movff       tempL_EEC, tempL_EE
+0002A0 6A04           00528         clrf        counter2
+0002A2 6A03           00529         clrf        counter
+                      00530 
+0002A4                00531 ShiftLoop
+0002A4 2A03           00532         incf            counter
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00533         READEE          REG_EE, H_EE, L_EE
+0002A6 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+0002AA C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+0002AE 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+0002B0 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+0002B2 80A6               M         bsf     EECON1, RD          ; read EEPROM
+0002B4 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+0002B8 0E15           00534         movlw           d'21'
+0002BA 2672           00535         addwf           L_EE
+                      00536         WriteEE         REG_EE, H_EE, L_EE
+0002BC C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+0002C0 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+0002C4 C073 FFA8          M         movff   REG_EE, EEDATA  ; set word
+                          M 
+0002C8 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
 0002CA D???               M         bra     $-2
                           M 
-0002CC 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-0002CE 94A6               M         bcf     EECON1, WREN        ; disable writes
-0002D0 2A72           00516         incf            L_EE
-                      00517         WriteEE         OP_INT, H_EE, L_EE
-0002D2 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-0002D6 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-0002DA C011 FFA8          M         movff   OP_INT, EEDATA  ; set word
+0002CC 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+0002CE 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+0002D0 84A6               M         bsf     EECON1, WREN    ; enable write
+0002D2 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+0002D4 98A1               M         bcf     PIR2, EEIF
                           M 
-0002DE B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-0002E0 D???               M         bra     $-2
+0002D6 0E55               M         movlw   0x55
+0002D8 6EA7               M         movwf   EECON2      ; write 55h
+0002DA 0EAA               M         movlw   0xAA
+0002DC 6EA7               M         movwf   EECON2      ; write 0xAA
+0002DE 82A6               M         bsf     EECON1, WR          ; begin write
+0002E0 B2A6               M         btfsc   EECON1, WR
+0002E2 D???               M         bra     $-2
                           M 
-0002E2 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-0002E4 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-0002E6 84A6               M         bsf     EECON1, WREN    ; enable write
-0002E8 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-0002EA 98A1               M         bcf     PIR2, EEIF
+0002E4 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+0002E6 94A6               M         bcf     EECON1, WREN        ; disable writes
+0002E8 0E14           00537         movlw           d'20'
+0002EA 5E72           00538         subwf           L_EE
+0002EC 0E15           00539         movlw           d'21'
+0002EE 6203           00540         cpfseq          counter
+0002F0 EF?? F???      00541         goto            ShiftLoop
+                      00542         
+                      00543         ; Set EEPROM address to the previous 21 byte block, and reset TempEEPROM address
+0002F4 0E2A           00544         movlw           d'42'
+0002F6 5E72           00545         subwf           L_EE
+0002F8 C082 F075      00546         movff           tempL_EEC, tempL_EE
+0002FC 6A03           00547         clrf            counter
+0002FE 2A04           00548         incf            counter2
+000300 0E09           00549         movlw           d'9'
+000302 6204           00550         cpfseq          counter2                                        ; Skip if 9 shifts were made
+000304 EF?? F???      00551         goto            ShiftLoop
+                      00552         
+                      00553         ; Finish Saving Data
+                      00554         ;Stop Timer and goto OpLog
+000308 9ED5           00555         bcf             T0CON, TMR0ON
+00030A 0E09           00556         movlw           d'9'
+00030C 6E72           00557         movwf           L_EE
+                      00558         WriteEE         OP_sec, H_EE, L_EE
+00030E C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+000312 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+000316 C010 FFA8          M         movff   OP_sec, EEDATA  ; set word
                           M 
-0002EC 0E55               M         movlw   0x55
-0002EE 6EA7               M         movwf   EECON2      ; write 55h
-0002F0 0EAA               M         movlw   0xAA
-0002F2 6EA7               M         movwf   EECON2      ; write 0xAA
-0002F4 82A6               M         bsf     EECON1, WR          ; begin write
-0002F6 B2A6               M         btfsc   EECON1, WR
-0002F8 D???               M         bra     $-2
+00031A B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+00031C D???               M         bra     $-2
                           M 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 12
+00031E 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+000320 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+000322 84A6               M         bsf     EECON1, WREN    ; enable write
+000324 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+000326 98A1               M         bcf     PIR2, EEIF
+                          M 
+000328 0E55               M         movlw   0x55
+00032A 6EA7               M         movwf   EECON2      ; write 55h
+00032C 0EAA               M         movlw   0xAA
+00032E 6EA7               M         movwf   EECON2      ; write 0xAA
+000330 82A6               M         bsf     EECON1, WR          ; begin write
+000332 B2A6               M         btfsc   EECON1, WR
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 13
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0002FA 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-0002FC 94A6               M         bcf     EECON1, WREN        ; disable writes
-0002FE 2A72           00518         incf            L_EE
-000300 EF?? F???      00519         goto            LOG
-                      00520         
-000304                00521 LOG
-000304 EC?? F???      00522         call    ClrLCD
-                      00523         Display Log1
+000334 D???               M         bra     $-2
+                          M 
+000336 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+000338 94A6               M         bcf     EECON1, WREN        ; disable writes
+00033A 2A72           00559         incf            L_EE
+                      00560         WriteEE         OP_INT, H_EE, L_EE
+00033C C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+000340 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+000344 C011 FFA8          M         movff   OP_INT, EEDATA  ; set word
+                          M 
+000348 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+00034A D???               M         bra     $-2
+                          M 
+00034C 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+00034E 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+000350 84A6               M         bsf     EECON1, WREN    ; enable write
+000352 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+000354 98A1               M         bcf     PIR2, EEIF
+                          M 
+000356 0E55               M         movlw   0x55
+000358 6EA7               M         movwf   EECON2      ; write 55h
+00035A 0EAA               M         movlw   0xAA
+00035C 6EA7               M         movwf   EECON2      ; write 0xAA
+00035E 82A6               M         bsf     EECON1, WR          ; begin write
+000360 B2A6               M         btfsc   EECON1, WR
+000362 D???               M         bra     $-2
+                          M 
+000364 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+000366 94A6               M         bcf     EECON1, WREN        ; disable writes
+000368 2A72           00561         incf            L_EE
+00036A EF?? F???      00562         goto            LOG
+                      00563         
+00036E                00564 LOG
+00036E EC?? F???      00565         call    ClrLCD
+                      00566         Display Log1
   0000                    M         local   loop
-000308 0E??               M         movlw   upper Log1      ; Move Table<20:16>
-00030A 6EF8               M         movwf   TBLPTRU
-00030C 0E??               M         movlw   high Log1       ; Move Table<15:8>
-00030E 6EF7               M         movwf   TBLPTRH
-000310 0E??               M         movlw   low Log1        ; Move Table<7:0>
-000312 6EF6               M         movwf   TBLPTRL
-000314 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-000316 50F5               M         movf    TABLAT, W
-000318                    M loop
-000318 EC?? F???          M         call    WR_DATA         ; write to LCD
-00031C 000B               M         tblrd+*                 ; next row in table
-00031E 50F5               M         movf    TABLAT, W
-000320 E1??               M         bnz     loop
-                      00524 
-                      00525         ; display most recent run data
-000322 0E09           00526         movlw   d'9'
-000324 6E72           00527         movwf   L_EE
-                      00528         READEE  OP_sec, H_EE, L_EE
-000326 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-00032A C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-00032E 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-000330 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-000332 80A6               M         bsf     EECON1, RD          ; read EEPROM
-000334 CFA8 F010          M         movff   EEDATA, OP_sec      ; put data into file
-000338 2A72           00529         incf    L_EE
-                      00530         READEE  OP_INT, H_EE, L_EE
-00033A C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-00033E C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-000342 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-000344 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-000346 80A6               M         bsf     EECON1, RD          ; read EEPROM
-000348 CFA8 F011          M         movff   EEDATA, OP_INT      ; put data into file
-00034C 2A72           00531         incf    L_EE
-00034E EC?? F???      00532         call    DisplayTime
-                      00533 
-000352 EC?? F???      00534         call    LCD_L2
-000356 6A72           00535         clrf    L_EE
-000358 EC?? F???      00536         call    DispOpRTC
-                      00537 
-00035C                00538 HOLD_LOG
-00035C EC?? F???      00539         call    READ_KEY
-                      00540         ChangeMode  keyB, LOG_INFO
-  0000                    M         local Next, Exit
-                          M 
-000360 0E07               M         movlw   keyB                ; poll for mode
-000362 6250               M         cpfseq  KEY                 ; check this against key press
-000364 EF?? F???          M         goto    Exit
-                          M 
-000368                    M Next
-000368 6A89               M         clrf    LATA                ; clear pins before proceeding
-00036A 6A8A               M         clrf    LATB
-00036C 6A8B               M         clrf    LATC
-00036E 6A8C               M         clrf    LATD
-000370 EF?? F???          M         goto    LOG_INFO
-                          M 
-000374                    M Exit
-000374 0000               M         nop
-                      00541         ChangeMode  key0, STANDBY
-  0000                    M         local Next, Exit
-                          M 
-000376 0E0D               M         movlw   key0                ; poll for mode
-000378 6250               M         cpfseq  KEY                 ; check this against key press
-00037A EF?? F???          M         goto    Exit
-                          M 
-00037E                    M Next
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 13
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-00037E 6A89               M         clrf    LATA                ; clear pins before proceeding
-000380 6A8A               M         clrf    LATB
-000382 6A8B               M         clrf    LATC
-000384 6A8C               M         clrf    LATD
-000386 EF?? F???          M         goto    STANDBY
-                          M 
-00038A                    M Exit
-00038A 0000               M         nop
-00038C D???           00542         bra     HOLD_LOG
-                      00543 
-00038E                00544 LOG_INFO
-00038E EC?? F???      00545         call    ClrLCD
-                      00546         Display LogInfo1
-  0000                    M         local   loop
-000392 0E??               M         movlw   upper LogInfo1  ; Move Table<20:16>
-000394 6EF8               M         movwf   TBLPTRU
-000396 0E??               M         movlw   high LogInfo1   ; Move Table<15:8>
-000398 6EF7               M         movwf   TBLPTRH
-00039A 0E??               M         movlw   low LogInfo1    ; Move Table<7:0>
-00039C 6EF6               M         movwf   TBLPTRL
-00039E 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-0003A0 50F5               M         movf    TABLAT, W
-0003A2                    M loop
-0003A2 EC?? F???          M         call    WR_DATA         ; write to LCD
-0003A6 000B               M         tblrd+*                 ; next row in table
-0003A8 50F5               M         movf    TABLAT, W
-0003AA E1??               M         bnz     loop
-0003AC EC?? F???      00547         call    LCD_L2
-                      00548         Display LogInfo2
-  0000                    M         local   loop
-0003B0 0E??               M         movlw   upper LogInfo2  ; Move Table<20:16>
-0003B2 6EF8               M         movwf   TBLPTRU
-0003B4 0E??               M         movlw   high LogInfo2   ; Move Table<15:8>
-0003B6 6EF7               M         movwf   TBLPTRH
-0003B8 0E??               M         movlw   low LogInfo2    ; Move Table<7:0>
-0003BA 6EF6               M         movwf   TBLPTRL
-0003BC 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-0003BE 50F5               M         movf    TABLAT, W
-0003C0                    M loop
-0003C0 EC?? F???          M         call    WR_DATA         ; write to LCD
-0003C4 000B               M         tblrd+*                 ; next row in table
-0003C6 50F5               M         movf    TABLAT, W
-0003C8 E1??               M         bnz     loop
-0003CA                00549 HOLD_LOG_INFO
-0003CA EC?? F???      00550         call    READ_KEY
-                      00551         ChangeMode key0, LOG
-  0000                    M         local Next, Exit
-                          M 
-0003CE 0E0D               M         movlw   key0                ; poll for mode
-0003D0 6250               M         cpfseq  KEY                 ; check this against key press
-0003D2 EF?? F???          M         goto    Exit
-                          M 
-0003D6                    M Next
-0003D6 6A89               M         clrf    LATA                ; clear pins before proceeding
-0003D8 6A8A               M         clrf    LATB
-0003DA 6A8B               M         clrf    LATC
-0003DC 6A8C               M         clrf    LATD
-0003DE EF?? F???          M         goto    LOG
-                          M 
-0003E2                    M Exit
-0003E2 0000               M         nop
-0003E4 D???           00552         bra     HOLD_LOG
-                      00553 
-                      00554 ;*******************************************************************************
-                      00555 ; subroutines
-                      00556 ;*******************************************************************************
-                      00557 
-0003E6                00558 Delay5us
-0003E6 0E78           00559         movlw   d'120'
-0003E8 6E29           00560         movwf   d5us
-                      00561 
-0003EA                00562 loop5us
-0003EA 2E29           00563         decfsz  d5us
-0003EC EF?? F???      00564         goto    loop5us
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 14
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0003F0 0000           00565         nop
-0003F2 0012           00566         return
+000372 0E??               M         movlw   upper Log1      ; Move Table<20:16>
+000374 6EF8               M         movwf   TBLPTRU
+000376 0E??               M         movlw   high Log1       ; Move Table<15:8>
+000378 6EF7               M         movwf   TBLPTRH
+00037A 0E??               M         movlw   low Log1        ; Move Table<7:0>
+00037C 6EF6               M         movwf   TBLPTRL
+00037E 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+000380 50F5               M         movf    TABLAT, W
+000382                    M loop
+000382 EC?? F???          M         call    WR_DATA         ; write to LCD
+000386 000B               M         tblrd+*                 ; next row in table
+000388 50F5               M         movf    TABLAT, W
+00038A E1??               M         bnz     loop
                       00567 
-0003F4                00568 Delay200us
-0003F4 0EA4           00569         movlw   0xA4
-0003F6 6E30           00570         movwf   d200us
-                      00571 
-0003F8                00572 loop200us
-0003F8 2E30           00573         decfsz  d200us
-0003FA EF?? F???      00574         goto    loop200us
-0003FE 0000           00575         nop
-000400 0012           00576         return
-                      00577 
-000402                00578 Delay50ms
-000402 0EF9           00579         movlw   0xF9
-000404 6E31           00580         movwf   d50ms
-                      00581 
-000406                00582 loop50ms
-000406 EC?? F???      00583         call    Delay200us
-00040A 2E31           00584         decfsz  d50ms
-                      00585 
-00040C                00586 Cycles
-00040C EF?? F???      00587         goto    loop50ms
-000410 EC?? F???      00588         call    Delay200us
-000414 0012           00589         return
-                      00590 
-000416                00591 WriteEE_RTC
-                      00592         WriteEE tens_digit, H_EE, L_EE
-000416 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-00041A C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-00041E C090 FFA8          M         movff   tens_digit, EEDATA ; set word
-                          M 
-000422 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-000424 D???               M         bra     $-2
-                          M 
-000426 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-000428 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-00042A 84A6               M         bsf     EECON1, WREN    ; enable write
-00042C 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-00042E 98A1               M         bcf     PIR2, EEIF
-                          M 
-000430 0E55               M         movlw   0x55
-000432 6EA7               M         movwf   EECON2      ; write 55h
-000434 0EAA               M         movlw   0xAA
-000436 6EA7               M         movwf   EECON2      ; write 0xAA
-000438 82A6               M         bsf     EECON1, WR          ; begin write
-00043A B2A6               M         btfsc   EECON1, WR
-00043C D???               M         bra     $-2
-                          M 
-00043E 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-000440 94A6               M         bcf     EECON1, WREN        ; disable writes
-000442 2A72           00593         incf    L_EE
-                      00594         WriteEE ones_digit, H_EE, L_EE
-000444 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-000448 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-00044C C091 FFA8          M         movff   ones_digit, EEDATA ; set word
-                          M 
-000450 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-000452 D???               M         bra     $-2
-                          M 
-000454 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-000456 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-000458 84A6               M         bsf     EECON1, WREN    ; enable write
-00045A 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-00045C 98A1               M         bcf     PIR2, EEIF
-                          M 
-00045E 0E55               M         movlw   0x55
-000460 6EA7               M         movwf   EECON2      ; write 55h
-000462 0EAA               M         movlw   0xAA
-000464 6EA7               M         movwf   EECON2      ; write 0xAA
-000466 82A6               M         bsf     EECON1, WR          ; begin write
-000468 B2A6               M         btfsc   EECON1, WR
-00046A D???               M         bra     $-2
-                          M 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 15
+                      00568         ; display most recent run data
+00038C 0E09           00569         movlw   d'9'
+00038E 6E72           00570         movwf   L_EE
+                      00571         READEE  OP_sec, H_EE, L_EE
+000390 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+000394 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+000398 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+00039A 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+00039C 80A6               M         bsf     EECON1, RD          ; read EEPROM
+00039E CFA8 F010          M         movff   EEDATA, OP_sec      ; put data into file
+0003A2 2A72           00572         incf    L_EE
+                      00573         READEE  OP_INT, H_EE, L_EE
+0003A4 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+0003A8 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+0003AC 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+0003AE 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+0003B0 80A6               M         bsf     EECON1, RD          ; read EEPROM
+0003B2 CFA8 F011          M         movff   EEDATA, OP_INT      ; put data into file
+0003B6 2A72           00574         incf    L_EE
+0003B8 EC?? F???      00575         call    DisplayTime
+                      00576 
+0003BC EC?? F???      00577         call    LCD_L2
+0003C0 6A72           00578         clrf    L_EE
+0003C2 EC?? F???      00579         call    DispOpRTC
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 14
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00046C 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-00046E 94A6               M         bcf     EECON1, WREN        ; disable writes
-000470 2A72           00595         incf    L_EE
-000472 0012           00596         return
-                      00597 
-000474                00598 ClearEEPROM_21
-000474 6A71           00599         clrf    H_EE
-000476 6A72           00600         clrf    L_EE
-000478 6870           00601         setf    clear_EE
-00047A 6A03           00602         clrf    counter
-00047C                00603 ClearNext
-                      00604         WriteEE         clear_EE, H_EE, L_EE
-00047C C071 FFAA          M         movff   H_EE, EEADRH    ; High address
-000480 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
-000484 C070 FFA8          M         movff   clear_EE, EEDATA ; set word
+                      00580 
+0003C6                00581 HOLD_LOG
+0003C6 EC?? F???      00582         call    READ_KEY
+                      00583         ChangeMode  keyB, LOG_INFO
+  0000                    M         local Next, Exit
                           M 
-000488 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
-00048A D???               M         bra     $-2
+0003CA 0E07               M         movlw   keyB                ; poll for mode
+0003CC 6250               M         cpfseq  KEY                 ; check this against key press
+0003CE EF?? F???          M         goto    Exit
                           M 
-00048C 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
-00048E 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
-000490 84A6               M         bsf     EECON1, WREN    ; enable write
-000492 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
-000494 98A1               M         bcf     PIR2, EEIF
+0003D2                    M Next
+0003D2 6A89               M         clrf    LATA                ; clear pins before proceeding
+0003D4 6A8A               M         clrf    LATB
+0003D6 6A8B               M         clrf    LATC
+0003D8 6A8C               M         clrf    LATD
+0003DA EF?? F???          M         goto    LOG_INFO
                           M 
-000496 0E55               M         movlw   0x55
-000498 6EA7               M         movwf   EECON2      ; write 55h
-00049A 0EAA               M         movlw   0xAA
-00049C 6EA7               M         movwf   EECON2      ; write 0xAA
-00049E 82A6               M         bsf     EECON1, WR          ; begin write
-0004A0 B2A6               M         btfsc   EECON1, WR
-0004A2 D???               M         bra     $-2
+0003DE                    M Exit
+0003DE 0000               M         nop
+                      00584         ChangeMode  key0, STANDBY
+  0000                    M         local Next, Exit
                           M 
-0004A4 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
-0004A6 94A6               M         bcf     EECON1, WREN        ; disable writes
-0004A8 2A03           00605         incf            counter
-0004AA 2A72           00606         incf            L_EE
-0004AC 0E15           00607         movlw           d'21'
-0004AE 6203           00608         cpfseq          counter
-0004B0 EF?? F???      00609         goto            ClearNext
-0004B4 6A71           00610         clrf            H_EE            ; reset EEPROMaddr
-0004B6 6A72           00611         clrf            L_EE
-0004B8 0012           00612         return
-                      00613         
-0004BA                00614 READ_KEY
-0004BA                00615 HOLD_KEY
-0004BA A281           00616         btfss   PORTB, 1        ; check for keypad interrupt
-0004BC EF?? F???      00617         goto    HOLD_KEY
-0004C0 3881           00618         swapf   PORTB, W
-0004C2 0B0F           00619         andlw   0x0F
-0004C4 6E50           00620         movwf   KEY
-0004C6 B281           00621         btfsc   PORTB, 1
-0004C8 EF?? F???      00622         goto    $-2
-0004CC 0012           00623         return
+0003E0 0E0D               M         movlw   key0                ; poll for mode
+0003E2 6250               M         cpfseq  KEY                 ; check this against key press
+0003E4 EF?? F???          M         goto    Exit
+                          M 
+0003E8                    M Next
+0003E8 6A89               M         clrf    LATA                ; clear pins before proceeding
+0003EA 6A8A               M         clrf    LATB
+0003EC 6A8B               M         clrf    LATC
+0003EE 6A8C               M         clrf    LATD
+0003F0 EF?? F???          M         goto    STANDBY
+                          M 
+0003F4                    M Exit
+0003F4 0000               M         nop
+0003F6 D???           00585         bra     HOLD_LOG
+                      00586 
+0003F8                00587 LOG_INFO
+0003F8 EC?? F???      00588         call    ClrLCD
+                      00589         Display LogInfo1
+  0000                    M         local   loop
+0003FC 0E??               M         movlw   upper LogInfo1  ; Move Table<20:16>
+0003FE 6EF8               M         movwf   TBLPTRU
+000400 0E??               M         movlw   high LogInfo1   ; Move Table<15:8>
+000402 6EF7               M         movwf   TBLPTRH
+000404 0E??               M         movlw   low LogInfo1    ; Move Table<7:0>
+000406 6EF6               M         movwf   TBLPTRL
+000408 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+00040A 50F5               M         movf    TABLAT, W
+00040C                    M loop
+00040C EC?? F???          M         call    WR_DATA         ; write to LCD
+000410 000B               M         tblrd+*                 ; next row in table
+000412 50F5               M         movf    TABLAT, W
+000414 E1??               M         bnz     loop
+000416 EC?? F???      00590         call    LCD_L2
+                      00591         Display LogInfo2
+  0000                    M         local   loop
+00041A 0E??               M         movlw   upper LogInfo2  ; Move Table<20:16>
+00041C 6EF8               M         movwf   TBLPTRU
+00041E 0E??               M         movlw   high LogInfo2   ; Move Table<15:8>
+000420 6EF7               M         movwf   TBLPTRH
+000422 0E??               M         movlw   low LogInfo2    ; Move Table<7:0>
+000424 6EF6               M         movwf   TBLPTRL
+000426 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+000428 50F5               M         movf    TABLAT, W
+00042A                    M loop
+00042A EC?? F???          M         call    WR_DATA         ; write to LCD
+00042E 000B               M         tblrd+*                 ; next row in table
+000430 50F5               M         movf    TABLAT, W
+000432 E1??               M         bnz     loop
+000434                00592 HOLD_LOG_INFO
+000434 EC?? F???      00593         call    READ_KEY
+                      00594         ChangeMode key0, LOG
+  0000                    M         local Next, Exit
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                          M 
+000438 0E0D               M         movlw   key0                ; poll for mode
+00043A 6250               M         cpfseq  KEY                 ; check this against key press
+00043C EF?? F???          M         goto    Exit
+                          M 
+000440                    M Next
+000440 6A89               M         clrf    LATA                ; clear pins before proceeding
+000442 6A8A               M         clrf    LATB
+000444 6A8B               M         clrf    LATC
+000446 6A8C               M         clrf    LATD
+000448 EF?? F???          M         goto    LOG
+                          M 
+00044C                    M Exit
+00044C 0000               M         nop
+00044E D???           00595         bra     HOLD_LOG
+                      00596 
+                      00597 ;*******************************************************************************
+                      00598 ; subroutines
+                      00599 ;*******************************************************************************
+                      00600 
+000450                00601 Delay5us
+000450 0E78           00602         movlw   d'120'
+000452 6E29           00603         movwf   d5us
+                      00604 
+000454                00605 loop5us
+000454 2E29           00606         decfsz  d5us
+000456 EF?? F???      00607         goto    loop5us
+00045A 0000           00608         nop
+00045C 0012           00609         return
+                      00610 
+00045E                00611 Delay200us
+00045E 0EA4           00612         movlw   0xA4
+000460 6E30           00613         movwf   d200us
+                      00614 
+000462                00615 loop200us
+000462 2E30           00616         decfsz  d200us
+000464 EF?? F???      00617         goto    loop200us
+000468 0000           00618         nop
+00046A 0012           00619         return
+                      00620 
+00046C                00621 Delay50ms
+00046C 0EF9           00622         movlw   0xF9
+00046E 6E31           00623         movwf   d50ms
                       00624 
-0004CE                00625 READ_KEY_RTC
-0004CE                00626 HOLD_KEY_RTC
-0004CE EC?? F???      00627         call        LCD_L2      ; go to second line to print RTC
-                      00628 ;       call        I2C_Master_START
-                      00629 ;       movlw       b'11010000'
-                      00630 ;       movlw       0x00
-                      00631 ;       call        I2C_Master_WRITE
-                      00632 ;       call        I2C_Master_STOP
-                      00633 ;
-                      00634 ;       movlw       0x01        ; set ACKDT
-                      00635 ;       movwf       I2C_ACKDT
-                      00636 ;
-                      00637 ;       movlw       0x02        ; get hours
-                      00638 ;       call        I2C_Master_READ
-                      00639 ;       movf        tens_digit, W
-                      00640 ;       andlw       b'00000001'
-                      00641 ;       addlw       0x30
-                      00642 ;       call        WR_DATA
-                      00643 ;       movf        ones_digit, W
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 16
+000470                00625 loop50ms
+000470 EC?? F???      00626         call    Delay200us
+000474 2E31           00627         decfsz  d50ms
+                      00628 
+000476                00629 Cycles
+000476 EF?? F???      00630         goto    loop50ms
+00047A EC?? F???      00631         call    Delay200us
+00047E 0012           00632         return
+                      00633 
+000480                00634 WriteEE_RTC
+                      00635         WriteEE tens_digit, H_EE, L_EE
+000480 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+000484 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+000488 C090 FFA8          M         movff   tens_digit, EEDATA ; set word
+                          M 
+00048C B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+00048E D???               M         bra     $-2
+                          M 
+000490 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+000492 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+000494 84A6               M         bsf     EECON1, WREN    ; enable write
+000496 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+000498 98A1               M         bcf     PIR2, EEIF
+                          M 
+00049A 0E55               M         movlw   0x55
+00049C 6EA7               M         movwf   EECON2      ; write 55h
+00049E 0EAA               M         movlw   0xAA
+0004A0 6EA7               M         movwf   EECON2      ; write 0xAA
+0004A2 82A6               M         bsf     EECON1, WR          ; begin write
+0004A4 B2A6               M         btfsc   EECON1, WR
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 16
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00644 ;       call        WR_DATA
-                      00645 ;       movlw       0x01        ; get minutes
-                      00646 ;       call        I2C_Master_READ
-                      00647 ;       WriteRTC
-                      00648 ;       movlw       " "         ; wow grate formatng very nice. thank you
-                      00649 ;       call        WR_DATA
-                      00650 ;       movlw       0x05        ; month
-                      00651 ;       call        I2C_Master_READ
-                      00652 ;       WriteRTC
-                      00653 ;       movlw       0x2F        ; ascii code for forward slash
-                      00654 ;       call        WR_DATA
-                      00655 ;       movlw       0x04        ; get day
-                      00656 ;       call        I2C_Master_READ
-                      00657 ;       WriteRTC
-                      00658 ;       movlw       0x2F        ; ascii code for forward slash
-                      00659 ;       call        WR_DATA
-                      00660 ;       movlw       0x00        ; clear ACKDT
-                      00661 ;       movwf       I2C_ACKDT
-                      00662 ;       movlw    0x06           ; get year
-                      00663 ;       call        I2C_Master_READ
-                      00664 ;       WriteRTC
-                      00665 
-0004D2 A281           00666         btfss       PORTB, 1    ; keypad interrupt
-0004D4 EF?? F???      00667         goto        HOLD_KEY_RTC
-0004D8 3881           00668         swapf       PORTB, W    ; copy PORTB7:4 to W3:0
-0004DA 0B0F           00669         andlw       0x0F        ; only want W3:0
-0004DC 6E50           00670         movwf       KEY         ; write this value to the KEY
-0004DE B281           00671         btfsc       PORTB, 1    ; wait for release
-0004E0 EF?? F???      00672         goto        $-2         ; go back one instruction
-0004E4 0012           00673         return
-                      00674 
-0004E6                00675 DisplayTime
-                      00676         READEE  REG_EE, H_EE, L_EE
-0004E6 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-0004EA C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-0004EE 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-0004F0 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-0004F2 80A6               M         bsf     EECON1, RD          ; read EEPROM
-0004F4 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-0004F8 0EFF           00677         movlw   0xFF
-0004FA 6273           00678         cpfseq  REG_EE
-0004FC EF?? F???      00679         goto    NoSkipDispOpTime
-                      00680         Display NoData
+0004A6 D???               M         bra     $-2
+                          M 
+0004A8 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+0004AA 94A6               M         bcf     EECON1, WREN        ; disable writes
+0004AC 2A72           00636         incf    L_EE
+                      00637         WriteEE ones_digit, H_EE, L_EE
+0004AE C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+0004B2 C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+0004B6 C091 FFA8          M         movff   ones_digit, EEDATA ; set word
+                          M 
+0004BA B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+0004BC D???               M         bra     $-2
+                          M 
+0004BE 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+0004C0 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+0004C2 84A6               M         bsf     EECON1, WREN    ; enable write
+0004C4 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+0004C6 98A1               M         bcf     PIR2, EEIF
+                          M 
+0004C8 0E55               M         movlw   0x55
+0004CA 6EA7               M         movwf   EECON2      ; write 55h
+0004CC 0EAA               M         movlw   0xAA
+0004CE 6EA7               M         movwf   EECON2      ; write 0xAA
+0004D0 82A6               M         bsf     EECON1, WR          ; begin write
+0004D2 B2A6               M         btfsc   EECON1, WR
+0004D4 D???               M         bra     $-2
+                          M 
+0004D6 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+0004D8 94A6               M         bcf     EECON1, WREN        ; disable writes
+0004DA 2A72           00638         incf    L_EE
+0004DC 0012           00639         return
+                      00640 
+0004DE                00641 ClearEEPROM_21
+0004DE 6A71           00642         clrf    H_EE
+0004E0 6A72           00643         clrf    L_EE
+0004E2 6870           00644         setf    clear_EE
+0004E4 6A03           00645         clrf    counter
+0004E6                00646 ClearNext
+                      00647         WriteEE         clear_EE, H_EE, L_EE
+0004E6 C071 FFAA          M         movff   H_EE, EEADRH    ; High address
+0004EA C072 FFAA          M         movff   L_EE, EEADRH    ; Low address
+0004EE C070 FFA8          M         movff   clear_EE, EEDATA ; set word
+                          M 
+0004F2 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
+0004F4 D???               M         bra     $-2
+                          M 
+0004F6 9EA6               M         bcf     EECON1, EEPGD   ; Point to data memory
+0004F8 9CA6               M         bcf     EECON1, CFGS    ; Access EEPROM
+0004FA 84A6               M         bsf     EECON1, WREN    ; enable write
+0004FC 9EA6               M         bcf     EECON1, GIE         ; disable interrupts during write
+0004FE 98A1               M         bcf     PIR2, EEIF
+                          M 
+000500 0E55               M         movlw   0x55
+000502 6EA7               M         movwf   EECON2      ; write 55h
+000504 0EAA               M         movlw   0xAA
+000506 6EA7               M         movwf   EECON2      ; write 0xAA
+000508 82A6               M         bsf     EECON1, WR          ; begin write
+00050A B2A6               M         btfsc   EECON1, WR
+00050C D???               M         bra     $-2
+                          M 
+00050E 8EA6               M         bsf     EECON1, GIE         ; enable interrupts after write
+000510 94A6               M         bcf     EECON1, WREN        ; disable writes
+000512 2A03           00648         incf            counter
+000514 2A72           00649         incf            L_EE
+000516 0E15           00650         movlw           d'21'
+000518 6203           00651         cpfseq          counter
+00051A EF?? F???      00652         goto            ClearNext
+00051E 6A71           00653         clrf            H_EE            ; reset EEPROMaddr
+000520 6A72           00654         clrf            L_EE
+000522 0012           00655         return
+                      00656         
+000524                00657 READ_KEY
+000524                00658 HOLD_KEY
+000524 A281           00659         btfss   PORTB, 1        ; check for keypad interrupt
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000526 EF?? F???      00660         goto    HOLD_KEY
+00052A 3881           00661         swapf   PORTB, W
+00052C 0B0F           00662         andlw   0x0F
+00052E 6E50           00663         movwf   KEY
+000530 B281           00664         btfsc   PORTB, 1
+000532 EF?? F???      00665         goto    $-2
+000536 0012           00666         return
+                      00667 
+000538                00668 READ_KEY_RTC
+000538                00669 HOLD_KEY_RTC
+000538 EC?? F???      00670         call        LCD_L2      ; go to second line to print RTC
+                      00671 ;       call        I2C_Master_START
+                      00672 ;       movlw       b'11010000'
+                      00673 ;       movlw       0x00
+                      00674 ;       call        I2C_Master_WRITE
+                      00675 ;       call        I2C_Master_STOP
+                      00676 ;
+                      00677 ;       movlw       0x01        ; set ACKDT
+                      00678 ;       movwf       I2C_ACKDT
+                      00679 ;
+                      00680 ;       movlw       0x02        ; get hours
+                      00681 ;       call        I2C_Master_READ
+                      00682 ;       movf        tens_digit, W
+                      00683 ;       andlw       b'00000001'
+                      00684 ;       addlw       0x30
+                      00685 ;       call        WR_DATA
+                      00686 ;       movf        ones_digit, W
+                      00687 ;       call        WR_DATA
+                      00688 ;       movlw       0x01        ; get minutes
+                      00689 ;       call        I2C_Master_READ
+                      00690 ;       WriteRTC
+                      00691 ;       movlw       " "         ; wow grate formatng very nice. thank you
+                      00692 ;       call        WR_DATA
+                      00693 ;       movlw       0x05        ; month
+                      00694 ;       call        I2C_Master_READ
+                      00695 ;       WriteRTC
+                      00696 ;       movlw       0x2F        ; ascii code for forward slash
+                      00697 ;       call        WR_DATA
+                      00698 ;       movlw       0x04        ; get day
+                      00699 ;       call        I2C_Master_READ
+                      00700 ;       WriteRTC
+                      00701 ;       movlw       0x2F        ; ascii code for forward slash
+                      00702 ;       call        WR_DATA
+                      00703 ;       movlw       0x00        ; clear ACKDT
+                      00704 ;       movwf       I2C_ACKDT
+                      00705 ;       movlw    0x06           ; get year
+                      00706 ;       call        I2C_Master_READ
+                      00707 ;       WriteRTC
+                      00708 
+00053C A281           00709         btfss       PORTB, 1    ; keypad interrupt
+00053E EF?? F???      00710         goto        HOLD_KEY_RTC
+000542 3881           00711         swapf       PORTB, W    ; copy PORTB7:4 to W3:0
+000544 0B0F           00712         andlw       0x0F        ; only want W3:0
+000546 6E50           00713         movwf       KEY         ; write this value to the KEY
+000548 B281           00714         btfsc       PORTB, 1    ; wait for release
+00054A EF?? F???      00715         goto        $-2         ; go back one instruction
+00054E 0012           00716         return
+                      00717 
+000550                00718 DisplayTime
+                      00719         READEE  REG_EE, H_EE, L_EE
+000550 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+000554 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+000558 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+00055A 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+00055C 80A6               M         bsf     EECON1, RD          ; read EEPROM
+00055E CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+000562 0EFF           00720         movlw   0xFF
+000564 6273           00721         cpfseq  REG_EE
+000566 EF?? F???      00722         goto    NoSkipDispOpTime
+                      00723         Display NoData
   0000                    M         local   loop
-000500 0E??               M         movlw   upper NoData    ; Move Table<20:16>
-000502 6EF8               M         movwf   TBLPTRU
-000504 0E??               M         movlw   high NoData     ; Move Table<15:8>
-000506 6EF7               M         movwf   TBLPTRH
-000508 0E??               M         movlw   low NoData      ; Move Table<7:0>
-00050A 6EF6               M         movwf   TBLPTRL
-00050C 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-00050E 50F5               M         movf    TABLAT, W
-000510                    M loop
-000510 EC?? F???          M         call    WR_DATA         ; write to LCD
-000514 000B               M         tblrd+*                 ; next row in table
-000516 50F5               M         movf    TABLAT, W
-000518 E1??               M         bnz     loop
-00051A 0EFF           00681         movlw   0xFF
-00051C 6073           00682         cpfslt  REG_EE
-00051E EF?? F???      00683         goto    SkipDispOpTime
-                      00684 
-000522                00685 NoSkipDispOpTime
-000522 3810           00686         swapf   OP_sec, W
-000524 6E06           00687         movwf   temp
-000526 0E0F           00688         movlw   0x0F
-000528 1606           00689         andwf   temp
-00052A C006 FFE8      00690         movff   temp, WREG
-00052E 0F30           00691         addlw   0x30
-000530 EC?? F???      00692         call    WR_DATA
-                      00693 
-000534 C010 F006      00694         movff   OP_sec, temp    ; 1's seconds
-000538 0E0F           00695         movlw   0x0F
-00053A 1606           00696         andwf   temp            ; Temp = lower nibble of Op_Seconds
-00053C C006 FFE8      00697         movff   temp, WREG      ; W = Temp
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 17
+00056A 0E??               M         movlw   upper NoData    ; Move Table<20:16>
+00056C 6EF8               M         movwf   TBLPTRU
+00056E 0E??               M         movlw   high NoData     ; Move Table<15:8>
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 18
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-000540 0F30           00698         addlw   0x30            ; Convert to ASCII
-000542 EC?? F???      00699         call    WR_DATA
-                      00700 
-000546 0E2E           00701         movlw   0x2E            ; Write '.'
-000548 EC?? F???      00702         call    WR_DATA
-                      00703 
-00054C 0E73           00704         movlw   0x73            ; Write 's'
-00054E EC?? F???      00705         call    WR_DATA
-000552 EC?? F???      00706         call    LCD_L2
-000556                00707 SkipDispOpTime
-000556 0012           00708         return
-                      00709 
-000558                00710 DispOpRTC
-000558 0E0B           00711         movlw   d'11'
-00055A 2672           00712         addwf   L_EE
-                      00713 
-                      00714         READEE  REG_EE, H_EE, L_EE
-00055C C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-000560 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-000564 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-000566 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-000568 80A6               M         bsf     EECON1, RD          ; read EEPROM
-00056A CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-00056E 0EFF           00715         movlw   0xFF
-000570 6273           00716         cpfseq  REG_EE
-000572 EF?? F???      00717         goto    NoSkipDispOpRTC
-                      00718         Display NoData
+000570 6EF7               M         movwf   TBLPTRH
+000572 0E??               M         movlw   low NoData      ; Move Table<7:0>
+000574 6EF6               M         movwf   TBLPTRL
+000576 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+000578 50F5               M         movf    TABLAT, W
+00057A                    M loop
+00057A EC?? F???          M         call    WR_DATA         ; write to LCD
+00057E 000B               M         tblrd+*                 ; next row in table
+000580 50F5               M         movf    TABLAT, W
+000582 E1??               M         bnz     loop
+000584 0EFF           00724         movlw   0xFF
+000586 6073           00725         cpfslt  REG_EE
+000588 EF?? F???      00726         goto    SkipDispOpTime
+                      00727 
+00058C                00728 NoSkipDispOpTime
+00058C 3810           00729         swapf   OP_sec, W
+00058E 6E06           00730         movwf   temp
+000590 0E0F           00731         movlw   0x0F
+000592 1606           00732         andwf   temp
+000594 C006 FFE8      00733         movff   temp, WREG
+000598 0F30           00734         addlw   0x30
+00059A EC?? F???      00735         call    WR_DATA
+                      00736 
+00059E C010 F006      00737         movff   OP_sec, temp    ; 1's seconds
+0005A2 0E0F           00738         movlw   0x0F
+0005A4 1606           00739         andwf   temp            ; Temp = lower nibble of Op_Seconds
+0005A6 C006 FFE8      00740         movff   temp, WREG      ; W = Temp
+0005AA 0F30           00741         addlw   0x30            ; Convert to ASCII
+0005AC EC?? F???      00742         call    WR_DATA
+                      00743 
+0005B0 0E2E           00744         movlw   0x2E            ; Write '.'
+0005B2 EC?? F???      00745         call    WR_DATA
+                      00746 
+0005B6 0E73           00747         movlw   0x73            ; Write 's'
+0005B8 EC?? F???      00748         call    WR_DATA
+0005BC EC?? F???      00749         call    LCD_L2
+0005C0                00750 SkipDispOpTime
+0005C0 0012           00751         return
+                      00752 
+0005C2                00753 DispOpRTC
+0005C2 0E0B           00754         movlw   d'11'
+0005C4 2672           00755         addwf   L_EE
+                      00756 
+                      00757         READEE  REG_EE, H_EE, L_EE
+0005C6 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+0005CA C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+0005CE 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+0005D0 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+0005D2 80A6               M         bsf     EECON1, RD          ; read EEPROM
+0005D4 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+0005D8 0EFF           00758         movlw   0xFF
+0005DA 6273           00759         cpfseq  REG_EE
+0005DC EF?? F???      00760         goto    NoSkipDispOpRTC
+                      00761         Display NoData
   0000                    M         local   loop
-000576 0E??               M         movlw   upper NoData    ; Move Table<20:16>
-000578 6EF8               M         movwf   TBLPTRU
-00057A 0E??               M         movlw   high NoData     ; Move Table<15:8>
-00057C 6EF7               M         movwf   TBLPTRH
-00057E 0E??               M         movlw   low NoData      ; Move Table<7:0>
-000580 6EF6               M         movwf   TBLPTRL
-000582 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
-000584 50F5               M         movf    TABLAT, W
-000586                    M loop
-000586 EC?? F???          M         call    WR_DATA         ; write to LCD
-00058A 000B               M         tblrd+*                 ; next row in table
-00058C 50F5               M         movf    TABLAT, W
-00058E E1??               M         bnz     loop
-000590 0EFF           00719         movlw   0xFF
-000592 6073           00720         cpfslt  REG_EE
-000594 EF?? F???      00721         goto    SkipDispOpRTC
-                      00722 
-000598                00723 NoSkipDispOpRTC
-                      00724         READEE  REG_EE, H_EE, L_EE
-000598 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-00059C C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-0005A0 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-0005A2 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-0005A4 80A6               M         bsf     EECON1, RD          ; read EEPROM
-0005A6 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-0005AA C073 FFE8      00725         movff   REG_EE, WREG
-0005AE 0BF1           00726         andlw   b'11110001'
-0005B0 EC?? F???      00727         call    WR_DATA
-0005B4 2A72           00728         incf    L_EE
-                      00729         READEE  REG_EE, H_EE, L_EE
-0005B6 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-0005BA C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-0005BE 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-0005C0 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-0005C2 80A6               M         bsf     EECON1, RD          ; read EEPROM
-0005C4 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-0005C8 C073 FFE8      00730         movff   REG_EE, WREG
-0005CC EC?? F???      00731         call    WR_DATA
-0005D0 2A72           00732         incf    L_EE
-                      00733 
-0005D2 0E3A           00734         movlw           ":"
-0005D4 EC?? F???      00735         call            WR_DATA
-0005D8 EC?? F???      00736         call DispOpRTC_Helper
-0005DC 0E20           00737         movlw           " "
-0005DE EC?? F???      00738         call            WR_DATA
-0005E2 EC?? F???      00739         call DispOpRTC_Helper
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-5-2017  23:18:10         PAGE 18
+0005E0 0E??               M         movlw   upper NoData    ; Move Table<20:16>
+0005E2 6EF8               M         movwf   TBLPTRU
+0005E4 0E??               M         movlw   high NoData     ; Move Table<15:8>
+0005E6 6EF7               M         movwf   TBLPTRH
+0005E8 0E??               M         movlw   low NoData      ; Move Table<7:0>
+0005EA 6EF6               M         movwf   TBLPTRL
+0005EC 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
+0005EE 50F5               M         movf    TABLAT, W
+0005F0                    M loop
+0005F0 EC?? F???          M         call    WR_DATA         ; write to LCD
+0005F4 000B               M         tblrd+*                 ; next row in table
+0005F6 50F5               M         movf    TABLAT, W
+0005F8 E1??               M         bnz     loop
+0005FA 0EFF           00762         movlw   0xFF
+0005FC 6073           00763         cpfslt  REG_EE
+0005FE EF?? F???      00764         goto    SkipDispOpRTC
+                      00765 
+000602                00766 NoSkipDispOpRTC
+                      00767         READEE  REG_EE, H_EE, L_EE
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-6-2017  12:26:25         PAGE 19
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0005E6 0E2F           00740         movlw           "/"
-0005E8 EC?? F???      00741         call            WR_DATA
-0005EC EC?? F???      00742         call DispOpRTC_Helper
-0005F0 0E2F           00743         movlw           "/"
-0005F2 EC?? F???      00744         call            WR_DATA
-0005F6 EC?? F???      00745         call DispOpRTC_Helper
-0005FA                00746 SkipDispOpRTC
-0005FA 0012           00747                 return
-0005FC                00748 DispOpRTC_Helper
-                      00749         READEE          REG_EE, H_EE, L_EE
-0005FC C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-000600 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-000604 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-000606 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-000608 80A6               M         bsf     EECON1, RD          ; read EEPROM
-00060A CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-00060E C073 FFE8      00750         movff           REG_EE, WREG
-000612 EC?? F???      00751         call            WR_DATA
-000616 2A72           00752         incf            L_EE
-                      00753         READEE          REG_EE, H_EE, L_EE
-000618 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
-00061C C072 FFA9          M         movff   L_EE, EEADR         ; read to low
-000620 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-000622 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-000624 80A6               M         bsf     EECON1, RD          ; read EEPROM
-000626 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
-00062A C073 FFE8      00754         movff           REG_EE, WREG
-00062E EC?? F???      00755         call            WR_DATA
-000632 2A72           00756         incf            L_EE
-000634 0012           00757         return
+000602 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+000606 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+00060A 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+00060C 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+00060E 80A6               M         bsf     EECON1, RD          ; read EEPROM
+000610 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+000614 C073 FFE8      00768         movff   REG_EE, WREG
+000618 0BF1           00769         andlw   b'11110001'
+00061A EC?? F???      00770         call    WR_DATA
+00061E 2A72           00771         incf    L_EE
+                      00772         READEE  REG_EE, H_EE, L_EE
+000620 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+000624 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+000628 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+00062A 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+00062C 80A6               M         bsf     EECON1, RD          ; read EEPROM
+00062E CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+000632 C073 FFE8      00773         movff   REG_EE, WREG
+000636 EC?? F???      00774         call    WR_DATA
+00063A 2A72           00775         incf    L_EE
+                      00776 
+00063C 0E3A           00777         movlw           ":"
+00063E EC?? F???      00778         call            WR_DATA
+000642 EC?? F???      00779         call DispOpRTC_Helper
+000646 0E20           00780         movlw           " "
+000648 EC?? F???      00781         call            WR_DATA
+00064C EC?? F???      00782         call DispOpRTC_Helper
+000650 0E2F           00783         movlw           "/"
+000652 EC?? F???      00784         call            WR_DATA
+000656 EC?? F???      00785         call DispOpRTC_Helper
+00065A 0E2F           00786         movlw           "/"
+00065C EC?? F???      00787         call            WR_DATA
+000660 EC?? F???      00788         call DispOpRTC_Helper
+000664                00789 SkipDispOpRTC
+000664 0012           00790                 return
+000666                00791 DispOpRTC_Helper
+                      00792         READEE          REG_EE, H_EE, L_EE
+000666 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+00066A C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+00066E 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+000670 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+000672 80A6               M         bsf     EECON1, RD          ; read EEPROM
+000674 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+000678 C073 FFE8      00793         movff           REG_EE, WREG
+00067C EC?? F???      00794         call            WR_DATA
+000680 2A72           00795         incf            L_EE
+                      00796         READEE          REG_EE, H_EE, L_EE
+000682 C071 FFAA          M         movff   H_EE, EEADRH        ; read to high
+000686 C072 FFA9          M         movff   L_EE, EEADR         ; read to low
+00068A 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
+00068C 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
+00068E 80A6               M         bsf     EECON1, RD          ; read EEPROM
+000690 CFA8 F073          M         movff   EEDATA, REG_EE      ; put data into file
+000694 C073 FFE8      00797         movff           REG_EE, WREG
+000698 EC?? F???      00798         call            WR_DATA
+00069C 2A72           00799         incf            L_EE
+00069E 0012           00800         return
 Warning[205]: Found directive in column 1. (end)
-                      00758 end
+                      00801 end
 
 Errors   :     0
 Warnings :     2 reported,     0 suppressed

@@ -187,6 +187,36 @@ Again
 Finish
 	    endm
 
+incf_BCD    macro   BCD
+	local ones, endBCD
+	movff	BCD, temp
+	
+	;process ones digit
+	movlw	0x0F
+	andwf	temp
+	movlw	d'9'
+	
+	;skip if ones digit is 9
+	cpfseq	temp
+	goto	ones
+	
+	movlw	b'00010000'
+	addwf	BCD
+	movlw	0x0F
+	andwf	BCD
+	movlw	0xA0
+	cpfslt	BCD
+	
+	clrf	BCD
+	goto	endBCD
+	
+ones
+	incf	BCD
+	goto	endBCD
+endBCD
+	nop
+	endm
+
 WriteRTC    macro
 	movff	tens_digit, W
 	call	WR_DATA
@@ -252,7 +282,7 @@ saveContext macro
     movwf   temp_W                  ; save W
     endm
 
-restContext macro
+restoreContext macro
     swapf   temp_W, W               ; restore W first
     movff   temp_S, STATUS	    ; restore STATUS last without affecting W
     endm
@@ -263,19 +293,32 @@ restContext macro
 	goto    INIT		    ; go to beginning of program
 
 	ORG	0x008
-	goto    ISR_High
+	goto    ISR_HIGH
 
 	ORG	0x018
 	goto    ISR_LOW
 
-ISR_High
-	movwf	temp_W		    ; save current W
-	movff	STATUS, temp_S	    ; save status
+ISR_HIGH
+	saveContext
 
-	; ISR_High routines
-	movff	temp_S, STATUS	    ; retreive status
-	swapf	temp_W, f
-	swapf	temp_W, w	    ; restore W
+	;reset timer
+	movlw	timer_H
+	movwf	TMR0H
+	movlw	timer_L - 9
+	movwf	TMR0L
+	
+	;timer interrupt
+	btfss	INTCON, TMR0IF
+	goto	END_ISR_HIGH
+	incf_BCD    OP_INT
+	movlw	d'0'
+	cpfseq	OP_INT
+	goto	END_ISR_HIGH
+	incf_BCD    OP_sec
+
+END_ISR_HIGH
+	bcf	INTCON, TMR0IF
+	restoreContext
 	retfie
 
 ISR_LOW
@@ -303,9 +346,9 @@ ISR_LOW
 	clrf		TOSL
 
 END_ISR_LOW
-    bcf			INTCON3, INT1IF         ; Clear flag for next interrupt
-    restContext
-
+	bcf			INTCON3, INT1IF         ; Clear flag for next interrupt
+	restoreContext
+	
 	movwf	temp_W		    ; save current W
 	movff	STATUS, temp_S	    ; save status
 
