@@ -31,101 +31,84 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 ;*******************************************************************************
 ; variable and constants
 ;*******************************************************************************
-	    CODE
-; timers
-#define	    timer_H	0x9E
-#define	    timer_L	0x58
-OP_sec	    equ	        0x10
-OP_INT	    equ		0x11
-
-; keys
-key1        equ		d'0'
-key2        equ		d'1'
-key3        equ		d'2'
-keyA        equ		d'3'
-key4	    equ		d'4'
-key5	    equ		d'5'
-key6	    equ	        d'6'
-keyB        equ		d'7'
-key7	    equ		d'8'
-key8	    equ		d'9'
-key9        equ	 	d'10'
-keyC	    equ		d'11'
-keyS        equ		d'12'
-key0	    equ		d'13'
-keyH	    equ		d'14'
-keyD	    equ		d'15'
-
-KEY	    equ		0x50
-temp_KEY    equ		0x51
-KEY_ISR	    equ		0x52
-
-; temporary variable used in isrs
-temp_ISR    equ		0x05
-
-; temporary registers to save W and status
-temp_S	    equ		0x01
-temp_W	    equ		0x02
-counter	    equ		0x03
-counter2    equ		0x04
-temp	    equ		0x06
-
-; delays for timers
-delayR	    equ		0x28	    ; primary delay register
-d5us	    equ		0x29	    ; 5 us delay
-d200us	    equ		0x30	    ; 200 us delay
-d50ms	    equ		0x31	    ; 50 ms delay
-
-; execution
-inExecution equ		0x60
+    CODE
 	    
-; EEPROM
-#define	    temp_EE	d'220'
-#define	    last_log	d'168'
-clear_EE    equ		0x70
-H_EE	    equ		0x71
-L_EE	    equ		0x72
-REG_EE      equ		0x73
-tempH_EE    equ		0x74
-tempL_EE    equ		0x75
-tempL_EEC   equ		0x82
-MAX_EE      equ		0x76
-READ_EE	    equ		0x77
-LED_Count   equ		0x78
-SkipCount   equ		0x79
-
-; execution
-exe_sec	    equ		0x80
-exe_int	    equ		0x81
-
-; pc interface
-; rtc
-tens_digit  equ		0x90
-ones_digit  equ		0x91
+    cblock 0x00
+	key1
+	key2
+	key3
+	keyA
+	key4
+	key5
+	key6
+	keyB
+	key7
+	key8
+	key9
+	keyC
+	keyS
+	key0
+	keyH
+	keyD
+	temp_S	
+	temp_W	
+	counter
+	counter2
+	temp
+	OP_sec
+	OP_INT
+	temp_ISR
+	delayR
+	d5us
+	d200us
+	d50ms
+	KEY
+	temp_KEY
+	KEY_ISR
+	inExecution
+	clear_EE
+	H_EE	
+	L_EE	
+	REG_EE  
+	tempH_EE
+	tempL_EE
+	tempL_EEC
+	MAX_EE   
+	READ_EE
+	last_log
+	LED_Count
+	SkipCount
+	exe_sec
+	exe_int
+	tens_digit
+	ones_digit
+	timer_H
+	timer_L
+	convert_buffer
+    endc
 
 ;*******************************************************************************
 ; tables
 ;*******************************************************************************
-Welcome		db	    "botL", 0
-Team		db	    "mr hl hg", 0
-StandBy		db	    "Standby", 0
-Log1		db	    "Time:",0
-Log2		db	    "12:00 2/3/14", 0
-LogInfo1	db	    "Saved:", 0
-LogInfo2	db	    "Back <0>", 0
-PermLog1	db	    "Permanent Logs", 0
-PermLog2	db	    "<1> ... <9>", 0	
-Exe1		db	    "Sorting...", 0
-Exe2		db	    "END <*>", 0
-PC1		db	    "PC Interface", 0
-PC2		db	    "Begin <#>", 0
-PCTransfer	db	    "Transferring...", 0
-Stopped		db	    "Stopped", 0
-Op_Time		db	    "Time: ", 0
-SAVE		db	    "Saving...", 0
-
-Safety		db	    "Safety check...", 0
-NoData		db	    "N/A", 0
+    Welcome	db	    "botL", 0
+    Team	db	    "mr hl hg", 0
+    StandBy	db	    "Standby", 0
+    Log1	db	    "Time:",0
+    Log2	db	    "12:00 2/3/14", 0
+    LogInfo1	db	    "Saved:", 0
+    LogInfo2	db	    "Back <0>", 0
+    PermLog1	db	    "Permanent Logs", 0
+    PermLog2	db	    "<1> ... <9>", 0	
+    Exe1	db	    "Sorting...", 0
+    Exe2	db	    "END <*>", 0
+    PC1		db	    "PC Interface", 0
+    PC2		db	    "Begin <#>", 0
+    PCTransfer	db	    "Transferring...", 0
+    Stopped	db	    "Stopped", 0
+    Op_Time	db	    "Time: ", 0
+    SAVE	db	    "Saving...", 0
+    Safety	db	    "Safety check...", 0
+    NoData	db	    "N/A", 0
 
 ;*******************************************************************************
 ; macros
@@ -223,9 +206,9 @@ endBCD
 	endm
 
 WriteRTC    macro
-	movff	tens_digit, W
+	movf	tens_digit, W
 	call	WR_DATA
-	movff	ones_digit, W
+	movf	ones_digit, W
 	call	WR_DATA
 	endm
 
@@ -392,6 +375,7 @@ INIT
 
 	; initializations
 	call	InitLCD
+	call	Delay50ms
 	call	I2C_Master_INIT
 	call	Delay50ms
 	;call	initUSART
@@ -419,29 +403,61 @@ INIT
 	clrf	tens_digit
 	clrf	ones_digit
 
-;	; set real time clock
-;	call	I2C_Master_START
-;	movlw	'w'
-;	call	WR_DATA
-;	call	Delay50ms
-;	movlw	b'11010000'
-;	call	I2C_Master_WRITE
-;	movlw	0x00		    ; memory point to seconds
-;	call	I2C_Master_WRITE
-;
-;	movlw	0x00		    ; set seconds to 0
-;	call	I2C_Master_WRITE
-;	movlw	0x40		    ; set minutes to 40
-;	call	I2C_Master_WRITE
-;	movlw	0x15		    ; set hours to 15
-;	call	I2C_Master_WRITE
-;	movlw	0x5		    ; set day to 5
-;	call	I2C_Master_WRITE
-;	movlw	0x02		    ; set month to feb
-;	call	I2C_Master_WRITE
-;	movlw	0x17		    ; set year to 17
-;	call	I2C_Master_STOP
-
+	;set real time clock
+	call	I2C_Master_START
+	movlw	b'11010000'
+	call	I2C_Master_WRITE
+	movlw	0x00		    ; set register pointer to seconds in rtc
+	call	I2C_Master_WRITE
+	movlw	b'00000000'	    ; seconds to 0
+	call	I2C_Master_WRITE
+	call	I2C_Master_STOP
+	
+	call	I2C_Master_START
+	movlw	b'11010000'
+	call	I2C_Master_WRITE
+	movlw	0x01		    ; set register pointer to minutes in rtc
+	call	I2C_Master_WRITE
+	movlw	b'00010100'	    ; minutes to 14
+	call	I2C_Master_WRITE
+	call	I2C_Master_STOP
+	
+	call	I2C_Master_START
+	movlw	b'11010000'
+	call	I2C_Master_WRITE
+	movlw	0x02		    ; set register pointer to hours in rtc
+	call	I2C_Master_WRITE
+	movlw	b'00100001'	    ; hours to 21
+	call	I2C_Master_WRITE
+	call	I2C_Master_STOP
+	
+	call	I2C_Master_START
+	movlw	b'11010000'
+	call	I2C_Master_WRITE
+	movlw	0x04		    ; set register pointer to day in rtc
+	call	I2C_Master_WRITE
+	movlw	b'00000110'	    ; days to 6
+	call	I2C_Master_WRITE
+	call	I2C_Master_STOP
+	
+	call	I2C_Master_START
+	movlw	b'11010000'
+	call	I2C_Master_WRITE
+	movlw	0x05		    ; set register pointer to month in rtc
+	call	I2C_Master_WRITE
+	movlw	b'00000010'	    ; month to 2
+	call	I2C_Master_WRITE
+	call	I2C_Master_STOP
+	
+	call	I2C_Master_START
+	movlw	b'11010000'
+	call	I2C_Master_WRITE
+	movlw	0x06		    ; set register pointer to years in rtc
+	call	I2C_Master_WRITE
+	movlw	b'00011111'	    ; year to 17
+	call	I2C_Master_WRITE
+	call	I2C_Master_STOP
+	
 	Display	Welcome
 	call LCD_L2
 	Display	Team
@@ -497,25 +513,7 @@ EXIT_EXE
 	WriteEE	    OP_INT, H_EE, L_EE
 	incf	    L_EE
 	
-;	movlw	    0x02
-;	call	    I2C_Master_READ					; Hours
-;	call	    WriteEE_RTC
-;	
-;	movlw	    0x01
-;	call	    I2C_Master_READ					; Minutes
-;	call	    WriteEE_RTC
-;	
-;	movlw	    0x05
-;	call	    I2C_Master_READ					; Month
-;	call	    WriteEE_RTC
-;	
-;	movlw	    0x04
-;	call	    I2C_Master_READ					; Day
-;	call	    WriteEE_RTC
-;	
-;	movlw	    0x06
-;	call	    I2C_Master_READ					; Year
-;	call	    WriteEE_RTC
+
 	
 	; Clear InOperation flag to stop '*' interrupts
 	clrf	    inExecution
@@ -617,14 +615,14 @@ HOLD_PERM_LOG
 	call	READ_KEY
 	ChangeMode  key0, STANDBY
 	ChangeMode  key1, PLOG
-;	ChangeMode  key2, PLOG
-;	ChangeMode  key3, PLOG
-;	ChangeMode  key4, PLOG
-;	ChangeMode  key5, PLOG
-;	ChangeMode  key6, PLOG
-;	ChangeMode  key7, PLOG
-;	ChangeMode  key8, PLOG
-;	ChangeMode  key9, PLOG
+	ChangeMode  key2, PLOG
+	ChangeMode  key3, PLOG
+	ChangeMode  key4, PLOG
+	ChangeMode  key5, PLOG
+	ChangeMode  key6, PLOG
+	ChangeMode  key7, PLOG
+	ChangeMode  key8, PLOG
+	ChangeMode  key9, PLOG
 	bra HOLD_PERM_LOG
 	
 PLOG
@@ -678,6 +676,19 @@ HOLD_PLOG
 ; subroutines
 ;*******************************************************************************
 
+Convert_RTC
+    movwf convert_buffer ; B1 = HHHH LLLL
+    swapf convert_buffer,w ; W = LLLL HHHH
+    andlw 0x0f ; Mask upper four bits 0000 HHHH
+    addlw 0x30 ; convert to ASCII
+    movwf tens_digit ;saves into 10ths digit
+
+    movf convert_buffer,w
+    andlw 0x0f ; w = 0000 LLLL
+    addlw 0x30 ; convert to ASCII
+    movwf ones_digit ; saves into 1s digit
+    return
+	
 Delay5us
 	movlw	d'120'
 	movwf	d5us
@@ -747,44 +758,95 @@ HOLD_KEY
 
 READ_KEY_RTC
 HOLD_KEY_RTC
-	call	    LCD_L2	; go to second line to print RTC
-;	call	    I2C_Master_START
-;	movlw	    b'11010000'
-;	movlw	    0x00
-;	call	    I2C_Master_WRITE
-;    	call	    I2C_Master_STOP
-;
-;	movlw	    0x01	; set ACKDT
-;	movwf	    I2C_ACKDT
-;
-;	movlw	    0x02	; get hours
-;	call	    I2C_Master_READ
-;	movf	    tens_digit, W
-;	andlw	    b'00000001'
-;	addlw	    0x30
-;	call	    WR_DATA
-;	movf	    ones_digit, W
-;	call	    WR_DATA
-;	movlw	    0x01	; get minutes
-;	call	    I2C_Master_READ
-;	WriteRTC
-;	movlw	    " "		; wow grate formatng very nice. thank you
-;	call	    WR_DATA
-;	movlw	    0x05	; month
-;	call	    I2C_Master_READ
-;	WriteRTC
-;	movlw	    0x2F	; ascii code for forward slash
-;	call	    WR_DATA
-;	movlw	    0x04	; get day
-;	call	    I2C_Master_READ
-;	WriteRTC
-;	movlw	    0x2F	; ascii code for forward slash
-;	call	    WR_DATA
-;	movlw	    0x00	; clear ACKDT
-;	movwf	    I2C_ACKDT
-;	movlw    0x06		; get year
-;	call	    I2C_Master_READ
-;	WriteRTC
+	call	    LCD_L2	    ; go to second line to print RTC
+	bsf	    I2C_ACKDT,0	    ; set temp acknowledge bit to 1
+
+	; read current time
+	call	    I2C_Master_START
+	movlw	    b'11010000'	    ; 7 bit rtc address and write
+	call	    I2C_Master_WRITE
+	;call	    I2C_Master_ACK
+	movlw	    0x02	    ; hours pointer
+	call	    I2C_Master_WRITE; set register pointer in rtc
+	;call	    I2C_Master_ACK
+	call	    I2C_Master_RSTART
+	movlw	    b'11010001'    ; rtc address and read
+	call	    I2C_Master_WRITE
+	;call	    I2C_Master_ACK
+	call	    I2C_Master_READ
+	;call	    I2C_Master_NACK
+	bcf	    I2C_ACKDT,0	    ; set temp acknowledge bit to 1
+	call	    I2C_Master_STOP ; here is infinite loop
+	call	    Convert_RTC
+	
+	movwf	    tens_digit
+	andlw	    b'00000001'
+	addlw	    0x30
+	call	    WR_DATA
+		
+	movwf	    ones_digit
+	call	    WR_DATA
+	
+	call	    I2C_Master_START
+	movlw	    b'11010000'	    ; 7 bit rtc address and write
+	call	    I2C_Master_WRITE
+	movlw	    0x01	    ; minutes pointer
+	call	    I2C_Master_WRITE; set register pointer in rtc
+	call	    I2C_Master_RSTART
+	movlw	    b'11010001'    ; rtc address and read
+	call	    I2C_Master_WRITE
+	call	    I2C_Master_STOP
+	call	    Convert_RTC
+	WriteRTC
+	
+	movlw	    " "		; wow grate formatng very nice. thank you
+	call	    WR_DATA
+	
+	call	    I2C_Master_START
+	movlw	    b'11010000'	    ; 7 bit rtc address and write
+	call	    I2C_Master_WRITE
+	movlw	    0x05	    ; month pointer
+	call	    I2C_Master_WRITE; set register pointer in rtc
+	call	    I2C_Master_RSTART
+	movlw	    b'11010001'    ; rtc address and read
+	call	    I2C_Master_WRITE
+	call	    I2C_Master_READ
+	call	    I2C_Master_STOP
+	call	    Convert_RTC
+	WriteRTC
+	
+	movlw	    0x2F	; ascii code for forward slash
+	call	    WR_DATA
+	
+	call	    I2C_Master_START
+	movlw	    b'11010000'	    ; 7 bit rtc address and write
+	call	    I2C_Master_WRITE
+	movlw	    0x04	    ; day pointer
+	call	    I2C_Master_WRITE; set register pointer in rtc
+	call	    I2C_Master_RSTART
+	movlw	    b'11010001'    ; rtc address and read
+	call	    I2C_Master_WRITE
+	call	    I2C_Master_READ
+	call	    I2C_Master_STOP
+	call	    Convert_RTC
+	WriteRTC
+	
+	movlw	    0x2F	; ascii code for forward slash
+	call	    WR_DATA
+	
+	bcf	    I2C_ACKDT, 0 ; no more reading, clea acknowledge bit
+	call	    I2C_Master_START
+	movlw	    b'11010000'	    ; 7 bit rtc address and write
+	call	    I2C_Master_WRITE
+	movlw	    0x06	    ; year pointer
+	call	    I2C_Master_WRITE; set register pointer in rtc
+	call	    I2C_Master_RSTART
+	movlw	    b'11010001'    ; rtc address and read
+	call	    I2C_Master_WRITE
+	call	    I2C_Master_READ
+	call	    I2C_Master_STOP
+	call	    Convert_RTC
+	WriteRTC
 
 	btfss	    PORTB, 1	; keypad interrupt
 	goto	    HOLD_KEY_RTC

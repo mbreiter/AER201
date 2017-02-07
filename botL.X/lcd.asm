@@ -7,14 +7,14 @@ E 	equ 3
 #define		LCD_RS      LATD, 2        ; for v 1.0 used PORTD.3
 #define		LCD_E       LATD, 3        ; for v 1.0 used PORTD.2
 
-lcd_tmp		equ		0x20
-lcd_d1		equ		0x21
-lcd_d2		equ		0x22
-temp_lcd	equ		0x23           ; buffer for Instruction
-dat		equ		0x24           ; buffer for data
-delay1		equ		0x25
-delay2		equ		0x26
-delay3		equ		0x27
+lcd_tmp		equ		0x70
+lcd_d1		equ		0x71
+lcd_d2		equ		0x72
+temp_lcd	equ		0x73           ; buffer for Instruction
+dat		equ		0x74           ; buffer for data
+delay1		equ		0x75
+delay2		equ		0x76
+delay3		equ		0x77
 
 ;Helper macros
 WRT_LCD macro val
