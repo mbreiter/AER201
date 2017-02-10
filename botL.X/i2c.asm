@@ -7,9 +7,25 @@ errorlevel -305
 I2C_temp    res		1
 I2C_ACKDT   res		1
      
-global I2C_Master_INIT, I2C_Master_WAIT,I2C_Master_START,I2C_Master_RSTART,I2C_Master_STOP,I2C_Master_WRITE, I2C_Master_READ,I2C_Master_ACK,I2C_Master_NACK
+global I2C_Master_INIT, I2C_Master_WAIT,I2C_Master_START,I2C_Master_RSTART,I2C_Master_STOP,I2C_Master_WRITE, I2C_Master_READ,I2C_Master_ACK,CHECK_ACK, CHECK_NACK
 global I2C_ACKDT
    
+I2C_Condition	macro	 condition
+    bsf	    SSPCON2, condition
+    endm
+   
+CHECK_ACK
+    btfsc   SSPCON2, ACKSTAT
+    return
+
+CHECK_NACK
+    bsf	    SSPCON2, ACKDT
+    bcf	    SSPCON2, ACKEN
+TEST_NACK
+    btfsc   SSPCON2, ACKEN
+    goto    TEST_NACK
+    return
+    
 I2C_Master_INIT
     clrf    SSPSTAT
     movlw   b'00101000'
@@ -33,54 +49,44 @@ WAIT
     return
         
 I2C_Master_START
-    
     call    I2C_Master_WAIT
-    bsf	    SSPCON2, SEN
+    I2C_Condition   SEN
     return
 
 I2C_Master_RSTART
     call    I2C_Master_WAIT
-    bsf	    SSPCON2, RSEN
+    I2C_Condition   RSEN
     return
     
 I2C_Master_STOP
-    ;call    I2C_Master_WAIT
-    bsf	    SSPCON2, PEN
+    call    I2C_Master_WAIT
+    I2C_Condition   PEN
     return
     
-I2C_Master_WRITE
+I2C_Master_WRITE 
     call    I2C_Master_WAIT
     movwf   SSPBUF
+HOLD_UP
+    btfsc   SSPSTAT, 2
+    goto    HOLD_UP
     return   
     
 I2C_Master_READ
-    call    I2C_Master_WAIT
+    
     bsf	    SSPCON2, RCEN
-    call    I2C_Master_WAIT
-    movff   SSPBUF, WREG
-        
-    call    I2C_Master_WAIT    
-    btfsc   I2C_ACKDT, 0
-    bsf	    SSPCON2, ACKDT
-    btfss   I2C_ACKDT, 0
-    bcf	    SSPCON2, ACKDT
-    
-    bsf	    SSPCON2, ACKEN
+    call    I2C_Master_WAIT   
+LOOP
+    btfsc   SSPCON2, RCEN
+    bra LOOP
+    movf    SSPBUF, W
     return
-
+    
 I2C_Master_ACK
-    bcf SSPCON2,ACKDT
-    bsf SSPCON2,ACKEN
-;    btfsc SSPCON2,ACKEN
-;    bra $-2
-    return
-    
-I2C_Master_NACK
-    bsf SSPCON2,ACKDT
-    bsf SSPCON2,ACKEN
-;Again
-;    btfsc SSPCON2,ACKEN
-;    goto Again
+    bcf	    SSPCON2,ACKDT
+    bsf	    SSPCON2,ACKEN
+TEST_ACK
+    btfsc   SSPCON2,ACKEN
+    bra	    TEST_ACK
     return
     
     end

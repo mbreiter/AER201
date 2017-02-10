@@ -14,13 +14,14 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 #include <p18f4620.inc>
 #include <lcd.inc>
 #include <i2c.inc>
+#include <rtc.inc>
 
     CONFIG OSC=HS, FCMEN=OFF, IESO=OFF
     CONFIG PWRT = OFF, BOREN = SBORDIS, BORV = 3
     CONFIG WDT = OFF, WDTPS = 32768
     CONFIG MCLRE = ON, LPT1OSC = OFF, PBADEN = OFF
     CONFIG STVREN = ON, LVP = OFF, XINST = OFF
-    CONFIG DEBUG = ON
+    CONFIG DEBUG = OFF
     CONFIG CP0 = OFF, CP1 = OFF, CP2 = OFF, CP3 = OFF
     CONFIG CPB = OFF, CPD = OFF
     CONFIG WRT0 = OFF, WRT1 = OFF, WRT2 = OFF, WRT3 = OFF
@@ -50,8 +51,11 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	key0
 	keyH
 	keyD
+	KEY
+	temp_KEY
+	KEY_ISR
 	temp_S	
-	temp_W	
+	temp_W
 	counter
 	counter2
 	temp
@@ -62,9 +66,6 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	d5us
 	d200us
 	d50ms
-	KEY
-	temp_KEY
-	KEY_ISR
 	inExecution
 	clear_EE
 	H_EE	
@@ -76,15 +77,30 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	MAX_EE   
 	READ_EE
 	last_log
+	startHt
+	startHo
+	startMt
+	startMo
+	endHt
+	endHo
+	endMt
+	endMo
 	LED_Count
 	SkipCount
 	exe_sec
 	exe_int
-	tens_digit
-	ones_digit
+;	tens_digit
+;	ones_digit
 	timer_H
 	timer_L
 	convert_buffer
+	transferring
+	PC_PCL
+	PC_PCLATH
+	PC_PCLATU
+	TIMCNT
+	CPCNT
+	TDATA
     endc
 
 ;*******************************************************************************
@@ -109,11 +125,42 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     SAVE	db	    "Saving...", 0
     Safety	db	    "Safety check...", 0
     NoData	db	    "N/A", 0
-
+    PCLog1	db	    "Time and Date:", 0
+	
 ;*******************************************************************************
 ; macros
 ;*******************************************************************************
 
+TransferTable macro table
+	local loop
+	
+	movlw	upper table
+	movwf	TBLPTRU
+	movlw	high table
+	movwf	TBLPTRH
+	movlw	low table
+	movwf	TBLPTRL
+	tblrd*
+	movf	TABLAT, W
+loop
+	call	USART_WAIT
+	tblrd+*
+	movf	TABLAT, W
+	bnz	loop
+	endm
+	
+ConfigLCD   macro
+          movlw     b'00101000'    ; 4 bits, 2 lines,5X7 dots seems to work best instead of the above setting
+          call      WR_INS
+
+          movlw     b'00001100'    ; display on/off
+          call      WR_INS
+         ; movlw     B'00000110'    ; Entry mode
+         ; call      WR_INS
+          movlw     b'00000001'    ; Clear ram
+          call      WR_INS
+	  endm
+	
 movMSB	macro	port
 	andlw	0xF0
 	iorwf	port, f
@@ -174,6 +221,9 @@ Again
 	    goto	Finish
 Finish
 	    endm
+	    
+;TransferLog macro   addrH, addrL
+	
 
 incf_BCD    macro   BCD
 	local ones, endBCD
@@ -357,6 +407,7 @@ INIT
 	movwf	TRISB		    ; keypad
 	movlw	b'10111111'
 	movwf	TRISC
+	
 	movlw	b'00000000'
 	movwf	TRISD
 	movlw	b'00000111'
@@ -364,22 +415,26 @@ INIT
 
 	; analog/digital pins
 	movlw	b'00001111'     ; Set all AN pins to Digital
-        movwf   ADCON1
+	movwf   ADCON1
 
-	; clear Ports
-	clrf	LATA
-	clrf	LATB
-	clrf	LATC
-	clrf	LATD
+	; clear ports
+        clrf	LATA
+        clrf	LATB
+	bcf	TRISC, SCL
+	bcf	TRISC, SDA
+        clrf	LATC
+        clrf	LATD
 	clrf	LATE
-
+	
 	; initializations
+	
 	call	InitLCD
+	ConfigLCD
+	
+	call	RTC_INIT
 	call	Delay50ms
-	call	I2C_Master_INIT
-	call	Delay50ms
-	;call	initUSART
-	;call	initEEPROM
+	
+	call	INIT_USART
 
 	movlw	b'00001000'
 	movwf	T0CON
@@ -402,61 +457,9 @@ INIT
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
-
-	;set real time clock
-	call	I2C_Master_START
-	movlw	b'11010000'
-	call	I2C_Master_WRITE
-	movlw	0x00		    ; set register pointer to seconds in rtc
-	call	I2C_Master_WRITE
-	movlw	b'00000000'	    ; seconds to 0
-	call	I2C_Master_WRITE
-	call	I2C_Master_STOP
 	
-	call	I2C_Master_START
-	movlw	b'11010000'
-	call	I2C_Master_WRITE
-	movlw	0x01		    ; set register pointer to minutes in rtc
-	call	I2C_Master_WRITE
-	movlw	b'00010100'	    ; minutes to 14
-	call	I2C_Master_WRITE
-	call	I2C_Master_STOP
-	
-	call	I2C_Master_START
-	movlw	b'11010000'
-	call	I2C_Master_WRITE
-	movlw	0x02		    ; set register pointer to hours in rtc
-	call	I2C_Master_WRITE
-	movlw	b'00100001'	    ; hours to 21
-	call	I2C_Master_WRITE
-	call	I2C_Master_STOP
-	
-	call	I2C_Master_START
-	movlw	b'11010000'
-	call	I2C_Master_WRITE
-	movlw	0x04		    ; set register pointer to day in rtc
-	call	I2C_Master_WRITE
-	movlw	b'00000110'	    ; days to 6
-	call	I2C_Master_WRITE
-	call	I2C_Master_STOP
-	
-	call	I2C_Master_START
-	movlw	b'11010000'
-	call	I2C_Master_WRITE
-	movlw	0x05		    ; set register pointer to month in rtc
-	call	I2C_Master_WRITE
-	movlw	b'00000010'	    ; month to 2
-	call	I2C_Master_WRITE
-	call	I2C_Master_STOP
-	
-	call	I2C_Master_START
-	movlw	b'11010000'
-	call	I2C_Master_WRITE
-	movlw	0x06		    ; set register pointer to years in rtc
-	call	I2C_Master_WRITE
-	movlw	b'00011111'	    ; year to 17
-	call	I2C_Master_WRITE
-	call	I2C_Master_STOP
+	movlw     b'11110010'    ; Set required keypad inputs
+        movwf     TRISB
 	
 	Display	Welcome
 	call LCD_L2
@@ -471,11 +474,11 @@ STANDBY
 	Display	StandBy
 
 HOLD_STANDBY
-	call	READ_KEY_RTC
+	call	READ_KEY_TIME
 	ChangeMode keyA, EXECUTION
 	ChangeMode keyB, LOG
 	ChangeMode keyC, PERM_LOG
-	;ChangeMode keyD, PC
+	ChangeMode keyD, PC_MODE
 	bra	HOLD_STANDBY
 
 ;*******************************************************************************
@@ -483,6 +486,9 @@ HOLD_STANDBY
 ;*******************************************************************************
 
 EXECUTION
+	; save the starting time
+	call	START_TIME
+	
 	; display
         setf	    inExecution
 	call	    ClrLCD
@@ -554,7 +560,7 @@ ShiftLoop
 	goto		ShiftLoop
 	
 	; Finish Saving Data
-	;Stop Timer and goto OpLog
+	; Stop Timer and goto OpLog
 	bcf		T0CON, TMR0ON
 	movlw		d'9'
 	movwf		L_EE
@@ -671,23 +677,234 @@ HOLD_PLOG
 	call	READ_KEY
 	ChangeMode  key0, PERM_LOG	; back to perm log menu
 	bra HOLD_PERM_LOG
-		
+	
+;*******************************************************************************
+; pc interface
+;*******************************************************************************
+
+PC_MODE
+	call	ClrLCD
+	Display	PC1
+	call	LCD_L2
+	Display	PC2
+	movff	PCL, PC_PCL
+	movff	PCLATH, PC_PCLATH
+	movff	PCLATU, PC_PCLATU
+	
+HOLD_PC
+	call	READ_KEY
+	ChangeMode  key0, STANDBY
+	ChangeMode  keyH, PC_TRANSFER
+	bra	HOLD_PC
+
+PC_TRANSFER
+	setf	transferring
+	call	ClrLCD
+	Display	PCTransfer
+	;call	DataUSART
+	clrf	transferring
+	bra	HOLD_PC
+	
 ;*******************************************************************************
 ; subroutines
 ;*******************************************************************************
 
-Convert_RTC
-    movwf convert_buffer ; B1 = HHHH LLLL
-    swapf convert_buffer,w ; W = LLLL HHHH
-    andlw 0x0f ; Mask upper four bits 0000 HHHH
-    addlw 0x30 ; convert to ASCII
-    movwf tens_digit ;saves into 10ths digit
+RTC_INIT
+	; set sda and scl to high-z
+	bcf	PORTC, 4
+	bcf	PORTC, 3
+	bsf	TRISC, 4
+	bsf	TRISC, 3
 
-    movf convert_buffer,w
-    andlw 0x0f ; w = 0000 LLLL
-    addlw 0x30 ; convert to ASCII
-    movwf ones_digit ; saves into 1s digit
-    return
+	call	i2c_common_setup
+	;call	SET_TIME
+return
+	
+START_TIME
+	rtc_read    0x02	    ; hour
+	movf	tens_digit, WREG
+	movwf	startHt
+	movf	ones_digit, WREG
+	movwf	startHo
+	
+	rtc_read    0x01	    ; minute
+	movf	tens_digit, WREG
+	movwf	startMt
+	movf	ones_digit, WREG
+	movwf	startMo
+return
+	
+END_TIME
+	rtc_read    0x02	    ; hour
+	movf	tens_digit, WREG
+	movwf	endHt
+	movf	ones_digit, WREG
+	movwf	endHo
+	
+	rtc_read    0x01	    ; minute
+	movf	tens_digit, WREG
+	movwf	endMt
+	movf	ones_digit, WREG
+	movwf	endMo
+return
+	
+	
+DISPLAY_RTC
+	
+	; display data in this format hh/minmin/yy yy/mm/dd
+	rtc_read    0x02	    ; 0x02 from DS1307 - hours
+	movf	tens_digit,WREG
+	call	WR_DATA
+	movf	ones_digit,WREG
+	call	WR_DATA
+	movlw	"h"
+	call	WR_DATA
+	
+	rtc_read    0x01	    ; 0x01 from DS1307 - minutes
+	movf	tens_digit,WREG
+	call	WR_DATA
+	movf	ones_digit,WREG
+	call	WR_DATA
+	movlw	" "
+	call	WR_DATA
+	
+	rtc_read    0x06	    ; 0x06 from DS1307 - years
+	movf	tens_digit,WREG
+	call	WR_DATA
+	movf	ones_digit,WREG
+	call	WR_DATA
+	movlw	"/"
+	call	WR_DATA
+	
+	rtc_read    0x05	    ; 0x06 from DS1307 - months
+	movf	tens_digit,WREG
+	call	WR_DATA
+	movf	ones_digit,WREG
+	call	WR_DATA
+	movlw	"/"
+	call	WR_DATA
+	
+	rtc_read    0x04	    ; 0x06 from DS1307 - days
+	movf	tens_digit,WREG
+	call	WR_DATA
+	movf	ones_digit,WREG
+	call	WR_DATA
+return
+	
+SET_TIME
+	rtc_resetAll
+	
+	rtc_set	0x00,	b'10000000'
+
+	rtc_set	0x06,	b'00010111'		; Year 17
+	rtc_set	0x05,	b'00000010'		; Month 2
+	rtc_set	0x04,	b'00010000'		; Date 10
+	rtc_set	0x02,	b'00011000'		; Hours 18
+	rtc_set	0x01,	b'00100111'		; Minutes 27
+	rtc_set	0x00,	b'00000000'		; Seconds 0
+return
+	
+INIT_USART
+	movlw	15	; baud rate 9600
+	movwf	SPBRG
+	clrf	TXSTA
+	
+	clrf	RCSTA
+	bsf	RCSTA,SPEN	; asynchronous serial port enable
+	bsf	RCSTA,CREN	; continous receive
+	
+	bsf	TXSTA, TXEN	; transmit enabled
+	return
+
+;DataUSART
+;	
+;	movlw	0x02
+;	call	USART_WAIT
+;	movlw	0x0D
+;	call	USART_WAIT
+;	
+;	movlw	d'21'	    ; start of permanent logs
+;	movff	w, L_EE
+;	TransferTable	PCLog1
+;	
+;	; display time here
+;;	rtc_read	0x02
+;;		movf        tens_digit, W
+;;        andlw       b'00000001'
+;;        addlw       0x30
+;;        call        TransmitWaitUSART
+;;        movf        ones_digit, W
+;;        call        TransmitWaitUSART
+;;		movlw		":"
+;;		call		TransmitWaitUSART
+;;		; Dispay minutes
+;;		rtc_read	0x01
+;;		call        SendRTC_USART
+;;		; Dispay AM/PM
+;;		rtc_read	0x02
+;;        movlw       "P"
+;;        btfss       tens_digit, 1
+;;        movlw       "A"
+;;        call        TransmitWaitUSART
+;;        movlw       "M"
+;;        call        TransmitWaitUSART
+;;		movlw		" "
+;;        call        TransmitWaitUSART
+;;		; Display month
+;;		rtc_read	0x05
+;;		call        SendRTC_USART
+;;		movlw		0x2F		; ASCII '/'
+;;		call		TransmitWaitUSART
+;;		; Display day
+;;		rtc_read	0x04
+;;		call        SendRTC_USART
+;;		movlw		0x2F		; ASCII '/'
+;;		call		TransmitWaitUSART
+;;		; Display year
+;;		rtc_read	0x06
+;;		call        SendRTC_USART
+;	
+;	call	USART_LINE
+;	call	USART_LINE
+;	
+;	clrf	counter
+;	incf	counter
+;
+;USART_TRANSFER
+;	movlw	d'21'
+;	mulwf	counter
+;	movff	PRODL, L_EE
+;	movlw	d'9'
+;	addwf	L_EE
+;	READEE	OP_sec, H_EE, L_EE
+;	incf	L_EE
+;	READEE	OP_INT, H_EE, L_EE
+;	incf	L_EE
+;	; call	TransferTime
+;	
+;	; send rtc
+;	movlw	0x09
+;	call	USART_WAIT
+;	movff	PRODL, L_EE
+;	;call	TransferRTC
+;	call	USART_LINE
+;	
+;	
+;	
+;	
+;USART_WAIT
+;	movwf	TXREG
+;	btfss	TXSTA,1
+;	goto	$-2
+;	return
+;
+;USART_LINE
+;	movlw	0x0A
+;	call	USART_WAIT
+;	movlw	0x0D
+;	call	USART_WAIT
+;	return
+	
 	
 Delay5us
 	movlw	d'120'
@@ -746,9 +963,8 @@ ClearNext
 	return
 	
 READ_KEY
-HOLD_KEY
 	btfss	PORTB, 1	; check for keypad interrupt
-	goto	HOLD_KEY
+	goto	READ_KEY
 	swapf	PORTB, W
 	andlw	0x0F
 	movwf	KEY
@@ -756,100 +972,14 @@ HOLD_KEY
 	goto	$-2
 	return
 
-READ_KEY_RTC
-HOLD_KEY_RTC
+READ_KEY_TIME
 	call	    LCD_L2	    ; go to second line to print RTC
-	bsf	    I2C_ACKDT,0	    ; set temp acknowledge bit to 1
 
-	; read current time
-	call	    I2C_Master_START
-	movlw	    b'11010000'	    ; 7 bit rtc address and write
-	call	    I2C_Master_WRITE
-	;call	    I2C_Master_ACK
-	movlw	    0x02	    ; hours pointer
-	call	    I2C_Master_WRITE; set register pointer in rtc
-	;call	    I2C_Master_ACK
-	call	    I2C_Master_RSTART
-	movlw	    b'11010001'    ; rtc address and read
-	call	    I2C_Master_WRITE
-	;call	    I2C_Master_ACK
-	call	    I2C_Master_READ
-	;call	    I2C_Master_NACK
-	bcf	    I2C_ACKDT,0	    ; set temp acknowledge bit to 1
-	call	    I2C_Master_STOP ; here is infinite loop
-	call	    Convert_RTC
-	
-	movwf	    tens_digit
-	andlw	    b'00000001'
-	addlw	    0x30
-	call	    WR_DATA
-		
-	movwf	    ones_digit
-	call	    WR_DATA
-	
-	call	    I2C_Master_START
-	movlw	    b'11010000'	    ; 7 bit rtc address and write
-	call	    I2C_Master_WRITE
-	movlw	    0x01	    ; minutes pointer
-	call	    I2C_Master_WRITE; set register pointer in rtc
-	call	    I2C_Master_RSTART
-	movlw	    b'11010001'    ; rtc address and read
-	call	    I2C_Master_WRITE
-	call	    I2C_Master_STOP
-	call	    Convert_RTC
-	WriteRTC
-	
-	movlw	    " "		; wow grate formatng very nice. thank you
-	call	    WR_DATA
-	
-	call	    I2C_Master_START
-	movlw	    b'11010000'	    ; 7 bit rtc address and write
-	call	    I2C_Master_WRITE
-	movlw	    0x05	    ; month pointer
-	call	    I2C_Master_WRITE; set register pointer in rtc
-	call	    I2C_Master_RSTART
-	movlw	    b'11010001'    ; rtc address and read
-	call	    I2C_Master_WRITE
-	call	    I2C_Master_READ
-	call	    I2C_Master_STOP
-	call	    Convert_RTC
-	WriteRTC
-	
-	movlw	    0x2F	; ascii code for forward slash
-	call	    WR_DATA
-	
-	call	    I2C_Master_START
-	movlw	    b'11010000'	    ; 7 bit rtc address and write
-	call	    I2C_Master_WRITE
-	movlw	    0x04	    ; day pointer
-	call	    I2C_Master_WRITE; set register pointer in rtc
-	call	    I2C_Master_RSTART
-	movlw	    b'11010001'    ; rtc address and read
-	call	    I2C_Master_WRITE
-	call	    I2C_Master_READ
-	call	    I2C_Master_STOP
-	call	    Convert_RTC
-	WriteRTC
-	
-	movlw	    0x2F	; ascii code for forward slash
-	call	    WR_DATA
-	
-	bcf	    I2C_ACKDT, 0 ; no more reading, clea acknowledge bit
-	call	    I2C_Master_START
-	movlw	    b'11010000'	    ; 7 bit rtc address and write
-	call	    I2C_Master_WRITE
-	movlw	    0x06	    ; year pointer
-	call	    I2C_Master_WRITE; set register pointer in rtc
-	call	    I2C_Master_RSTART
-	movlw	    b'11010001'    ; rtc address and read
-	call	    I2C_Master_WRITE
-	call	    I2C_Master_READ
-	call	    I2C_Master_STOP
-	call	    Convert_RTC
-	WriteRTC
+	; display the time
+	call	DISPLAY_RTC
 
 	btfss	    PORTB, 1	; keypad interrupt
-	goto	    HOLD_KEY_RTC
+	goto	    READ_KEY_TIME
 	swapf	    PORTB, W	; copy PORTB7:4 to W3:0
 	andlw	    0x0F	; only want W3:0
 	movwf	    KEY		; write this value to the KEY
@@ -941,3 +1071,4 @@ DispOpRTC_Helper
 	incf		L_EE
 	return
 end
+

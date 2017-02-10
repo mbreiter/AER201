@@ -74,18 +74,18 @@ InitLCD
 ;		output : -
 ;****************************************
 WR_INS
-		bcf		LCD_RS	  				; clear Register Status bit
+		bcf	LCD_RS	  				; clear Register Status bit
 		movwf	temp_lcd			; store instruction
 		andlw	0xF0			  	; mask 4 bits MSB
 		movwf	LATD			  	; send 4 bits MSB
 
-		bsf		LCD_E					; pulse enable high
+		bsf	LCD_E					; pulse enable high
 		swapf	temp_lcd, WREG		; swap nibbles
 		andlw	0xF0			  	; mask 4 bits LSB
-		bcf		LCD_E
+		bcf	LCD_E
 		movwf	LATD			  	; send 4 bits LSB
-		bsf		LCD_E					; pulse enable high
-		bcf		LCD_E
+		bsf	LCD_E					; pulse enable high
+		bcf	LCD_E
 		call	delay5ms
 
 		return
