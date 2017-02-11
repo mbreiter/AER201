@@ -1,6 +1,0 @@
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c.asm 3 : Found directive in column 1. (errorlevel)
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c.asm 4 : Found directive in column 1. (errorlevel)
-Warning[231] /Users/mreiter/Desktop/AER201/botL.X/i2c.asm 7 : No memory has been reserved by this instruction
-Warning[231] /Users/mreiter/Desktop/AER201/botL.X/i2c.asm 8 : No memory has been reserved by this instruction
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c.asm 10 : Found directive in column 1. (global)
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c.asm 11 : Found directive in column 1. (global)

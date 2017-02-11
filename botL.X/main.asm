@@ -13,7 +13,6 @@
 list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 #include <p18f4620.inc>
 #include <lcd.inc>
-#include <i2c.inc>
 #include <rtc.inc>
 
     CONFIG OSC=HS, FCMEN=OFF, IESO=OFF
@@ -89,8 +88,6 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	SkipCount
 	exe_sec
 	exe_int
-;	tens_digit
-;	ones_digit
 	timer_H
 	timer_L
 	convert_buffer
@@ -487,7 +484,6 @@ HOLD_STANDBY
 
 EXECUTION
 	; save the starting time
-	call	START_TIME
 	
 	; display
         setf	    inExecution
@@ -518,8 +514,6 @@ EXIT_EXE
 	incf	    L_EE
 	WriteEE	    OP_INT, H_EE, L_EE
 	incf	    L_EE
-	
-
 	
 	; Clear InOperation flag to stop '*' interrupts
 	clrf	    inExecution
@@ -719,36 +713,7 @@ RTC_INIT
 	call	i2c_common_setup
 	;call	SET_TIME
 return
-	
-START_TIME
-	rtc_read    0x02	    ; hour
-	movf	tens_digit, WREG
-	movwf	startHt
-	movf	ones_digit, WREG
-	movwf	startHo
-	
-	rtc_read    0x01	    ; minute
-	movf	tens_digit, WREG
-	movwf	startMt
-	movf	ones_digit, WREG
-	movwf	startMo
-return
-	
-END_TIME
-	rtc_read    0x02	    ; hour
-	movf	tens_digit, WREG
-	movwf	endHt
-	movf	ones_digit, WREG
-	movwf	endHo
-	
-	rtc_read    0x01	    ; minute
-	movf	tens_digit, WREG
-	movwf	endMt
-	movf	ones_digit, WREG
-	movwf	endMo
-return
-	
-	
+		
 DISPLAY_RTC
 	
 	; display data in this format hh/minmin/yy yy/mm/dd
@@ -799,8 +764,8 @@ SET_TIME
 	rtc_set	0x06,	b'00010111'		; Year 17
 	rtc_set	0x05,	b'00000010'		; Month 2
 	rtc_set	0x04,	b'00010000'		; Date 10
-	rtc_set	0x02,	b'00011000'		; Hours 18
-	rtc_set	0x01,	b'00100111'		; Minutes 27
+	rtc_set	0x02,	b'00100001'		; Hours 18
+	rtc_set	0x01,	b'00101001'		; Minutes 27
 	rtc_set	0x00,	b'00000000'		; Seconds 0
 return
 	
@@ -1071,4 +1036,3 @@ DispOpRTC_Helper
 	incf		L_EE
 	return
 end
-

@@ -39,9 +39,7 @@ i2c_common_start macro
 ;output: none
 ;desc: initiate start condition on the bus
 bsf SSPCON2,SEN
-
-btfss	SSPCON1, WCOL
- 
+btfss	SSPCON1, WCOL	    ; NEED THIS HERE!!!!!!
 bsf PIR1, SSPIF
 btfss PIR1, SSPIF
 bra $-2
@@ -272,7 +270,5 @@ andlw 0x0f ; w = 0000 LLLL
 addlw 0x30 ; convert to ASCII
 movwf ones_digit ; saves into 1s digit
 return
-
-
 
 end
