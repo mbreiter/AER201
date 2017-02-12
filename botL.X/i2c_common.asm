@@ -39,7 +39,7 @@ i2c_common_start macro
 ;output: none
 ;desc: initiate start condition on the bus
 bsf SSPCON2,SEN
-btfss	SSPCON1, WCOL	    ; NEED THIS HERE!!!!!!
+btfss	SSPCON1, WCOL
 bsf PIR1, SSPIF
 btfss PIR1, SSPIF
 bra $-2
@@ -132,7 +132,7 @@ i2c_common_setup
 ;output: none
 ;desc: sets up I2C as master device with 100kHz baud rate
 
-movlw b'10000000'
+movlw b'00000000'
 movwf SSPSTAT ;set I2C line leves, clear all flags.
 
 movlw 24 ;100kHz baud rate: 10000000 osc / [4*100000] -1

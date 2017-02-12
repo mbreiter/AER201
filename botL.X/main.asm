@@ -6,6 +6,7 @@
 ;    Author: Matthew Reiter
 ;    Course: AER201
 ;    Description: Bottle sorting machine
+ 
 ;*******************************************************************************
 ; configuration settings
 ;*******************************************************************************
@@ -99,6 +100,8 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	CPCNT
 	TDATA
     endc
+    
+
 
 ;*******************************************************************************
 ; tables
@@ -337,14 +340,17 @@ ISR_HIGH
 	saveContext
 
 	;reset timer
-	movlw	timer_H
+	movlw	0xb
 	movwf	TMR0H
-	movlw	timer_L - 9
+	movlw	0xdc
 	movwf	TMR0L
+	
+	;call	DISPLAY_RTC
 	
 	;timer interrupt
 	btfss	INTCON, TMR0IF
 	goto	END_ISR_HIGH
+	
 	incf_BCD    OP_INT
 	movlw	d'0'
 	cpfseq	OP_INT
@@ -398,13 +404,12 @@ END_ISR_LOW
 ;*******************************************************************************
 INIT
 	; i/o
-	movlw	b'00000000'
+	movlw	b'11111111'
 	movwf	TRISA
 	movlw	b'11111111'
 	movwf	TRISB		    ; keypad
-	movlw	b'10111111'
+	movlw	b'00000000'
 	movwf	TRISC
-	
 	movlw	b'00000000'
 	movwf	TRISD
 	movlw	b'00000111'
@@ -417,11 +422,16 @@ INIT
 	; clear ports
         clrf	LATA
         clrf	LATB
-	bcf	TRISC, SCL
-	bcf	TRISC, SDA
+;	bcf	TRISC, SCL
+;	bcf	TRISC, SDA
         clrf	LATC
         clrf	LATD
 	clrf	LATE
+	
+	movlw	b'00000000'
+	movwf	ADCON0
+	movlw	b'11111111'
+	movwf	ADCON1
 	
 	; initializations
 	
@@ -433,9 +443,6 @@ INIT
 	
 	call	INIT_USART
 
-	movlw	b'00001000'
-	movwf	T0CON
-
 	; interrupts
 	clrf	RCON
 	clrf	INTCON
@@ -445,10 +452,23 @@ INIT
 	bsf	INTCON, GIEH	    ; permit global interrupts
 	bsf	INTCON, GIEL
 	bsf	INTCON2, INTEDG1    ; INTEDG1 on rising edge
-	bsf	INTCON, TMR0IE
+	bsf	INTCON, TMR0IE	    ; clear timer0 overflow interrupt flag
+	bsf	INTCON, TMR0IF	    ; clear timer0 overflow interrupt flag
 	bsf	INTCON2, TMR0IP	    ; set to high priority
 	bsf	INTCON3, INT1IE
 	bcf	INTCON3, INT1IP
+	
+	; setting up timer to sychronize with 1 second clock intervals
+	bcf	T0CON, T08BIT
+	bcf	T0CON, T0CS
+	bcf	T0CON, PSA
+	bsf	T0CON, T0PS2
+	bcf	T0CON, T0PS1
+	bcf	T0CON, T0PS0
+	movlw	0xb
+	movwf	TMR0H
+	movlw	0xdc
+	movwf	TMR0L
 
 	clrf	H_EE
 	clrf	L_EE
@@ -484,7 +504,8 @@ HOLD_STANDBY
 
 EXECUTION
 	; save the starting time
-	
+	call	    SAVE_TIME
+		
 	; display
         setf	    inExecution
 	call	    ClrLCD
@@ -493,10 +514,6 @@ EXECUTION
 	Display	    Exe2
 	
 	; start timer
-	movlw	    timer_H				; 1
-	movwf	    TMR0H
-	movlw	    timer_L				; 1
-	movwf	    TMR0L				; 1
 	bsf	    T0CON, TMR0ON			; Turn on timer
 	call	    ClearEEPROM_21
 	
@@ -508,12 +525,14 @@ HOLD_EXE
 	call	    READ_KEY
 	ChangeMode  keyS, EXIT_EXE
 	bra	    HOLD_EXE
-
+	
 EXIT_EXE
-	WriteEE	    OP_sec, H_EE, L_EE
-	incf	    L_EE
-	WriteEE	    OP_INT, H_EE, L_EE
-	incf	    L_EE
+;	WriteEE	    OP_sec, H_EE, L_EE
+;	incf	    L_EE
+;	WriteEE	    OP_INT, H_EE, L_EE
+;	incf	    L_EE
+	
+	call	    SAVE_TIME
 	
 	; Clear InOperation flag to stop '*' interrupts
 	clrf	    inExecution
@@ -554,7 +573,7 @@ ShiftLoop
 	goto		ShiftLoop
 	
 	; Finish Saving Data
-	; Stop Timer and goto OpLog
+	; Stop Timer and goto logs
 	bcf		T0CON, TMR0ON
 	movlw		d'9'
 	movwf		L_EE
@@ -713,6 +732,19 @@ RTC_INIT
 	call	i2c_common_setup
 	;call	SET_TIME
 return
+	
+SAVE_TIME   
+	rtc_read    0x02	; hours
+	call	WriteEE_RTC
+	rtc_read    0x01	; minutes
+	call	WriteEE_RTC
+	rtc_read    0x06	; years
+	call	WriteEE_RTC
+	rtc_read    0x05	; months
+	call	WriteEE_RTC
+	rtc_read    0x04	; days
+	call	WriteEE_RTC
+return
 		
 DISPLAY_RTC
 	
@@ -763,9 +795,9 @@ SET_TIME
 
 	rtc_set	0x06,	b'00010111'		; Year 17
 	rtc_set	0x05,	b'00000010'		; Month 2
-	rtc_set	0x04,	b'00010000'		; Date 10
-	rtc_set	0x02,	b'00100001'		; Hours 18
-	rtc_set	0x01,	b'00101001'		; Minutes 27
+	rtc_set	0x04,	b'00010010'		; Date 12
+	rtc_set	0x02,	b'00010011'		; Hours 13
+	rtc_set	0x01,	b'01000111'		; Minutes 45
 	rtc_set	0x00,	b'00000000'		; Seconds 0
 return
 	
