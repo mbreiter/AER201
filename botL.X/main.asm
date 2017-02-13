@@ -198,6 +198,7 @@ loop
 
 DisplayLog  macro   addrH, addrL
 	    local   Again, Finish
+	    
 	    clrf    SkipCount
 	    clrf    MAX_EE
 
@@ -465,10 +466,6 @@ INIT
 	bsf	T0CON, T0PS2
 	bcf	T0CON, T0PS1
 	bcf	T0CON, T0PS0
-	movlw	0xb
-	movwf	TMR0H
-	movlw	0xdc
-	movwf	TMR0L
 
 	clrf	H_EE
 	clrf	L_EE
@@ -514,6 +511,12 @@ EXECUTION
 	Display	    Exe2
 	
 	; start timer
+	
+	movlw	0xb
+	movwf	TMR0H
+	movlw	0xdc
+	movwf	TMR0L
+	
 	bsf	    T0CON, TMR0ON			; Turn on timer
 	call	    ClearEEPROM_21
 	
@@ -527,26 +530,30 @@ HOLD_EXE
 	bra	    HOLD_EXE
 	
 EXIT_EXE
-;	WriteEE	    OP_sec, H_EE, L_EE
-;	incf	    L_EE
-;	WriteEE	    OP_INT, H_EE, L_EE
-;	incf	    L_EE
+	WriteEE	    OP_sec, H_EE, L_EE
+	incf	    L_EE
+	WriteEE	    OP_INT, H_EE, L_EE
+	incf	    L_EE
 	
 	call	    SAVE_TIME
 	
-	; Clear InOperation flag to stop '*' interrupts
+	; Clear inExecution flag to stop '*' interrupts
 	clrf	    inExecution
         goto        SaveData
 
 SaveData
 	call	    ClrLCD
 	Display	    SAVE
+
 	movlw	    d'0'
 	movwf	    H_EE
-	movff	    last_log, L_EE
+	movlw	    d'168'		; take d'168' as last
+	movwf	    L_EE
 	movlw	    d'0'
 	movwf	    tempH_EE
-	movff	    tempL_EEC, tempL_EE
+	movlw	    d'220'		; temp for low constant
+	movwf	    tempL_EE
+	
 	clrf	    counter2
 	clrf	    counter
 
@@ -565,11 +572,12 @@ ShiftLoop
 	; Set EEPROM address to the previous 21 byte block, and reset TempEEPROM address
 	movlw		d'42'
 	subwf		L_EE
-	movff		tempL_EEC, tempL_EE
+	movlw		d'220'
+	movwf		tempL_EE
 	clrf		counter
 	incf		counter2
 	movlw		d'9'
-	cpfseq		counter2					; Skip if 9 shifts were made
+	cpfseq		counter2	; Skip if 9 shifts were made
 	goto		ShiftLoop
 	
 	; Finish Saving Data
@@ -615,6 +623,9 @@ LOG_INFO
 	Display	LogInfo1
 	call	LCD_L2
 	Display LogInfo2
+	clrf	H_EE
+	clrf	L_EE
+	DisplayLog  H_EE, L_EE
 HOLD_LOG_INFO
 	call	READ_KEY
 	ChangeMode key0, LOG
@@ -993,8 +1004,11 @@ DisplayTime
 	movlw	0xFF
 	cpfslt	REG_EE
 	goto	SkipDispOpTime
+	return
 
 NoSkipDispOpTime
+	movlw	b'00100001'
+	movwf	OP_sec
 	swapf	OP_sec, W
 	movwf	temp
 	movlw	0x0F
@@ -1005,12 +1019,9 @@ NoSkipDispOpTime
 
 	movff	OP_sec, temp	; 1's seconds
 	movlw	0x0F
-	andwf	temp		; Temp = lower nibble of Op_Seconds
+	andwf	temp		; Temp = lower nibble of Op_sec
 	movff	temp, WREG	; W = Temp
 	addlw	0x30		; Convert to ASCII
-	call	WR_DATA
-
-	movlw	0x2E		; Write '.'
 	call	WR_DATA
 
 	movlw	0x73		; Write 's'
@@ -1037,13 +1048,14 @@ NoSkipDispOpRTC
 	movff	REG_EE, WREG
 	andlw	b'11110001'
 	call	WR_DATA
+	
 	incf	L_EE
 	READEE	REG_EE, H_EE, L_EE
 	movff	REG_EE, WREG
 	call	WR_DATA
 	incf	L_EE
 
-	movlw		":"
+	movlw		"h"
 	call		WR_DATA
 	call DispOpRTC_Helper
 	movlw		" "
