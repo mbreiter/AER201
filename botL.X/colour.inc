@@ -53,18 +53,40 @@
 
 
     COLOUR_INIT macro	integration_time, gain
-	
+	COLOUR_WRITE	0x00, 0x02 ; turn on (0x02) enable register (0x00)
+	COLOUR_WRITE	0x01, 0xd6 ; set 100ms integration time
+	COLOUR_WRITE	0x0F, 0x00 ; set gain to 1x (00), REFERNCE, 4x is 01, 16x is 10, 60x is 11
     endm
     
-    COLOUR_ENABLE macro
-	
+    COLOUR_READ	 macro	address
+	movlw	address
+	movwf	regaddress
+	call	READ_COLOUR_I2C
+	movf	datachar, w
     endm
     
-    COLOUR_DISABLE macro
-	
+    COLOUR_WRITE macro address, instr
+	movlw	address
+	movwf	regaddress
+	movlw	instr
+	movwf	databyte
+	call	WRITE_COLOUR_I2C
     endm
     
-    COLOUR_READ	 macro	red, blue, gree, clear
+    COLOUR_GET_DATA macro clear, red, green, blue
+	COLOUR_READ 0x14		; call read with the red register
+	movwf	clear			; store the result into red
+	
+	COLOUR_READ 0x16		; call read with the red register
+	movwf	red			; store the result into red
+	
+	COLOUR_READ 0x18		; call read with the red register
+	movwf	green			; store the result into red
+	
+	COLOUR_READ 0x20		; call read with the red register
+	movwf	blue			; store the result into red
+	
+	; TODO implement delay, set to 101ms
     endm
     
     

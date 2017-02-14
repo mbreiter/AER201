@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -28,697 +28,558 @@ Warning[205]: Found directive in column 1. (errorlevel)
                       00004 errorlevel -302
 Warning[205]: Found directive in column 1. (errorlevel)
                       00005 errorlevel -305
-                      00006 
-                      00007 ;global labels
-                      00008 
-Warning[205]: Found directive in column 1. (variable)
-  0000                00009 variable _waitknt=0
-                      00010 
-Warning[205]: Found directive in column 1. (udata)
-                      00011 udata
-000000                00012 regaddress res 1
-000001                00013 databyte res 1
-000002                00014 datachar res 1
-000003                00015 tens_digit res 1
-000004                00016 ones_digit res 1
-000005                00017 convert_buffer res 1
-                      00018 
-Warning[205]: Found directive in column 1. (global)
-  0000                00019 global write_rtc,read_rtc,rtc_convert,i2c_common_setup
-Warning[205]: Found directive in column 1. (global)
-  0000                00020 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
+Warning[205]: Found directive in column 1. (errorlevel)
+                      00006 errorlevel -205
+                      00007 errorlevel -203
+                      00008 errorlevel -207
+                      00009     
+                      00010 ;global labels
+                      00011 
+  0000                00012 variable _waitknt=0
+                      00013 
+                      00014 udata
+000000                00015 regaddress res 1
+000001                00016 databyte res 1
+000002                00017 datachar res 1
+000003                00018 tens_digit res 1
+000004                00019 ones_digit res 1
+000005                00020 convert_buffer res 1
                       00021 
-                      00022 
-                      00023 ;; I2C MACROS
-                      00024 ;;
-                      00025 ;; Sebastian K, commit 110219-2208
-                      00026 ;; forked off PIC16 sample code
-                      00027 ;; for PIC18F4620
-                      00028 ;; relocatable labels
-                      00029 
-                      00030 ;I2C lowest layer macros;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  2
+  0000                00022 global write_rtc,read_rtc,rtc_convert,i2c_common_setup
+  0000                00023 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
+                      00024 
+                      00025 
+                      00026 ;; I2C MACROS
+                      00027 ;;
+                      00028 ;; Sebastian K, commit 110219-2208
+                      00029 ;; forked off PIC16 sample code
+                      00030 ;; for PIC18F4620
+                      00031 ;; relocatable labels
+                      00032 
+                      00033 i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00031 
-                      00032 i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
-                      00033 btfsc SSPCON2,ACKSTAT
-                      00034 goto err_address
-Warning[205]: Found directive in column 1. (endm)
-                      00035 endm
-                      00036 
-                      00037 i2c_common_start macro
-                      00038 ;input: none
-                      00039 ;output: none
-                      00040 ;desc: initiate start condition on the bus
-                      00041 bsf SSPCON2,SEN
-                      00042 btfss   SSPCON1, WCOL
-                      00043 bsf PIR1, SSPIF
-                      00044 btfss PIR1, SSPIF
-                      00045 bra $-2
-                      00046 bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00047 
-Warning[205]: Found directive in column 1. (endm)
-                      00048 endm
-                      00049 
-                      00050 i2c_common_stop macro
-                      00051 ;input: none
-                      00052 ;output: none
-                      00053 ;desc: initiate stop condition on the bus
-                      00054 bsf SSPCON2,PEN
-                      00055 btfsc SSPCON2,PEN
-                      00056 bra $-2
-                      00057 bcf PIR1, SSPIF
-Warning[205]: Found directive in column 1. (endm)
-                      00058 endm
-                      00059 
-                      00060 i2c_common_repeatedstart macro
-                      00061 ;input: none
-                      00062 ;output: none
-                      00063 ;desc: initiate repeated start on the bus. Usually used for
-                      00064 ; changing direction of SDA without STOP event
-                      00065 bsf SSPCON2,RSEN
-                      00066 btfss PIR1, SSPIF
-                      00067 bra $-2
+                      00034     btfsc   SSPCON2,ACKSTAT
+                      00035     goto    err_address
+                      00036 endm
+                      00037 
+                      00038 i2c_common_start macro
+                      00039     bsf     SSPCON2,SEN
+                      00040     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+                      00041     bsf     PIR1, SSPIF
+                      00042     btfss   PIR1, SSPIF
+                      00043     bra     $-2
+                      00044     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00045 endm
+                      00046 
+                      00047 i2c_common_stop macro
+                      00048     bsf     SSPCON2,PEN
+                      00049     btfsc   SSPCON2,PEN
+                      00050     bra     $-2
+                      00051     bcf     PIR1, SSPIF
+                      00052 endm
+                      00053 
+                      00054 i2c_common_repeatedstart macro
+                      00055     bsf     SSPCON2,RSEN
+                      00056     btfss   PIR1, SSPIF
+                      00057     bra     $-2
+                      00058 
+                      00059     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00060 endm
+                      00061 
+                      00062 i2c_common_ack macro
+                      00063     bcf     SSPCON2,ACKDT
+                      00064     bsf     SSPCON2,ACKEN
+                      00065     btfsc   SSPCON2,ACKEN
+                      00066     bra     $-2
+                      00067 endm
                       00068 
-                      00069 bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00070 
-Warning[205]: Found directive in column 1. (endm)
-                      00071 endm
+                      00069 i2c_common_nack macro
+                      00070     bsf     SSPCON2,ACKDT
+                      00071     bsf     SSPCON2,ACKEN
                       00072 
-                      00073 i2c_common_ack macro
-                      00074 ;input: none
-                      00075 ;output: none
-                      00076 ;desc: send an acknowledge to slave device
-                      00077 bcf SSPCON2,ACKDT
-                      00078 bsf SSPCON2,ACKEN
-                      00079 btfsc SSPCON2,ACKEN
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  3
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00080 bra $-2
-Warning[205]: Found directive in column 1. (endm)
-                      00081 endm
+                      00073     _waitl#v(_waitknt)
+                      00074     btfsc   SSPCON2,ACKEN
+                      00075     goto    _waitl#v(_waitknt)
+                      00076     _waitknt    set _waitknt+1
+                      00077 endm
+                      00078 
+                      00079 i2c_common_write macro
+                      00080     btfsc   SSPSTAT, BF
+                      00081     bra     $-2
                       00082 
-                      00083 i2c_common_nack macro
-                      00084 ;input: none
-                      00085 ;output: none
-                      00086 ;desc: send an not acknowledge to slave device
-                      00087 
-                      00088 bsf SSPCON2,ACKDT
-                      00089 bsf SSPCON2,ACKEN
-                      00090 
-                      00091 _waitl#v(_waitknt)
-                      00092 btfsc SSPCON2,ACKEN
-                      00093 goto _waitl#v(_waitknt)
-                      00094 _waitknt set _waitknt+1
-Warning[205]: Found directive in column 1. (endm)
-                      00095 endm
-                      00096 
-                      00097 i2c_common_write macro
-                      00098 
-                      00099 ;input: W
-                      00100 ;output: to slave device
-                      00101 ;desc: writes W to SSPBUF and send to slave device. Make sure
-                      00102 ; transmit is finished before continuing
+                      00083     movwf   SSPBUF
+                      00084 
+                      00085     btfss   PIR1, SSPIF
+                      00086     bra     $-2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00087     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00088 endm
+                      00089 
+                      00090 i2c_common_read macro
+                      00091     bsf     SSPCON2,RCEN ;Begin receiving byte from
+                      00092     btfss   PIR1, SSPIF
+                      00093     bra     $-2
+                      00094     bcf     PIR1, SSPIF
+                      00095     movf    SSPBUF,w
+                      00096 endm
+                      00097 
+                      00098 code
+                      00099 
+000000                00100 i2c_common_setup
+000000 0E00           00101     movlw   b'00000000'
+000002 6EC7           00102     movwf   SSPSTAT ;set I2C line leves, clear all flags.
                       00103 
-                      00104 btfsc SSPSTAT, BF
-                      00105 bra $-2
+000004 0E24           00104     movlw   24 ;100kHz baud rate: 10000000 osc / [4*100000] -1
+000006 6EC8           00105     movwf   SSPADD ;RTC only supports 100kHz
                       00106 
-                      00107 movwf SSPBUF
-                      00108 
-                      00109 btfss PIR1, SSPIF
-                      00110 bra $-2
-                      00111 bcf PIR1, SSPIF ;clear SSPIF interrupt bit
+000008 0E28           00107     movlw   b'00101000' ;Config SSP for Master Mode I2C
+00000A 6EC6           00108     movwf   SSPCON1
+                      00109 
+00000C 8AC6           00110     bsf     SSPCON1,SSPEN ;Enable SSP module
+                      00111 
                       00112 
-Warning[205]: Found directive in column 1. (endm)
-                      00113 endm
-                      00114 
-                      00115 i2c_common_read macro
-                      00116 ;input: none
-                      00117 ;output: W
-                      00118 ;desc: reads data from slave and saves it in W.
+00000E 96A1           00113     bcf     PIR2, SSPIE ;don't cause an interrupt on SSPIF, please. We're just polling it.
+000010 969E           00114     bcf     PIR1, SSPIF
+000012 90C7           00115     bcf     SSPSTAT, BF
+                      00116     i2c_common_stop ;Ensure the bus is free
+000014 84C5               M     bsf     SSPCON2,PEN
+000016 B4C5               M     btfsc   SSPCON2,PEN
+000018 D???               M     bra     $-2
+00001A 969E               M     bcf     PIR1, SSPIF
+00001C 0012           00117 return
+                      00118 
                       00119 
-                      00120 bsf SSPCON2,RCEN ;Begin receiving byte from
-                      00121 btfss PIR1, SSPIF
-                      00122 bra $-2
-                      00123 bcf PIR1, SSPIF
-                      00124 movf SSPBUF,w
-Warning[205]: Found directive in column 1. (endm)
-                      00125 endm
-                      00126 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00127 
-Warning[205]: Found directive in column 1. (code)
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  4
+00001E                00120 write_rtc
+                      00121     i2c_common_start
+00001E 80C5               M     bsf     SSPCON2,SEN
+000020 AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+000022 869E               M     bsf     PIR1, SSPIF
+000024 A69E               M     btfss   PIR1, SSPIF
+000026 D???               M     bra     $-2
+000028 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00122 
+00002A 0ED0           00123     movlw   0xD0 ;DS1307 address | WRITE bit
+                      00124     i2c_common_write
+00002C B0C7               M     btfsc   SSPSTAT, BF
+00002E D???               M     bra     $-2
+                          M 
+000030 6EC9               M     movwf   SSPBUF
+                          M 
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00128 code
-                      00129 
-000000                00130 i2c_common_setup
-                      00131 ;input: none
-                      00132 ;output: none
-                      00133 ;desc: sets up I2C as master device with 100kHz baud rate
-                      00134 
-Warning[203]: Found opcode in column 1. (movlw)
-000000 0E00           00135 movlw b'00000000'
-Warning[203]: Found opcode in column 1. (movwf)
-000002 6EC7           00136 movwf SSPSTAT ;set I2C line leves, clear all flags.
-                      00137 
-Warning[203]: Found opcode in column 1. (movlw)
-000004 0E24           00138 movlw 24 ;100kHz baud rate: 10000000 osc / [4*100000] -1
-Warning[203]: Found opcode in column 1. (movwf)
-000006 6EC8           00139 movwf SSPADD ;RTC only supports 100kHz
-                      00140 
-Warning[203]: Found opcode in column 1. (movlw)
-000008 0E28           00141 movlw b'00101000' ;Config SSP for Master Mode I2C
-Warning[203]: Found opcode in column 1. (movwf)
-00000A 6EC6           00142 movwf SSPCON1
-                      00143 
-Warning[203]: Found opcode in column 1. (bsf)
-00000C 8AC6           00144 bsf SSPCON1,SSPEN ;Enable SSP module
-                      00145 
-                      00146 
-Warning[203]: Found opcode in column 1. (bcf)
-00000E 96A1           00147 bcf PIR2, SSPIE ;don't cause an interrupt on SSPIF, please. We're just polling it.
-Warning[203]: Found opcode in column 1. (bcf)
-000010 969E           00148 bcf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bcf)
-000012 90C7           00149 bcf SSPSTAT, BF
-Warning[206]: Found call to macro in column 1. (i2c_common_stop)
-                      00150 i2c_common_stop ;Ensure the bus is free
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: initiate stop condition on the bus
-Warning[203]: Found opcode in column 1. (bsf)
-000014 84C5               M bsf SSPCON2,PEN
-Warning[203]: Found opcode in column 1. (btfsc)
-000016 B4C5               M btfsc SSPCON2,PEN
-Warning[203]: Found opcode in column 1. (bra)
-000018 D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-00001A 969E               M bcf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (return)
-00001C 0012           00151 return
-                      00152 
-                      00153 ;rtc Algorithms;;;;;;
-                      00154 
-00001E                00155 write_rtc
-                      00156 
-                      00157 ;input: address of register in RTC
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  5
+000032 A69E               M     btfss   PIR1, SSPIF
+000034 D???               M     bra     $-2
+000036 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00125     i2c_common_check_ack WR_ERR1_RTC
+000038 BCC5               M     btfsc   SSPCON2,ACKSTAT
+00003A EF?? F???          M     goto    WR_ERR1_RTC
+                      00126 
+                      00127     ;Write data to I2C bus (Register Address in RTC)
+00003E 50??           00128     movf    regaddress,w ;Set register pointer in RTC
+                      00129     i2c_common_write ;
+000040 B0C7               M     btfsc   SSPSTAT, BF
+000042 D???               M     bra     $-2
+                          M 
+000044 6EC9               M     movwf   SSPBUF
+                          M 
+000046 A69E               M     btfss   PIR1, SSPIF
+000048 D???               M     bra     $-2
+00004A 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00130     i2c_common_check_ack WR_ERR2_RTC
+00004C BCC5               M     btfsc   SSPCON2,ACKSTAT
+00004E EF?? F???          M     goto    WR_ERR2_RTC
+                      00131 
+                      00132     ;Write data to I2C bus (Data to be placed in RTC register)
+000052 50??           00133     movf    databyte,w ;Write data to register in RTC
+                      00134     i2c_common_write
+000054 B0C7               M     btfsc   SSPSTAT, BF
+000056 D???               M     bra     $-2
+                          M 
+000058 6EC9               M     movwf   SSPBUF
+                          M 
+00005A A69E               M     btfss   PIR1, SSPIF
+00005C D???               M     bra     $-2
+00005E 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00135     i2c_common_check_ack WR_ERR3_RTC
+000060 BCC5               M     btfsc   SSPCON2,ACKSTAT
+000062 EF?? F???          M     goto    WR_ERR3_RTC
+                      00136 
+000066 EF?? F???      00137     goto    WR_END_RTC
+                      00138 
+00006A                00139     WR_ERR1_RTC
+00006A 0000           00140         nop
+00006C 0E0D           00141         movlw   b'00001101'
+00006E 6E89           00142         movwf   LATA    
+000070 EF?? F???      00143         goto    WR_END
+                      00144     
+000074                00145     WR_ERR2_RTC
+000074 0000           00146         nop
+000076 0E0F           00147         movlw   b'00001111'
+000078 6E89           00148         movwf   LATA
+00007A 808D           00149         bsf     LATE,0
+00007C EF?? F???      00150         goto    WR_END
+                      00151         
+000080                00152     WR_ERR3_RTC
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00158 ;output: none
-                      00159 ;Desc: handles writing data to RTC
-                      00160 ;Select the DS1307 on the bus, in WRITE mode
-Warning[206]: Found call to macro in column 1. (i2c_common_start)
-                      00161 i2c_common_start
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: initiate start condition on the bus
-Warning[203]: Found opcode in column 1. (bsf)
-00001E 80C5               M bsf SSPCON2,SEN
-Warning[203]: Found opcode in column 1. (btfss)
-000020 AEC6               M btfss   SSPCON1, WCOL
-Warning[203]: Found opcode in column 1. (bsf)
-000022 869E               M bsf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (btfss)
-000024 A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-000026 D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-000028 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
+000080 0000           00153         nop
+000082 0E09           00154         movlw   b'00001001'
+000084 6E89           00155         movwf   LATA
+000086 EF?? F???      00156         goto    WR_END
+00008A                00157     WR_END_RTC
+                      00158         i2c_common_stop ;Release the I2C bus
+00008A 84C5               M     bsf     SSPCON2,PEN
+00008C B4C5               M     btfsc   SSPCON2,PEN
+00008E D???               M     bra     $-2
+000090 969E               M     bcf     PIR1, SSPIF
+000092 0012           00159 return
+                      00160 
+000094                00161 read_rtc
+                      00162     i2c_common_start
+000094 80C5               M     bsf     SSPCON2,SEN
+000096 AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+000098 869E               M     bsf     PIR1, SSPIF
+00009A A69E               M     btfss   PIR1, SSPIF
+00009C D???               M     bra     $-2
+00009E 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00163 
+0000A0 0ED0           00164     movlw   0xD0 ;DS1307 address | WRITE bit
+                      00165     i2c_common_write ;
+0000A2 B0C7               M     btfsc   SSPSTAT, BF
+0000A4 D???               M     bra     $-2
                           M 
-                      00162 
-Warning[203]: Found opcode in column 1. (movlw)
-00002A 0ED0           00163 movlw 0xD0 ;DS1307 address | WRITE bit
-Warning[206]: Found call to macro in column 1. (i2c_common_write)
-                      00164 i2c_common_write
+0000A6 6EC9               M     movwf   SSPBUF
                           M 
-                          M ;input: W
-                          M ;output: to slave device
-                          M ;desc: writes W to SSPBUF and send to slave device. Make sure
-                          M ; transmit is finished before continuing
+0000A8 A69E               M     btfss   PIR1, SSPIF
+0000AA D???               M     bra     $-2
+0000AC 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00166     i2c_common_check_ack RD_ERR1_RTC
+0000AE BCC5               M     btfsc   SSPCON2,ACKSTAT
+0000B0 EF?? F???          M     goto    RD_ERR1_RTC
+                      00167 
+                      00168     ;Write data to I2C bus (Register Address in RTC)
+0000B4 50??           00169     movf    regaddress,w ;Set register pointer in RTC
+                      00170     i2c_common_write ;
+0000B6 B0C7               M     btfsc   SSPSTAT, BF
+0000B8 D???               M     bra     $-2
                           M 
-Warning[203]: Found opcode in column 1. (btfsc)
-00002C B0C7               M btfsc SSPSTAT, BF
-Warning[203]: Found opcode in column 1. (bra)
-00002E D???               M bra $-2
+0000BA 6EC9               M     movwf   SSPBUF
                           M 
-Warning[203]: Found opcode in column 1. (movwf)
-000030 6EC9               M movwf SSPBUF
-                          M 
-Warning[203]: Found opcode in column 1. (btfss)
-000032 A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-000034 D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-000036 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                          M 
-Warning[206]: Found call to macro in column 1. (i2c_common_check_ack)
-                      00165 i2c_common_check_ack WR_ERR1
-Warning[203]: Found opcode in column 1. (btfsc)
-000038 BCC5               M btfsc SSPCON2,ACKSTAT
-Warning[203]: Found opcode in column 1. (goto)
-00003A EF?? F???          M goto WR_ERR1
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  6
+0000BC A69E               M     btfss   PIR1, SSPIF
+0000BE D???               M     bra     $-2
+0000C0 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00171     i2c_common_check_ack RD_ERR2_RTC
+0000C2 BCC5               M     btfsc   SSPCON2,ACKSTAT
+0000C4 EF?? F???          M     goto    RD_ERR2_RTC
+                      00172 
+                      00173     ;Re-Select the DS1307 on the bus, in READ mode
+                      00174     i2c_common_repeatedstart
+0000C8 82C5               M     bsf     SSPCON2,RSEN
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00166 
-                      00167 ;Write data to I2C bus (Register Address in RTC)
-Warning[203]: Found opcode in column 1. (movf)
-00003E 50??           00168 movf regaddress,w ;Set register pointer in RTC
-Warning[206]: Found call to macro in column 1. (i2c_common_write)
-                      00169 i2c_common_write ;
+0000CA A69E               M     btfss   PIR1, SSPIF
+0000CC D???               M     bra     $-2
                           M 
-                          M ;input: W
-                          M ;output: to slave device
-                          M ;desc: writes W to SSPBUF and send to slave device. Make sure
-                          M ; transmit is finished before continuing
+0000CE 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+0000D0 0ED1           00175     movlw   0xD1 ;DS1307 address | READ bit
+                      00176     i2c_common_write
+0000D2 B0C7               M     btfsc   SSPSTAT, BF
+0000D4 D???               M     bra     $-2
                           M 
-Warning[203]: Found opcode in column 1. (btfsc)
-000040 B0C7               M btfsc SSPSTAT, BF
-Warning[203]: Found opcode in column 1. (bra)
-000042 D???               M bra $-2
+0000D6 6EC9               M     movwf   SSPBUF
                           M 
-Warning[203]: Found opcode in column 1. (movwf)
-000044 6EC9               M movwf SSPBUF
-                          M 
-Warning[203]: Found opcode in column 1. (btfss)
-000046 A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-000048 D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-00004A 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                          M 
-Warning[206]: Found call to macro in column 1. (i2c_common_check_ack)
-                      00170 i2c_common_check_ack WR_ERR2
-Warning[203]: Found opcode in column 1. (btfsc)
-00004C BCC5               M btfsc SSPCON2,ACKSTAT
-Warning[203]: Found opcode in column 1. (goto)
-00004E EF?? F???          M goto WR_ERR2
-                      00171 
-                      00172 ;Write data to I2C bus (Data to be placed in RTC register)
-Warning[203]: Found opcode in column 1. (movf)
-000052 50??           00173 movf databyte,w ;Write data to register in RTC
-Warning[206]: Found call to macro in column 1. (i2c_common_write)
-                      00174 i2c_common_write
-                          M 
-                          M ;input: W
-                          M ;output: to slave device
-                          M ;desc: writes W to SSPBUF and send to slave device. Make sure
-                          M ; transmit is finished before continuing
-                          M 
-Warning[203]: Found opcode in column 1. (btfsc)
-000054 B0C7               M btfsc SSPSTAT, BF
-Warning[203]: Found opcode in column 1. (bra)
-000056 D???               M bra $-2
-                          M 
-Warning[203]: Found opcode in column 1. (movwf)
-000058 6EC9               M movwf SSPBUF
-                          M 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  7
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-Warning[203]: Found opcode in column 1. (btfss)
-00005A A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-00005C D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-00005E 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                          M 
-Warning[206]: Found call to macro in column 1. (i2c_common_check_ack)
-                      00175 i2c_common_check_ack WR_ERR3
-Warning[203]: Found opcode in column 1. (btfsc)
-000060 BCC5               M btfsc SSPCON2,ACKSTAT
-Warning[203]: Found opcode in column 1. (goto)
-000062 EF?? F???          M goto WR_ERR3
-                      00176 
-Warning[203]: Found opcode in column 1. (goto)
-000066 EF?? F???      00177 goto WR_END
+0000D8 A69E               M     btfss   PIR1, SSPIF
+0000DA D???               M     bra     $-2
+0000DC 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00177     i2c_common_check_ack RD_ERR3_RTC
+0000DE BCC5               M     btfsc   SSPCON2,ACKSTAT
+0000E0 EF?? F???          M     goto    RD_ERR3_RTC
                       00178 
-00006A                00179 WR_ERR1
-Warning[203]: Found opcode in column 1. (nop)
-00006A 0000           00180 nop
-Warning[203]: Found opcode in column 1. (movlw)
-00006C 0E0D           00181 movlw b'00001101'
-Warning[203]: Found opcode in column 1. (movwf)
-00006E 6E89           00182 movwf LATA
+                      00179     ;Read data from I2C bus (Contents of Register in RTC)
+                      00180     i2c_common_read
+0000E4 86C5               M     bsf     SSPCON2,RCEN ;Begin receiving byte from
+0000E6 A69E               M     btfss   PIR1, SSPIF
+0000E8 D???               M     bra     $-2
+0000EA 969E               M     bcf     PIR1, SSPIF
+0000EC 50C9               M     movf    SSPBUF,w
+0000EE 6E??           00181     movwf datachar
+                      00182     i2c_common_nack ;Send acknowledgement of data reception
+0000F0 8AC5               M     bsf     SSPCON2,ACKDT
+0000F2 88C5               M     bsf     SSPCON2,ACKEN
+                          M 
+0000F4                    M     _waitl0
+0000F4 B8C5               M     btfsc   SSPCON2,ACKEN
+0000F6 EF?? F???          M     goto    _waitl0
+  00000001                M     _waitknt    set _waitknt+1
                       00183 
-Warning[203]: Found opcode in column 1. (goto)
-000070 EF?? F???      00184 goto WR_END
-000074                00185 WR_ERR2
-Warning[203]: Found opcode in column 1. (nop)
-000074 0000           00186 nop
-Warning[203]: Found opcode in column 1. (movlw)
-000076 0E0F           00187 movlw b'00001111'
-Warning[203]: Found opcode in column 1. (movwf)
-000078 6E89           00188 movwf LATA
-Warning[203]: Found opcode in column 1. (bsf)
-00007A 808D           00189 bsf LATE,0
-Warning[203]: Found opcode in column 1. (goto)
-00007C EF?? F???      00190 goto WR_END
-000080                00191 WR_ERR3
-Warning[203]: Found opcode in column 1. (nop)
-000080 0000           00192 nop
-Warning[203]: Found opcode in column 1. (movlw)
-000082 0E09           00193 movlw b'00001001'
-Warning[203]: Found opcode in column 1. (movwf)
-000084 6E89           00194 movwf LATA
-Warning[203]: Found opcode in column 1. (goto)
-000086 EF?? F???      00195 goto WR_END
-00008A                00196 WR_END
-Warning[206]: Found call to macro in column 1. (i2c_common_stop)
-                      00197 i2c_common_stop ;Release the I2C bus
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: initiate stop condition on the bus
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  8
+0000FA EF?? F???      00184     goto RD_END_RTC
+                      00185 
+0000FE                00186     RD_ERR1_RTC
+0000FE 0000           00187         nop
+000100 0E03           00188         movlw   b'00000011'
+000102 6E89           00189         movwf   LATA
+000104 EF?? F???      00190         goto    RD_END
+000108                00191     RD_ERR2_RTC
+000108 0000           00192         nop
+00010A 0E05           00193         movlw   b'00000101'
+00010C 6E89           00194         movwf   LATA
+00010E EF?? F???      00195         goto    RD_END
+000112                00196     RD_ERR3_RTC
+000112 0000           00197         nop
+000114 0E07           00198         movlw   b'00000111'
+000116 6E89           00199         movwf   LATA
+000118 EF?? F???      00200         goto    RD_END
+00011C                00201     RD_END_RTC
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-Warning[203]: Found opcode in column 1. (bsf)
-00008A 84C5               M bsf SSPCON2,PEN
-Warning[203]: Found opcode in column 1. (btfsc)
-00008C B4C5               M btfsc SSPCON2,PEN
-Warning[203]: Found opcode in column 1. (bra)
-00008E D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-000090 969E               M bcf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (return)
-000092 0012           00198 return
-                      00199 
-                      00200 ;; ************************************************** READ RTC
-000094                00201 read_rtc
-                      00202 ;input: address of RTC
-                      00203 ;output: DOUT or 0x75
-                      00204 ;Desc: This reads from the selected address of the RTC
-                      00205 ; and saves it into DOUT or address 0x75
-                      00206 
-                      00207 ;Select the DS1307 on the bus, in WRITE mode
-                      00208 
-Warning[206]: Found call to macro in column 1. (i2c_common_start)
-                      00209 i2c_common_start
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: initiate start condition on the bus
-Warning[203]: Found opcode in column 1. (bsf)
-000094 80C5               M bsf SSPCON2,SEN
-Warning[203]: Found opcode in column 1. (btfss)
-000096 AEC6               M btfss   SSPCON1, WCOL
-Warning[203]: Found opcode in column 1. (bsf)
-000098 869E               M bsf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (btfss)
-00009A A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-00009C D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-00009E 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00202         i2c_common_stop
+00011C 84C5               M     bsf     SSPCON2,PEN
+00011E B4C5               M     btfsc   SSPCON2,PEN
+000120 D???               M     bra     $-2
+000122 969E               M     bcf     PIR1, SSPIF
+000124 0012           00203 return
+                      00204 
+000126                00205 rtc_convert
+000126 6E??           00206     movwf   convert_buffer ; B1 = HHHH LLLL
+000128 38??           00207     swapf   convert_buffer,w ; W = LLLL HHHH
+00012A 0B0F           00208     andlw   0x0f ; Mask upper four bits 0000 HHHH
+00012C 0F30           00209     addlw   0x30 ; convert to ASCII
+00012E 6E??           00210     movwf   tens_digit ;saves into 10ths digit
+                      00211 
+000130 50??           00212     movf    convert_buffer,w
+000132 0B0F           00213     andlw   0x0f ; w = 0000 LLLL
+000134 0F30           00214     addlw   0x30 ; convert to ASCII
+000136 6E??           00215     movwf   ones_digit ; saves into 1s digit
+000138 0012           00216 return
+                      00217     
+00013A                00218 READ_COLOUR_I2C
+                      00219     i2c_common_start
+00013A 80C5               M     bsf     SSPCON2,SEN
+00013C AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+00013E 869E               M     bsf     PIR1, SSPIF
+000140 A69E               M     btfss   PIR1, SSPIF
+000142 D???               M     bra     $-2
+000144 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00220 
+000146 0E29           00221     movlw   0x29 ;TCS34725 address | WRITE bit (+0)
+                      00222     i2c_common_write ;
+000148 B0C7               M     btfsc   SSPSTAT, BF
+00014A D???               M     bra     $-2
                           M 
-                      00210 
-Warning[203]: Found opcode in column 1. (movlw)
-0000A0 0ED0           00211 movlw 0xD0 ;DS1307 address | WRITE bit
-Warning[206]: Found call to macro in column 1. (i2c_common_write)
-                      00212 i2c_common_write ;
+00014C 6EC9               M     movwf   SSPBUF
                           M 
-                          M ;input: W
-                          M ;output: to slave device
-                          M ;desc: writes W to SSPBUF and send to slave device. Make sure
-                          M ; transmit is finished before continuing
+00014E A69E               M     btfss   PIR1, SSPIF
+000150 D???               M     bra     $-2
+000152 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00223     i2c_common_check_ack RD_ERR1
+000154 BCC5               M     btfsc   SSPCON2,ACKSTAT
+000156 EF?? F???          M     goto    RD_ERR1
+                      00224 
+                      00225     ;Write data to I2C bus (Register Address in TCS34725)
+00015A 50??           00226     movf    regaddress,w ;Set register pointer in TCS34725
+                      00227     i2c_common_write ;
+00015C B0C7               M     btfsc   SSPSTAT, BF
+00015E D???               M     bra     $-2
                           M 
-Warning[203]: Found opcode in column 1. (btfsc)
-0000A2 B0C7               M btfsc SSPSTAT, BF
-Warning[203]: Found opcode in column 1. (bra)
-0000A4 D???               M bra $-2
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE  9
+000160 6EC9               M     movwf   SSPBUF
+                          M 
+000162 A69E               M     btfss   PIR1, SSPIF
+000164 D???               M     bra     $-2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+000166 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00228     i2c_common_check_ack RD_ERR2
+000168 BCC5               M     btfsc   SSPCON2,ACKSTAT
+00016A EF?? F???          M     goto    RD_ERR2
+                      00229 
+                      00230     ;Re-Select the TCS34725 on the bus, in READ mode
+                      00231     i2c_common_repeatedstart
+00016E 82C5               M     bsf     SSPCON2,RSEN
+000170 A69E               M     btfss   PIR1, SSPIF
+000172 D???               M     bra     $-2
                           M 
-Warning[203]: Found opcode in column 1. (movwf)
-0000A6 6EC9               M movwf SSPBUF
+000174 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+000176 0E2A           00232     movlw   0x2A ;TCS34725 address | READ bit (+1)
+                      00233     i2c_common_write
+000178 B0C7               M     btfsc   SSPSTAT, BF
+00017A D???               M     bra     $-2
                           M 
-Warning[203]: Found opcode in column 1. (btfss)
-0000A8 A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-0000AA D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-0000AC 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
+00017C 6EC9               M     movwf   SSPBUF
                           M 
-Warning[206]: Found call to macro in column 1. (i2c_common_check_ack)
-                      00213 i2c_common_check_ack RD_ERR1
-Warning[203]: Found opcode in column 1. (btfsc)
-0000AE BCC5               M btfsc SSPCON2,ACKSTAT
-Warning[203]: Found opcode in column 1. (goto)
-0000B0 EF?? F???          M goto RD_ERR1
-                      00214 
-                      00215 ;Write data to I2C bus (Register Address in RTC)
-Warning[203]: Found opcode in column 1. (movf)
-0000B4 50??           00216 movf regaddress,w ;Set register pointer in RTC
-Warning[206]: Found call to macro in column 1. (i2c_common_write)
-                      00217 i2c_common_write ;
+00017E A69E               M     btfss   PIR1, SSPIF
+000180 D???               M     bra     $-2
+000182 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00234     i2c_common_check_ack RD_ERR3
+000184 BCC5               M     btfsc   SSPCON2,ACKSTAT
+000186 EF?? F???          M     goto    RD_ERR3
+                      00235 
+                      00236     ;Read data from I2C bus (Contents of Register in TCS34725)
+                      00237     i2c_common_read
+00018A 86C5               M     bsf     SSPCON2,RCEN ;Begin receiving byte from
+00018C A69E               M     btfss   PIR1, SSPIF
+00018E D???               M     bra     $-2
+000190 969E               M     bcf     PIR1, SSPIF
+000192 50C9               M     movf    SSPBUF,w
+000194 6E??           00238     movwf datachar
+                      00239     i2c_common_nack ;Send acknowledgement of data reception
+000196 8AC5               M     bsf     SSPCON2,ACKDT
+000198 88C5               M     bsf     SSPCON2,ACKEN
                           M 
-                          M ;input: W
-                          M ;output: to slave device
-                          M ;desc: writes W to SSPBUF and send to slave device. Make sure
-                          M ; transmit is finished before continuing
-                          M 
-Warning[203]: Found opcode in column 1. (btfsc)
-0000B6 B0C7               M btfsc SSPSTAT, BF
-Warning[203]: Found opcode in column 1. (bra)
-0000B8 D???               M bra $-2
-                          M 
-Warning[203]: Found opcode in column 1. (movwf)
-0000BA 6EC9               M movwf SSPBUF
-                          M 
-Warning[203]: Found opcode in column 1. (btfss)
-0000BC A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-0000BE D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-0000C0 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                          M 
-Warning[206]: Found call to macro in column 1. (i2c_common_check_ack)
-                      00218 i2c_common_check_ack RD_ERR2
-Warning[203]: Found opcode in column 1. (btfsc)
-0000C2 BCC5               M btfsc SSPCON2,ACKSTAT
-Warning[203]: Found opcode in column 1. (goto)
-0000C4 EF?? F???          M goto RD_ERR2
-                      00219 
-                      00220 ;Re-Select the DS1307 on the bus, in READ mode
-Warning[206]: Found call to macro in column 1. (i2c_common_repeatedstart)
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 10
+00019A                    M     _waitl1
+00019A B8C5               M     btfsc   SSPCON2,ACKEN
+00019C EF?? F???          M     goto    _waitl1
+  00000002                M     _waitknt    set _waitknt+1
+                      00240 
+0001A0 EF?? F???      00241     goto RD_END
+                      00242 
+0001A4                00243     RD_ERR1
+0001A4 0000           00244         nop
+0001A6 0E03           00245         movlw   b'00000011'
+0001A8 6E89           00246         movwf   LATA
+0001AA EF?? F???      00247         goto    RD_END
+0001AE                00248     RD_ERR2
+0001AE 0000           00249         nop
+0001B0 0E05           00250         movlw   b'00000101'
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00221 i2c_common_repeatedstart
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: initiate repeated start on the bus. Usually used for
-                          M ; changing direction of SDA without STOP event
-Warning[203]: Found opcode in column 1. (bsf)
-0000C8 82C5               M bsf SSPCON2,RSEN
-Warning[203]: Found opcode in column 1. (btfss)
-0000CA A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-0000CC D???               M bra $-2
-                          M 
-Warning[203]: Found opcode in column 1. (bcf)
-0000CE 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                          M 
-Warning[203]: Found opcode in column 1. (movlw)
-0000D0 0ED1           00222 movlw 0xD1 ;DS1307 address | READ bit
-Warning[206]: Found call to macro in column 1. (i2c_common_write)
-                      00223 i2c_common_write
-                          M 
-                          M ;input: W
-                          M ;output: to slave device
-                          M ;desc: writes W to SSPBUF and send to slave device. Make sure
-                          M ; transmit is finished before continuing
-                          M 
-Warning[203]: Found opcode in column 1. (btfsc)
-0000D2 B0C7               M btfsc SSPSTAT, BF
-Warning[203]: Found opcode in column 1. (bra)
-0000D4 D???               M bra $-2
-                          M 
-Warning[203]: Found opcode in column 1. (movwf)
-0000D6 6EC9               M movwf SSPBUF
-                          M 
-Warning[203]: Found opcode in column 1. (btfss)
-0000D8 A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-0000DA D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-0000DC 969E               M bcf PIR1, SSPIF ;clear SSPIF interrupt bit
-                          M 
-Warning[206]: Found call to macro in column 1. (i2c_common_check_ack)
-                      00224 i2c_common_check_ack RD_ERR3
-Warning[203]: Found opcode in column 1. (btfsc)
-0000DE BCC5               M btfsc SSPCON2,ACKSTAT
-Warning[203]: Found opcode in column 1. (goto)
-0000E0 EF?? F???          M goto RD_ERR3
-                      00225 
-                      00226 ;Read data from I2C bus (Contents of Register in RTC)
-Warning[206]: Found call to macro in column 1. (i2c_common_read)
-                      00227 i2c_common_read
-                          M ;input: none
-                          M ;output: W
-                          M ;desc: reads data from slave and saves it in W.
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 11
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                          M 
-Warning[203]: Found opcode in column 1. (bsf)
-0000E4 86C5               M bsf SSPCON2,RCEN ;Begin receiving byte from
-Warning[203]: Found opcode in column 1. (btfss)
-0000E6 A69E               M btfss PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (bra)
-0000E8 D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-0000EA 969E               M bcf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (movf)
-0000EC 50C9               M movf SSPBUF,w
-Warning[203]: Found opcode in column 1. (movwf)
-0000EE 6E??           00228 movwf datachar
-Warning[206]: Found call to macro in column 1. (i2c_common_nack)
-                      00229 i2c_common_nack ;Send acknowledgement of data reception
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: send an not acknowledge to slave device
-                          M 
-Warning[203]: Found opcode in column 1. (bsf)
-0000F0 8AC5               M bsf SSPCON2,ACKDT
-Warning[203]: Found opcode in column 1. (bsf)
-0000F2 88C5               M bsf SSPCON2,ACKEN
-                          M 
-0000F4                    M _waitl0
-Warning[203]: Found opcode in column 1. (btfsc)
-0000F4 B8C5               M btfsc SSPCON2,ACKEN
-Warning[203]: Found opcode in column 1. (goto)
-0000F6 EF?? F???          M goto _waitl0
-  00000001                M _waitknt set _waitknt+1
-                      00230 
-                      00231 
-Warning[203]: Found opcode in column 1. (goto)
-0000FA EF?? F???      00232 goto RD_END
-                      00233 
-0000FE                00234 RD_ERR1
-Warning[203]: Found opcode in column 1. (nop)
-0000FE 0000           00235 nop
-Warning[203]: Found opcode in column 1. (movlw)
-000100 0E03           00236 movlw b'00000011'
-Warning[203]: Found opcode in column 1. (movwf)
-000102 6E89           00237 movwf LATA
-Warning[203]: Found opcode in column 1. (goto)
-000104 EF?? F???      00238 goto RD_END
-000108                00239 RD_ERR2
-Warning[203]: Found opcode in column 1. (nop)
-000108 0000           00240 nop
-Warning[203]: Found opcode in column 1. (movlw)
-00010A 0E05           00241 movlw b'00000101'
-Warning[203]: Found opcode in column 1. (movwf)
-00010C 6E89           00242 movwf LATA
-Warning[203]: Found opcode in column 1. (goto)
-00010E EF?? F???      00243 goto RD_END
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 12
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000112                00244 RD_ERR3
-Warning[203]: Found opcode in column 1. (nop)
-000112 0000           00245 nop
-Warning[203]: Found opcode in column 1. (movlw)
-000114 0E07           00246 movlw b'00000111'
-Warning[203]: Found opcode in column 1. (movwf)
-000116 6E89           00247 movwf LATA
-Warning[203]: Found opcode in column 1. (goto)
-000118 EF?? F???      00248 goto RD_END
-                      00249 ;Release the I2C bus
-00011C                00250 RD_END
-Warning[206]: Found call to macro in column 1. (i2c_common_stop)
-                      00251 i2c_common_stop
-                          M ;input: none
-                          M ;output: none
-                          M ;desc: initiate stop condition on the bus
-Warning[203]: Found opcode in column 1. (bsf)
-00011C 84C5               M bsf SSPCON2,PEN
-Warning[203]: Found opcode in column 1. (btfsc)
-00011E B4C5               M btfsc SSPCON2,PEN
-Warning[203]: Found opcode in column 1. (bra)
-000120 D???               M bra $-2
-Warning[203]: Found opcode in column 1. (bcf)
-000122 969E               M bcf PIR1, SSPIF
-Warning[203]: Found opcode in column 1. (return)
-000124 0012           00252 return
-                      00253 
-000126                00254 rtc_convert
-                      00255 ;input: W
-                      00256 ;output: tens_digit, ones_digit
-                      00257 ;desc: This subroutine converts the binary number
-                      00258 ; in W into a two digit ASCII number and place
-                      00259 ; each digit into the corresponding registers
-                      00260 ; dig10 or dig1
+0001B2 6E89           00251         movwf   LATA
+0001B4 EF?? F???      00252         goto    RD_END
+0001B8                00253     RD_ERR3
+0001B8 0000           00254         nop
+0001BA 0E07           00255         movlw   b'00000111'
+0001BC 6E89           00256         movwf   LATA
+0001BE EF?? F???      00257         goto    RD_END
+0001C2                00258     RD_END
+                      00259         i2c_common_stop
+0001C2 84C5               M     bsf     SSPCON2,PEN
+0001C4 B4C5               M     btfsc   SSPCON2,PEN
+0001C6 D???               M     bra     $-2
+0001C8 969E               M     bcf     PIR1, SSPIF
+0001CA 0012           00260 return
                       00261 
-Warning[203]: Found opcode in column 1. (movwf)
-000126 6E??           00262 movwf convert_buffer ; B1 = HHHH LLLL
-Warning[203]: Found opcode in column 1. (swapf)
-000128 38??           00263 swapf convert_buffer,w ; W = LLLL HHHH
-Warning[203]: Found opcode in column 1. (andlw)
-00012A 0B0F           00264 andlw 0x0f ; Mask upper four bits 0000 HHHH
-Warning[203]: Found opcode in column 1. (addlw)
-00012C 0F30           00265 addlw 0x30 ; convert to ASCII
-Warning[203]: Found opcode in column 1. (movwf)
-00012E 6E??           00266 movwf tens_digit ;saves into 10ths digit
-                      00267 
-Warning[203]: Found opcode in column 1. (movf)
-000130 50??           00268 movf convert_buffer,w
-Warning[203]: Found opcode in column 1. (andlw)
-000132 0B0F           00269 andlw 0x0f ; w = 0000 LLLL
-Warning[203]: Found opcode in column 1. (addlw)
-000134 0F30           00270 addlw 0x30 ; convert to ASCII
-Warning[203]: Found opcode in column 1. (movwf)
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 13
+0001CC                00262 WRITE_COLOUR_I2C
+                      00263     i2c_common_start
+0001CC 80C5               M     bsf     SSPCON2,SEN
+0001CE AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+0001D0 869E               M     bsf     PIR1, SSPIF
+0001D2 A69E               M     btfss   PIR1, SSPIF
+0001D4 D???               M     bra     $-2
+0001D6 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00264 
+0001D8 0E29           00265     movlw   0x29 ;TCS34725 address | WRITE bit
+                      00266     i2c_common_write
+0001DA B0C7               M     btfsc   SSPSTAT, BF
+0001DC D???               M     bra     $-2
+                          M 
+0001DE 6EC9               M     movwf   SSPBUF
+                          M 
+0001E0 A69E               M     btfss   PIR1, SSPIF
+0001E2 D???               M     bra     $-2
+0001E4 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00267     i2c_common_check_ack WR_ERR1
+0001E6 BCC5               M     btfsc   SSPCON2,ACKSTAT
+0001E8 EF?? F???          M     goto    WR_ERR1
+                      00268 
+                      00269     ;Write data to I2C bus (Register Address in TCS34725)
+0001EC 50??           00270     movf    regaddress,w ;Set register pointer in TCS34725
+                      00271     i2c_common_write ;
+0001EE B0C7               M     btfsc   SSPSTAT, BF
+0001F0 D???               M     bra     $-2
+                          M 
+0001F2 6EC9               M     movwf   SSPBUF
+                          M 
+0001F4 A69E               M     btfss   PIR1, SSPIF
+0001F6 D???               M     bra     $-2
+0001F8 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00272     i2c_common_check_ack WR_ERR2
+0001FA BCC5               M     btfsc   SSPCON2,ACKSTAT
+0001FC EF?? F???          M     goto    WR_ERR2
+                      00273 
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-000136 6E??           00271 movwf ones_digit ; saves into 1s digit
-Warning[203]: Found opcode in column 1. (return)
-000138 0012           00272 return
-                      00273 
-Warning[205]: Found directive in column 1. (end)
-                      00274 end
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 14
+                      00274     ;Write data to I2C bus (Data to be placed in TCS34725 register)
+000200 50??           00275     movf    databyte,w ;Write data to register in TCS34725
+                      00276     i2c_common_write
+000202 B0C7               M     btfsc   SSPSTAT, BF
+000204 D???               M     bra     $-2
+                          M 
+000206 6EC9               M     movwf   SSPBUF
+                          M 
+000208 A69E               M     btfss   PIR1, SSPIF
+00020A D???               M     bra     $-2
+00020C 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00277     i2c_common_check_ack WR_ERR3
+00020E BCC5               M     btfsc   SSPCON2,ACKSTAT
+000210 EF?? F???          M     goto    WR_ERR3
+                      00278 
+000214 EF?? F???      00279     goto    WR_END
+                      00280 
+000218                00281     WR_ERR1
+000218 0000           00282         nop
+00021A 0E0D           00283         movlw   b'00001101'
+00021C 6E89           00284         movwf   LATA    
+00021E EF?? F???      00285         goto    WR_END
+                      00286     
+000222                00287     WR_ERR2
+000222 0000           00288         nop
+000224 0E0F           00289         movlw   b'00001111'
+000226 6E89           00290         movwf   LATA
+000228 808D           00291         bsf     LATE,0
+00022A EF?? F???      00292         goto    WR_END
+                      00293         
+00022E                00294     WR_ERR3
+00022E 0000           00295         nop
+000230 0E09           00296         movlw   b'00001001'
+000232 6E89           00297         movwf   LATA
+000234 EF?? F???      00298         goto    WR_END
+000238                00299     WR_END
+                      00300         i2c_common_stop ;Release the I2C bus
+000238 84C5               M     bsf     SSPCON2,PEN
+00023A B4C5               M     btfsc   SSPCON2,PEN
+00023C D???               M     bra     $-2
+00023E 969E               M     bcf     PIR1, SSPIF
+                      00301         
+000240 0012           00302 return
+                      00303 end
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 11
 
 
 SYMBOL TABLE
@@ -777,7 +638,7 @@ C1OUT                             00000006
 C2INV                             00000005
 C2OUT                             00000007
 CCP1                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 15
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 12
 
 
 SYMBOL TABLE
@@ -836,7 +697,7 @@ CVR2                              00000002
 CVR3                              00000003
 CVRCON                            00000FB5
 CVREN                             00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 16
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 13
 
 
 SYMBOL TABLE
@@ -895,7 +756,7 @@ GIE_GIEH                          00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 17
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 14
 
 
 SYMBOL TABLE
@@ -954,7 +815,7 @@ IRVST                             00000005
 IVRST                             00000005
 InitLCD                           00000000
 KBI0                              00000004
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 18
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 15
 
 
 SYMBOL TABLE
@@ -1013,7 +874,7 @@ LVDIN                             00000005
 LVDIP                             00000002
 LVDL0                             00000000
 LVDL1                             00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 19
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 16
 
 
 SYMBOL TABLE
@@ -1072,7 +933,7 @@ PD                                00000002
 PDC0                              00000000
 PDC1                              00000001
 PDC2                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 20
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 17
 
 
 SYMBOL TABLE
@@ -1131,7 +992,7 @@ PSPIP                             00000007
 PSPMODE                           00000004
 PSSAC0                            00000002
 PSSAC1                            00000003
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 21
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 18
 
 
 SYMBOL TABLE
@@ -1188,20 +1049,25 @@ RD4                               00000004
 RD5                               00000005
 RD6                               00000006
 RD7                               00000007
-RD_END                            0000011C
-RD_ERR1                           000000FE
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 22
+RD_END                            000001C2
+RD_END_RTC                        0000011C
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 19
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-RD_ERR2                           00000108
-RD_ERR3                           00000112
+RD_ERR1                           000001A4
+RD_ERR1_RTC                       000000FE
+RD_ERR2                           000001AE
+RD_ERR2_RTC                       00000108
+RD_ERR3                           000001B8
+RD_ERR3_RTC                       00000112
 RE0                               00000000
 RE1                               00000001
 RE2                               00000002
 RE3                               00000003
+READ_COLOUR_I2C                   0000013A
 RI                                00000004
 RSEN                              00000001
 RX                                00000007
@@ -1244,17 +1110,17 @@ SSPIF                             00000003
 SSPIP                             00000003
 SSPM0                             00000000
 SSPM1                             00000001
-SSPM2                             00000002
-SSPM3                             00000003
-SSPOV                             00000006
-SSPSTAT                           00000FC7
-STATUS                            00000FD8
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 23
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 20
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000FC7
+STATUS                            00000FD8
 STKFUL                            00000007
 STKOVF                            00000007
 STKPTR                            00000FFC
@@ -1303,17 +1169,17 @@ T3CON                             00000FB1
 T3SYNC                            00000002
 TABLAT                            00000FF5
 TBLPTR                            00000FF6
-TBLPTRH                           00000FF7
-TBLPTRL                           00000FF6
-TBLPTRU                           00000FF8
-TMR0                              00000FD6
-TMR0H                             00000FD7
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 24
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 21
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+TBLPTRH                           00000FF7
+TBLPTRL                           00000FF6
+TBLPTRU                           00000FF8
+TMR0                              00000FD6
+TMR0H                             00000FD7
 TMR0IE                            00000005
 TMR0IF                            00000002
 TMR0IP                            00000002
@@ -1362,17 +1228,17 @@ TRISB3                            00000003
 TRISB4                            00000004
 TRISB5                            00000005
 TRISB6                            00000006
-TRISB7                            00000007
-TRISC                             00000F94
-TRISC0                            00000000
-TRISC1                            00000001
-TRISC2                            00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 25
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 22
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+TRISB7                            00000007
+TRISC                             00000F94
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
 TRISC3                            00000003
 TRISC4                            00000004
 TRISC5                            00000005
@@ -1419,19 +1285,24 @@ WR                                00000001
 WREG                              00000FE8
 WREN                              00000002
 WRERR                             00000003
+WRITE_COLOUR_I2C                  000001CC
 WR_DATA                           00000000
-WR_END                            0000008A
-WR_ERR1                           0000006A
-WR_ERR2                           00000074
-WR_ERR3                           00000080
-WR_INS                            00000000
-WUE                               00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 26
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 23
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+WR_END                            00000238
+WR_END_RTC                        0000008A
+WR_ERR1                           00000218
+WR_ERR1_RTC                       0000006A
+WR_ERR2                           00000222
+WR_ERR2_RTC                       00000074
+WR_ERR3                           0000022E
+WR_ERR3_RTC                       00000080
+WR_INS                            00000000
+WUE                               00000001
 WrtLCD                            00000000
 Z                                 00000002
 _.code_0018                       00000018
@@ -1453,10 +1324,34 @@ _.code_00D4                       000000D4
 _.code_00DA                       000000DA
 _.code_00E8                       000000E8
 _.code_0120                       00000120
+_.code_0142                       00000142
+_.code_014A                       0000014A
+_.code_0150                       00000150
+_.code_015E                       0000015E
+_.code_0164                       00000164
+_.code_0172                       00000172
+_.code_017A                       0000017A
+_.code_0180                       00000180
+_.code_018E                       0000018E
+_.code_01C6                       000001C6
+_.code_01D4                       000001D4
+_.code_01DC                       000001DC
+_.code_01E2                       000001E2
+_.code_01F0                       000001F0
+_.code_01F6                       000001F6
+_.code_0204                       00000204
+_.code_020A                       0000020A
+_.code_023C                       0000023C
 _BOREN_NOSLP_2L                   000000FD
 _BOREN_OFF_2L                     000000F9
 _BOREN_ON_2L                      000000FB
 _BOREN_SBORDIS_2L                 000000FF
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _BORV_0_2L                        000000E7
 _BORV_1_2L                        000000EF
 _BORV_2_2L                        000000F7
@@ -1485,12 +1380,6 @@ _CP3_ON_5L                        000000F7
 _CPB_OFF_5H                       000000FF
 _CPB_ON_5H                        000000BF
 _CPD_OFF_5H                       000000FF
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 27
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _CPD_ON_5H                        0000007F
 _DEBUG_OFF_4L                     000000FF
 _DEBUG_ON_4L                      0000007F
@@ -1516,6 +1405,12 @@ _IDLOC4                           00200004
 _IDLOC5                           00200005
 _IDLOC6                           00200006
 _IDLOC7                           00200007
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 25
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _IESO_OFF_1H                      0000007F
 _IESO_ON_1H                       000000FF
 _LPT1OSC_OFF_3H                   000000FB
@@ -1544,12 +1439,6 @@ _WDTPS_1024_2H                    000000F5
 _WDTPS_128_2H                     000000EF
 _WDTPS_16384_2H                   000000FD
 _WDTPS_16_2H                      000000E9
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 28
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _WDTPS_1_2H                       000000E1
 _WDTPS_2048_2H                    000000F7
 _WDTPS_256_2H                     000000F1
@@ -1575,14 +1464,21 @@ _WRT3_ON_6L                       000000F7
 _WRTB_OFF_6H                      000000FF
 _WRTB_ON_6H                       000000BF
 _WRTC_OFF_6H                      000000FF
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 26
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _WRTC_ON_6H                       000000DF
 _WRTD_OFF_6H                      000000FF
 _WRTD_ON_6H                       0000007F
 _XINST_OFF_4L                     000000BF
 _XINST_ON_4L                      000000FF
 __18F4620                         00000001
-_waitknt                          00000001
+_waitknt                          00000002
 _waitl0                           000000F4
+_waitl1                           0000019A
 convert_buffer                    00000005
 databyte                          00000001
 datachar                          00000002
@@ -1602,14 +1498,8 @@ rtc_convert                       00000126
 tens_digit                        00000003
 write_rtc                         0000001E
 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-12-2017  20:06:21         PAGE 29
-
-
-
-
-
 Errors   :     0
-Warnings :   178 reported,     0 suppressed
+Warnings :     3 reported,    42 suppressed
 Messages :     0 reported,     0 suppressed
 
 
