@@ -15,6 +15,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 #include <p18f4620.inc>
 #include <lcd.inc>
 #include <rtc.inc>
+#include <colour.inc>
 
     CONFIG OSC=HS, FCMEN=OFF, IESO=OFF
     CONFIG PWRT = OFF, BOREN = SBORDIS, BORV = 3
@@ -99,10 +100,12 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TIMCNT
 	CPCNT
 	TDATA
+	CLEAR
+	RED
+	GREEN
+	BLUE
     endc
     
-
-
 ;*******************************************************************************
 ; tables
 ;*******************************************************************************
@@ -442,6 +445,7 @@ INIT
 	call	RTC_INIT
 	call	Delay50ms
 	
+	COLOUR_INIT
 	call	INIT_USART
 
 	; interrupts
@@ -471,6 +475,10 @@ INIT
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
+	clrf	CLEAR
+	clrf	GREEN
+	clrf	RED
+	clrf	BLUE
 	
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
@@ -478,7 +486,7 @@ INIT
 	Display	Welcome
 	call LCD_L2
 	Display	Team
-	Delay50N delayR, 0x3C
+	Delay50N delayR, 0x14
 
 ;*******************************************************************************
 ; standby mode
@@ -489,6 +497,7 @@ STANDBY
 
 HOLD_STANDBY
 	call	READ_KEY_TIME
+	ChangeMode key5, COLOUR_TEST
 	ChangeMode keyA, EXECUTION
 	ChangeMode keyB, LOG
 	ChangeMode keyC, PERM_LOG
@@ -498,7 +507,34 @@ HOLD_STANDBY
 ;*******************************************************************************
 ; execution mode
 ;*******************************************************************************
+	
+COLOUR_TEST
+	call	ClrLCD
+	clrf	CLEAR
+	bra LOOPIN
+CLEAR_DISP
+	call	ClrLCD
+	movlw	'c'
+	call	WR_DATA
+	Delay50N delayR, 0x03
+	bra LOOPIN
 
+RED_DISP
+	call	ClrLCD
+	movlw	'r'
+	call	WR_DATA
+	Delay50N delayR, 0x03
+
+LOOPIN
+	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE, temp
+	Delay50N delayR, 0x03
+	
+	movlw	CLEAR
+	cpfsgt	GREEN
+	bra	CLEAR_DISP
+	bra	RED_DISP
+	bra	LOOPIN
+	
 EXECUTION
 	; save the starting time
 	call	    SAVE_TIME

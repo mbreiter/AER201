@@ -38,7 +38,6 @@ movlw addliteral
 movwf regaddress
 movlw datliteral
 movwf databyte
-call write_rtc
 endm
 
 rtc_read macro addliteral

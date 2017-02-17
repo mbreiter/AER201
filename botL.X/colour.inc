@@ -1,4 +1,5 @@
-    extern	i2c_common_setup, regaddress, databyte, datachar
+    extern	i2c_common_setup, regaddress, databyte, datachar, READ_COLOUR_I2C, WRITE_COLOUR_I2C, d200us_C, d50ms_C, data_colourH, data_colourL
+
 
 ;    #define TCS34725_ADDRESS          (0x29)
 ;
@@ -52,45 +53,93 @@
 ;    #define TCS34725_BDATAH           (0x1B)
 
 
-    COLOUR_INIT macro	integration_time, gain
-	COLOUR_WRITE	0x00, 0x02 ; turn on (0x02) enable register (0x00)
-	COLOUR_WRITE	0x01, 0xd6 ; set 100ms integration time
-	COLOUR_WRITE	0x0F, 0x00 ; set gain to 1x (00), REFERNCE, 4x is 01, 16x is 10, 60x is 11
+    COLOUR_INIT macro
+	COLOUR_WRITE	0xa1, 0x10 
+	COLOUR_WRITE	0xad, 0x00 
+	COLOUR_WRITE	0xaf, 0x00 
+	COLOUR_WRITE	0xa0, 0x03 ; Enable
+
     endm
     
     COLOUR_READ	 macro	address
 	movlw	address
 	movwf	regaddress
 	call	READ_COLOUR_I2C
-	movf	datachar, w
     endm
     
-    COLOUR_WRITE macro address, instr
+    COLOUR_WRITE macro address, datliteral
 	movlw	address
 	movwf	regaddress
-	movlw	instr
+	movlw	datliteral
 	movwf	databyte
 	call	WRITE_COLOUR_I2C
     endm
     
-    COLOUR_GET_DATA macro clear, red, green, blue
-	COLOUR_READ 0x14		; call read with the red register
-	movwf	clear			; store the result into red
+    COLOUR_GET_DATA macro clear, red, green, blue, temp_col
+	COLOUR_READ 0x14		; read clear colour
 	
-	COLOUR_READ 0x16		; call read with the red register
-	movwf	red			; store the result into red
+;	movlw	0x08
+;	movwf	temp_col
+;	movlw	data_colourH
+;	ROTATE	temp_col
+;	iorwf	data_colourL
+	movwf	clear
 	
-	COLOUR_READ 0x18		; call read with the red register
-	movwf	green			; store the result into red
+	COLOUR_READ 0x16		; read red colour
 	
-	COLOUR_READ 0x20		; call read with the red register
-	movwf	blue			; store the result into red
+;	movlw	0x08
+;	movwf	temp_col
+;	movlw	data_colourH
+;	ROTATE	temp_col
+;	iorwf	data_colourL
+	movwf	red
 	
-	; TODO implement delay, set to 101ms
+	COLOUR_READ 0x18		; read green colour
+;	
+;	movlw	0x08
+;	movwf	temp_col
+;	movlw	data_colourH
+;	ROTATE	temp_col
+;	iorwf	data_colourL
+	movwf	green
+	
+	COLOUR_READ 0x1a		; read blue colour
+;	
+;	movlw	0x08
+;	movwf	temp_col
+;	movlw	data_colourH
+;	ROTATE	temp_col
+;	iorwf	data_colourL
+	movwf	blue
+
     endm
     
+    ROTATE  macro count
+	rlncf	WREG
+	decfsz	count
+	bra	ROTATE
+    endm
     
-    
-    
-    
+;Delay200us macro
+;	local loop200us
+;	movlw	0xA4
+;	movwf	d200us_C
+;
+;loop200us
+;	decfsz	d200us
+;	goto	loop200us
+;	nop
+;	endm
+;	
+;
+;Delay50ms macro
+;	local loop50ms
+;	movlw	0xF9
+;	movwf	d50ms_C
+;
+;loop50ms
+;	Delay200us
+;	decfsz	d50ms_C
+;	endm
+;;    
     

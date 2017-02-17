@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -41,156 +41,160 @@ Warning[205]: Found directive in column 1. (errorlevel)
 000000                00015 regaddress res 1
 000001                00016 databyte res 1
 000002                00017 datachar res 1
-000003                00018 tens_digit res 1
-000004                00019 ones_digit res 1
-000005                00020 convert_buffer res 1
-                      00021 
-  0000                00022 global write_rtc,read_rtc,rtc_convert,i2c_common_setup
-  0000                00023 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
-                      00024 
+000003                00018 data_colourH res 1
+000004                00019 data_colourL res 1
+000005                00020 tens_digit res 1
+000006                00021 ones_digit res 1
+000007                00022 convert_buffer res 1
+000008                00023 d50ms_C res 1
+000009                00024 d200us_C res 1
                       00025 
-                      00026 ;; I2C MACROS
-                      00027 ;;
-                      00028 ;; Sebastian K, commit 110219-2208
-                      00029 ;; forked off PIC16 sample code
-                      00030 ;; for PIC18F4620
-                      00031 ;; relocatable labels
-                      00032 
-                      00033 i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  2
+  0000                00026 global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C
+  0000                00027 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer, d50ms_C, d200us_C
+  0000                00028 global data_colourH, data_colourL
+                      00029 
+                      00030 
+                      00031 ;; I2C MACROS
+                      00032 ;;
+                      00033 ;; Sebastian K, commit 110219-2208
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00034     btfsc   SSPCON2,ACKSTAT
-                      00035     goto    err_address
-                      00036 endm
+                      00034 ;; forked off PIC16 sample code
+                      00035 ;; for PIC18F4620
+                      00036 ;; relocatable labels
                       00037 
-                      00038 i2c_common_start macro
-                      00039     bsf     SSPCON2,SEN
-                      00040     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
-                      00041     bsf     PIR1, SSPIF
-                      00042     btfss   PIR1, SSPIF
-                      00043     bra     $-2
-                      00044     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00045 endm
-                      00046 
-                      00047 i2c_common_stop macro
-                      00048     bsf     SSPCON2,PEN
-                      00049     btfsc   SSPCON2,PEN
-                      00050     bra     $-2
-                      00051     bcf     PIR1, SSPIF
-                      00052 endm
-                      00053 
-                      00054 i2c_common_repeatedstart macro
-                      00055     bsf     SSPCON2,RSEN
-                      00056     btfss   PIR1, SSPIF
-                      00057     bra     $-2
+                      00038 i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
+                      00039     btfsc   SSPCON2,ACKSTAT
+                      00040     goto    err_address
+                      00041 endm
+                      00042 
+                      00043 i2c_common_start macro
+                      00044     bsf     SSPCON2,SEN
+                      00045     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+                      00046     bsf     PIR1, SSPIF
+                      00047     btfss   PIR1, SSPIF
+                      00048     bra     $-2
+                      00049     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00050 endm
+                      00051 
+                      00052 i2c_common_stop macro
+                      00053     bsf     SSPCON2,PEN
+                      00054     btfsc   SSPCON2,PEN
+                      00055     bra     $-2
+                      00056     bcf     PIR1, SSPIF
+                      00057 endm
                       00058 
-                      00059     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00060 endm
-                      00061 
-                      00062 i2c_common_ack macro
-                      00063     bcf     SSPCON2,ACKDT
-                      00064     bsf     SSPCON2,ACKEN
-                      00065     btfsc   SSPCON2,ACKEN
-                      00066     bra     $-2
-                      00067 endm
-                      00068 
-                      00069 i2c_common_nack macro
-                      00070     bsf     SSPCON2,ACKDT
-                      00071     bsf     SSPCON2,ACKEN
-                      00072 
-                      00073     _waitl#v(_waitknt)
-                      00074     btfsc   SSPCON2,ACKEN
-                      00075     goto    _waitl#v(_waitknt)
-                      00076     _waitknt    set _waitknt+1
-                      00077 endm
-                      00078 
-                      00079 i2c_common_write macro
-                      00080     btfsc   SSPSTAT, BF
-                      00081     bra     $-2
-                      00082 
-                      00083     movwf   SSPBUF
-                      00084 
-                      00085     btfss   PIR1, SSPIF
+                      00059 i2c_common_repeatedstart macro
+                      00060     bsf     SSPCON2,RSEN
+                      00061     btfss   PIR1, SSPIF
+                      00062     bra     $-2
+                      00063 
+                      00064     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00065 endm
+                      00066 
+                      00067 i2c_common_ack macro
+                      00068     bcf     SSPCON2,ACKDT
+                      00069     bsf     SSPCON2,ACKEN
+                      00070     btfsc   SSPCON2,ACKEN
+                      00071     bra     $-2
+                      00072 endm
+                      00073 
+                      00074 i2c_common_nack macro
+                      00075     bsf     SSPCON2,ACKDT
+                      00076     bsf     SSPCON2,ACKEN
+                      00077 
+                      00078     _waitl#v(_waitknt)
+                      00079     btfsc   SSPCON2,ACKEN
+                      00080     goto    _waitl#v(_waitknt)
+                      00081     _waitknt    set _waitknt+1
+                      00082 endm
+                      00083 
+                      00084 i2c_common_write macro
+                      00085     btfsc   SSPSTAT, BF
                       00086     bra     $-2
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  3
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00087     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00088 endm
+                      00087 
+                      00088     movwf   SSPBUF
                       00089 
-                      00090 i2c_common_read macro
-                      00091     bsf     SSPCON2,RCEN ;Begin receiving byte from
-                      00092     btfss   PIR1, SSPIF
-                      00093     bra     $-2
-                      00094     bcf     PIR1, SSPIF
-                      00095     movf    SSPBUF,w
-                      00096 endm
-                      00097 
-                      00098 code
-                      00099 
-000000                00100 i2c_common_setup
-000000 0E00           00101     movlw   b'00000000'
-000002 6EC7           00102     movwf   SSPSTAT ;set I2C line leves, clear all flags.
-                      00103 
-000004 0E24           00104     movlw   24 ;100kHz baud rate: 10000000 osc / [4*100000] -1
-000006 6EC8           00105     movwf   SSPADD ;RTC only supports 100kHz
-                      00106 
-000008 0E28           00107     movlw   b'00101000' ;Config SSP for Master Mode I2C
-00000A 6EC6           00108     movwf   SSPCON1
-                      00109 
-00000C 8AC6           00110     bsf     SSPCON1,SSPEN ;Enable SSP module
+                      00090     btfss   PIR1, SSPIF
+                      00091     bra     $-2
+                      00092     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00093 endm
+                      00094 
+                      00095 i2c_common_read macro
+                      00096     bsf     SSPCON2,RCEN ;Begin receiving byte from
+                      00097     btfss   PIR1, SSPIF
+                      00098     bra     $-2
+                      00099     bcf     PIR1, SSPIF
+                      00100     movf    SSPBUF,w
+                      00101 endm
+                      00102 
+                      00103 code
+                      00104 
+000000                00105 i2c_common_setup
+000000 0E00           00106     movlw   b'00000000'
+000002 6EC7           00107     movwf   SSPSTAT ;set I2C line leves, clear all flags.
+                      00108 
+000004 0E24           00109     movlw   24 ;100kHz baud rate: 10000000 osc / [4*100000] -1
+000006 6EC8           00110     movwf   SSPADD ;RTC only supports 100kHz
                       00111 
-                      00112 
-00000E 96A1           00113     bcf     PIR2, SSPIE ;don't cause an interrupt on SSPIF, please. We're just polling it.
-000010 969E           00114     bcf     PIR1, SSPIF
-000012 90C7           00115     bcf     SSPSTAT, BF
-                      00116     i2c_common_stop ;Ensure the bus is free
+000008 0E28           00112     movlw   b'00101000' ;Config SSP for Master Mode I2C
+00000A 6EC6           00113     movwf   SSPCON1
+                      00114 
+00000C 8AC6           00115     bsf     SSPCON1,SSPEN ;Enable SSP module
+                      00116 
+00000E 96A1           00117     bcf     PIR2, SSPIE ;don't cause an interrupt on SSPIF, please. We're just polling it.
+000010 969E           00118     bcf     PIR1, SSPIF
+000012 90C7           00119     bcf     SSPSTAT, BF
+                      00120     i2c_common_stop ;Ensure the bus is free
 000014 84C5               M     bsf     SSPCON2,PEN
 000016 B4C5               M     btfsc   SSPCON2,PEN
 000018 D???               M     bra     $-2
 00001A 969E               M     bcf     PIR1, SSPIF
-00001C 0012           00117 return
-                      00118 
-                      00119 
-00001E                00120 write_rtc
-                      00121     i2c_common_start
+00001C 0012           00121 return
+                      00122 
+                      00123 
+00001E                00124 write_rtc
+                      00125     i2c_common_start
 00001E 80C5               M     bsf     SSPCON2,SEN
 000020 AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
 000022 869E               M     bsf     PIR1, SSPIF
 000024 A69E               M     btfss   PIR1, SSPIF
 000026 D???               M     bra     $-2
 000028 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00122 
-00002A 0ED0           00123     movlw   0xD0 ;DS1307 address | WRITE bit
-                      00124     i2c_common_write
+                      00126 
+00002A 0ED0           00127     movlw   0xD0 ;DS1307 address | WRITE bit
+                      00128     i2c_common_write
 00002C B0C7               M     btfsc   SSPSTAT, BF
-00002E D???               M     bra     $-2
-                          M 
-000030 6EC9               M     movwf   SSPBUF
-                          M 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  4
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+00002E D???               M     bra     $-2
+                          M 
+000030 6EC9               M     movwf   SSPBUF
+                          M 
 000032 A69E               M     btfss   PIR1, SSPIF
 000034 D???               M     bra     $-2
 000036 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00125     i2c_common_check_ack WR_ERR1_RTC
+                      00129     i2c_common_check_ack WR_ERR1_RTC
 000038 BCC5               M     btfsc   SSPCON2,ACKSTAT
 00003A EF?? F???          M     goto    WR_ERR1_RTC
-                      00126 
-                      00127     ;Write data to I2C bus (Register Address in RTC)
-00003E 50??           00128     movf    regaddress,w ;Set register pointer in RTC
-                      00129     i2c_common_write ;
+                      00130 
+                      00131     ;Write data to I2C bus (Register Address in RTC)
+00003E 50??           00132     movf    regaddress,w ;Set register pointer in RTC
+                      00133     i2c_common_write ;
 000040 B0C7               M     btfsc   SSPSTAT, BF
 000042 D???               M     bra     $-2
                           M 
@@ -199,13 +203,13 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000046 A69E               M     btfss   PIR1, SSPIF
 000048 D???               M     bra     $-2
 00004A 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00130     i2c_common_check_ack WR_ERR2_RTC
+                      00134     i2c_common_check_ack WR_ERR2_RTC
 00004C BCC5               M     btfsc   SSPCON2,ACKSTAT
 00004E EF?? F???          M     goto    WR_ERR2_RTC
-                      00131 
-                      00132     ;Write data to I2C bus (Data to be placed in RTC register)
-000052 50??           00133     movf    databyte,w ;Write data to register in RTC
-                      00134     i2c_common_write
+                      00135 
+                      00136     ;Write data to I2C bus (Data to be placed in RTC register)
+000052 50??           00137     movf    databyte,w ;Write data to register in RTC
+                      00138     i2c_common_write
 000054 B0C7               M     btfsc   SSPSTAT, BF
 000056 D???               M     bra     $-2
                           M 
@@ -214,55 +218,55 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00005A A69E               M     btfss   PIR1, SSPIF
 00005C D???               M     bra     $-2
 00005E 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00135     i2c_common_check_ack WR_ERR3_RTC
+                      00139     i2c_common_check_ack WR_ERR3_RTC
 000060 BCC5               M     btfsc   SSPCON2,ACKSTAT
 000062 EF?? F???          M     goto    WR_ERR3_RTC
-                      00136 
-000066 EF?? F???      00137     goto    WR_END_RTC
-                      00138 
-00006A                00139     WR_ERR1_RTC
-00006A 0000           00140         nop
-00006C 0E0D           00141         movlw   b'00001101'
-00006E 6E89           00142         movwf   LATA    
-000070 EF?? F???      00143         goto    WR_END
-                      00144     
-000074                00145     WR_ERR2_RTC
-000074 0000           00146         nop
-000076 0E0F           00147         movlw   b'00001111'
-000078 6E89           00148         movwf   LATA
-00007A 808D           00149         bsf     LATE,0
-00007C EF?? F???      00150         goto    WR_END
-                      00151         
-000080                00152     WR_ERR3_RTC
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  5
+                      00140 
+000066 EF?? F???      00141     goto    WR_END_RTC
+                      00142 
+00006A                00143     WR_ERR1_RTC
+00006A 0000           00144         nop
+00006C 0E0D           00145         movlw   b'00001101'
+00006E 6E89           00146         movwf   LATA    
+000070 EF?? F???      00147         goto    WR_END
+                      00148     
+000074                00149     WR_ERR2_RTC
+000074 0000           00150         nop
+000076 0E0F           00151         movlw   b'00001111'
+000078 6E89           00152         movwf   LATA
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-000080 0000           00153         nop
-000082 0E09           00154         movlw   b'00001001'
-000084 6E89           00155         movwf   LATA
-000086 EF?? F???      00156         goto    WR_END
-00008A                00157     WR_END_RTC
-                      00158         i2c_common_stop ;Release the I2C bus
+00007A 808D           00153         bsf     LATE,0
+00007C EF?? F???      00154         goto    WR_END
+                      00155         
+000080                00156     WR_ERR3_RTC
+000080 0000           00157         nop
+000082 0E09           00158         movlw   b'00001001'
+000084 6E89           00159         movwf   LATA
+000086 EF?? F???      00160         goto    WR_END
+00008A                00161     WR_END_RTC
+                      00162         i2c_common_stop ;Release the I2C bus
 00008A 84C5               M     bsf     SSPCON2,PEN
 00008C B4C5               M     btfsc   SSPCON2,PEN
 00008E D???               M     bra     $-2
 000090 969E               M     bcf     PIR1, SSPIF
-000092 0012           00159 return
-                      00160 
-000094                00161 read_rtc
-                      00162     i2c_common_start
+000092 0012           00163 return
+                      00164 
+000094                00165 read_rtc
+                      00166     i2c_common_start
 000094 80C5               M     bsf     SSPCON2,SEN
 000096 AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
 000098 869E               M     bsf     PIR1, SSPIF
 00009A A69E               M     btfss   PIR1, SSPIF
 00009C D???               M     bra     $-2
 00009E 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00163 
-0000A0 0ED0           00164     movlw   0xD0 ;DS1307 address | WRITE bit
-                      00165     i2c_common_write ;
+                      00167 
+0000A0 0ED0           00168     movlw   0xD0 ;DS1307 address | WRITE bit
+                      00169     i2c_common_write ;
 0000A2 B0C7               M     btfsc   SSPSTAT, BF
 0000A4 D???               M     bra     $-2
                           M 
@@ -271,13 +275,13 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000A8 A69E               M     btfss   PIR1, SSPIF
 0000AA D???               M     bra     $-2
 0000AC 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00166     i2c_common_check_ack RD_ERR1_RTC
+                      00170     i2c_common_check_ack RD_ERR1_RTC
 0000AE BCC5               M     btfsc   SSPCON2,ACKSTAT
 0000B0 EF?? F???          M     goto    RD_ERR1_RTC
-                      00167 
-                      00168     ;Write data to I2C bus (Register Address in RTC)
-0000B4 50??           00169     movf    regaddress,w ;Set register pointer in RTC
-                      00170     i2c_common_write ;
+                      00171 
+                      00172     ;Write data to I2C bus (Register Address in RTC)
+0000B4 50??           00173     movf    regaddress,w ;Set register pointer in RTC
+                      00174     i2c_common_write ;
 0000B6 B0C7               M     btfsc   SSPSTAT, BF
 0000B8 D???               M     bra     $-2
                           M 
@@ -286,25 +290,25 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000BC A69E               M     btfss   PIR1, SSPIF
 0000BE D???               M     bra     $-2
 0000C0 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00171     i2c_common_check_ack RD_ERR2_RTC
+                      00175     i2c_common_check_ack RD_ERR2_RTC
 0000C2 BCC5               M     btfsc   SSPCON2,ACKSTAT
 0000C4 EF?? F???          M     goto    RD_ERR2_RTC
-                      00172 
-                      00173     ;Re-Select the DS1307 on the bus, in READ mode
-                      00174     i2c_common_repeatedstart
-0000C8 82C5               M     bsf     SSPCON2,RSEN
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  6
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+                      00176 
+                      00177     ;Re-Select the DS1307 on the bus, in READ mode
+                      00178     i2c_common_repeatedstart
+0000C8 82C5               M     bsf     SSPCON2,RSEN
 0000CA A69E               M     btfss   PIR1, SSPIF
 0000CC D???               M     bra     $-2
                           M 
 0000CE 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-0000D0 0ED1           00175     movlw   0xD1 ;DS1307 address | READ bit
-                      00176     i2c_common_write
+0000D0 0ED1           00179     movlw   0xD1 ;DS1307 address | READ bit
+                      00180     i2c_common_write
 0000D2 B0C7               M     btfsc   SSPSTAT, BF
 0000D4 D???               M     bra     $-2
                           M 
@@ -313,19 +317,19 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000D8 A69E               M     btfss   PIR1, SSPIF
 0000DA D???               M     bra     $-2
 0000DC 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00177     i2c_common_check_ack RD_ERR3_RTC
+                      00181     i2c_common_check_ack RD_ERR3_RTC
 0000DE BCC5               M     btfsc   SSPCON2,ACKSTAT
 0000E0 EF?? F???          M     goto    RD_ERR3_RTC
-                      00178 
-                      00179     ;Read data from I2C bus (Contents of Register in RTC)
-                      00180     i2c_common_read
+                      00182 
+                      00183     ;Read data from I2C bus (Contents of Register in RTC)
+                      00184     i2c_common_read
 0000E4 86C5               M     bsf     SSPCON2,RCEN ;Begin receiving byte from
 0000E6 A69E               M     btfss   PIR1, SSPIF
 0000E8 D???               M     bra     $-2
 0000EA 969E               M     bcf     PIR1, SSPIF
 0000EC 50C9               M     movf    SSPBUF,w
-0000EE 6E??           00181     movwf datachar
-                      00182     i2c_common_nack ;Send acknowledgement of data reception
+0000EE 6E??           00185     movwf datachar
+                      00186     i2c_common_nack ;Send acknowledgement of data reception
 0000F0 8AC5               M     bsf     SSPCON2,ACKDT
 0000F2 88C5               M     bsf     SSPCON2,ACKEN
                           M 
@@ -333,253 +337,283 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0000F4 B8C5               M     btfsc   SSPCON2,ACKEN
 0000F6 EF?? F???          M     goto    _waitl0
   00000001                M     _waitknt    set _waitknt+1
-                      00183 
-0000FA EF?? F???      00184     goto RD_END_RTC
-                      00185 
-0000FE                00186     RD_ERR1_RTC
-0000FE 0000           00187         nop
-000100 0E03           00188         movlw   b'00000011'
-000102 6E89           00189         movwf   LATA
-000104 EF?? F???      00190         goto    RD_END
-000108                00191     RD_ERR2_RTC
-000108 0000           00192         nop
-00010A 0E05           00193         movlw   b'00000101'
-00010C 6E89           00194         movwf   LATA
-00010E EF?? F???      00195         goto    RD_END
-000112                00196     RD_ERR3_RTC
-000112 0000           00197         nop
-000114 0E07           00198         movlw   b'00000111'
-000116 6E89           00199         movwf   LATA
-000118 EF?? F???      00200         goto    RD_END
-00011C                00201     RD_END_RTC
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  7
+                      00187 
+0000FA EF?? F???      00188     goto RD_END_RTC
+                      00189 
+0000FE                00190     RD_ERR1_RTC
+0000FE 0000           00191         nop
+000100 0E03           00192         movlw   b'00000011'
+000102 6E89           00193         movwf   LATA
+000104 EF?? F???      00194         goto    RD_END
+000108                00195     RD_ERR2_RTC
+000108 0000           00196         nop
+00010A 0E05           00197         movlw   b'00000101'
+00010C 6E89           00198         movwf   LATA
+00010E EF?? F???      00199         goto    RD_END
+000112                00200     RD_ERR3_RTC
+000112 0000           00201         nop
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00202         i2c_common_stop
+000114 0E07           00202         movlw   b'00000111'
+000116 6E89           00203         movwf   LATA
+000118 EF?? F???      00204         goto    RD_END
+00011C                00205     RD_END_RTC
+                      00206         i2c_common_stop
 00011C 84C5               M     bsf     SSPCON2,PEN
 00011E B4C5               M     btfsc   SSPCON2,PEN
 000120 D???               M     bra     $-2
 000122 969E               M     bcf     PIR1, SSPIF
-000124 0012           00203 return
-                      00204 
-000126                00205 rtc_convert
-000126 6E??           00206     movwf   convert_buffer ; B1 = HHHH LLLL
-000128 38??           00207     swapf   convert_buffer,w ; W = LLLL HHHH
-00012A 0B0F           00208     andlw   0x0f ; Mask upper four bits 0000 HHHH
-00012C 0F30           00209     addlw   0x30 ; convert to ASCII
-00012E 6E??           00210     movwf   tens_digit ;saves into 10ths digit
-                      00211 
-000130 50??           00212     movf    convert_buffer,w
-000132 0B0F           00213     andlw   0x0f ; w = 0000 LLLL
-000134 0F30           00214     addlw   0x30 ; convert to ASCII
-000136 6E??           00215     movwf   ones_digit ; saves into 1s digit
-000138 0012           00216 return
-                      00217     
-00013A                00218 READ_COLOUR_I2C
-                      00219     i2c_common_start
-00013A 80C5               M     bsf     SSPCON2,SEN
-00013C AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
-00013E 869E               M     bsf     PIR1, SSPIF
-000140 A69E               M     btfss   PIR1, SSPIF
-000142 D???               M     bra     $-2
-000144 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00220 
-000146 0E29           00221     movlw   0x29 ;TCS34725 address | WRITE bit (+0)
-                      00222     i2c_common_write ;
-000148 B0C7               M     btfsc   SSPSTAT, BF
-00014A D???               M     bra     $-2
+000124 0012           00207 return
+                      00208 
+000126                00209 rtc_convert
+000126 6E??           00210     movwf   convert_buffer ; B1 = HHHH LLLL
+000128 38??           00211     swapf   convert_buffer,w ; W = LLLL HHHH
+00012A 0B0F           00212     andlw   0x0f ; Mask upper four bits 0000 HHHH
+00012C 0F30           00213     addlw   0x30 ; convert to ASCII
+00012E 6E??           00214     movwf   tens_digit ;saves into 10ths digit
+                      00215 
+000130 50??           00216     movf    convert_buffer,w
+000132 0B0F           00217     andlw   0x0f ; w = 0000 LLLL
+000134 0F30           00218     addlw   0x30 ; convert to ASCII
+000136 6E??           00219     movwf   ones_digit ; saves into 1s digit
+000138 0012           00220 return
+                      00221     
+00013A                00222 READ_COLOUR_I2C
+                      00223     ; following combined read-write protocal as indicated in datasheet
+                      00224     
+00013A EC?? F???      00225         call    WR_DATA
+                      00226 
+                      00227     
+                      00228     i2c_common_start
+00013E 80C5               M     bsf     SSPCON2,SEN
+000140 AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+000142 869E               M     bsf     PIR1, SSPIF
+000144 A69E               M     btfss   PIR1, SSPIF
+000146 D???               M     bra     $-2
+000148 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00229     
+00014A 0E52           00230     movlw   0x52 ;TCS34725 address | WRITE bit (+0)
+                      00231         ; NOTE: IN ORDER TO GET THIS, TAKE SLAVE ADDRESS 0x29 and LEFT SHIFT
+                      00232     i2c_common_write ;
+00014C B0C7               M     btfsc   SSPSTAT, BF
+00014E D???               M     bra     $-2
                           M 
-00014C 6EC9               M     movwf   SSPBUF
+000150 6EC9               M     movwf   SSPBUF
                           M 
-00014E A69E               M     btfss   PIR1, SSPIF
-000150 D???               M     bra     $-2
-000152 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00223     i2c_common_check_ack RD_ERR1
-000154 BCC5               M     btfsc   SSPCON2,ACKSTAT
-000156 EF?? F???          M     goto    RD_ERR1
-                      00224 
-                      00225     ;Write data to I2C bus (Register Address in TCS34725)
-00015A 50??           00226     movf    regaddress,w ;Set register pointer in TCS34725
-                      00227     i2c_common_write ;
-00015C B0C7               M     btfsc   SSPSTAT, BF
-00015E D???               M     bra     $-2
-                          M 
-000160 6EC9               M     movwf   SSPBUF
-                          M 
-000162 A69E               M     btfss   PIR1, SSPIF
+000152 A69E               M     btfss   PIR1, SSPIF
+000154 D???               M     bra     $-2
+000156 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00233     i2c_common_check_ack RD_ERR1
+000158 BCC5               M     btfsc   SSPCON2,ACKSTAT
+00015A EF?? F???          M     goto    RD_ERR1
+                      00234 
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00235     ;Write data to I2C bus (Register Address in TCS34725)
+00015E 0E??           00236     movlw   regaddress
+000160 0980           00237     iorlw   0x80
+                      00238     i2c_common_write ;
+000162 B0C7               M     btfsc   SSPSTAT, BF
 000164 D???               M     bra     $-2
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  8
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000166 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00228     i2c_common_check_ack RD_ERR2
-000168 BCC5               M     btfsc   SSPCON2,ACKSTAT
-00016A EF?? F???          M     goto    RD_ERR2
-                      00229 
-                      00230     ;Re-Select the TCS34725 on the bus, in READ mode
-                      00231     i2c_common_repeatedstart
-00016E 82C5               M     bsf     SSPCON2,RSEN
-000170 A69E               M     btfss   PIR1, SSPIF
-000172 D???               M     bra     $-2
                           M 
-000174 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-000176 0E2A           00232     movlw   0x2A ;TCS34725 address | READ bit (+1)
-                      00233     i2c_common_write
-000178 B0C7               M     btfsc   SSPSTAT, BF
-00017A D???               M     bra     $-2
+000166 6EC9               M     movwf   SSPBUF
                           M 
-00017C 6EC9               M     movwf   SSPBUF
-                          M 
-00017E A69E               M     btfss   PIR1, SSPIF
-000180 D???               M     bra     $-2
-000182 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00234     i2c_common_check_ack RD_ERR3
-000184 BCC5               M     btfsc   SSPCON2,ACKSTAT
-000186 EF?? F???          M     goto    RD_ERR3
-                      00235 
-                      00236     ;Read data from I2C bus (Contents of Register in TCS34725)
-                      00237     i2c_common_read
-00018A 86C5               M     bsf     SSPCON2,RCEN ;Begin receiving byte from
-00018C A69E               M     btfss   PIR1, SSPIF
-00018E D???               M     bra     $-2
-000190 969E               M     bcf     PIR1, SSPIF
-000192 50C9               M     movf    SSPBUF,w
-000194 6E??           00238     movwf datachar
-                      00239     i2c_common_nack ;Send acknowledgement of data reception
-000196 8AC5               M     bsf     SSPCON2,ACKDT
-000198 88C5               M     bsf     SSPCON2,ACKEN
-                          M 
-00019A                    M     _waitl1
-00019A B8C5               M     btfsc   SSPCON2,ACKEN
-00019C EF?? F???          M     goto    _waitl1
-  00000002                M     _waitknt    set _waitknt+1
+000168 A69E               M     btfss   PIR1, SSPIF
+00016A D???               M     bra     $-2
+00016C 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00239     i2c_common_check_ack RD_ERR2
+00016E BCC5               M     btfsc   SSPCON2,ACKSTAT
+000170 EF?? F???          M     goto    RD_ERR2
                       00240 
-0001A0 EF?? F???      00241     goto RD_END
-                      00242 
-0001A4                00243     RD_ERR1
-0001A4 0000           00244         nop
-0001A6 0E03           00245         movlw   b'00000011'
-0001A8 6E89           00246         movwf   LATA
-0001AA EF?? F???      00247         goto    RD_END
-0001AE                00248     RD_ERR2
-0001AE 0000           00249         nop
-0001B0 0E05           00250         movlw   b'00000101'
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE  9
+                      00241     ;Re-Select the TCS34725 on the bus, in READ mode
+                      00242     i2c_common_repeatedstart
+000174 82C5               M     bsf     SSPCON2,RSEN
+000176 A69E               M     btfss   PIR1, SSPIF
+000178 D???               M     bra     $-2
+                          M 
+00017A 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+00017C 0E53           00243     movlw   0x53 ;TCS34725 address | READ bit (+1)
+                      00244     i2c_common_write
+00017E B0C7               M     btfsc   SSPSTAT, BF
+000180 D???               M     bra     $-2
+                          M 
+000182 6EC9               M     movwf   SSPBUF
+                          M 
+000184 A69E               M     btfss   PIR1, SSPIF
+000186 D???               M     bra     $-2
+000188 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00245     i2c_common_check_ack RD_ERR3
+00018A BCC5               M     btfsc   SSPCON2,ACKSTAT
+00018C EF?? F???          M     goto    RD_ERR3
+                      00246 
+                      00247     ;Read data from I2C bus (Contents of Register in TCS34725)
+                      00248     i2c_common_read
+000190 86C5               M     bsf     SSPCON2,RCEN ;Begin receiving byte from
+000192 A69E               M     btfss   PIR1, SSPIF
+000194 D???               M     bra     $-2
+000196 969E               M     bcf     PIR1, SSPIF
+000198 50C9               M     movf    SSPBUF,w
+00019A 6E??           00249     movwf data_colourL
+                      00250     i2c_common_nack ;Send acknowledgement of data reception
+00019C 8AC5               M     bsf     SSPCON2,ACKDT
+00019E 88C5               M     bsf     SSPCON2,ACKEN
+                          M 
+0001A0                    M     _waitl1
+0001A0 B8C5               M     btfsc   SSPCON2,ACKEN
+0001A2 EF?? F???          M     goto    _waitl1
+  00000002                M     _waitknt    set _waitknt+1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0001B2 6E89           00251         movwf   LATA
-0001B4 EF?? F???      00252         goto    RD_END
-0001B8                00253     RD_ERR3
-0001B8 0000           00254         nop
-0001BA 0E07           00255         movlw   b'00000111'
-0001BC 6E89           00256         movwf   LATA
-0001BE EF?? F???      00257         goto    RD_END
-0001C2                00258     RD_END
-                      00259         i2c_common_stop
-0001C2 84C5               M     bsf     SSPCON2,PEN
-0001C4 B4C5               M     btfsc   SSPCON2,PEN
-0001C6 D???               M     bra     $-2
-0001C8 969E               M     bcf     PIR1, SSPIF
-0001CA 0012           00260 return
-                      00261 
-0001CC                00262 WRITE_COLOUR_I2C
-                      00263     i2c_common_start
-0001CC 80C5               M     bsf     SSPCON2,SEN
-0001CE AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
-0001D0 869E               M     bsf     PIR1, SSPIF
-0001D2 A69E               M     btfss   PIR1, SSPIF
-0001D4 D???               M     bra     $-2
-0001D6 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00264 
-0001D8 0E29           00265     movlw   0x29 ;TCS34725 address | WRITE bit
-                      00266     i2c_common_write
-0001DA B0C7               M     btfsc   SSPSTAT, BF
-0001DC D???               M     bra     $-2
+                      00251     
+                      00252     i2c_common_read
+0001A6 86C5               M     bsf     SSPCON2,RCEN ;Begin receiving byte from
+0001A8 A69E               M     btfss   PIR1, SSPIF
+0001AA D???               M     bra     $-2
+0001AC 969E               M     bcf     PIR1, SSPIF
+0001AE 50C9               M     movf    SSPBUF,w
+0001B0 6E??           00253     movwf data_colourH
+                      00254     i2c_common_nack ;Send acknowledgement of data reception
+0001B2 8AC5               M     bsf     SSPCON2,ACKDT
+0001B4 88C5               M     bsf     SSPCON2,ACKEN
                           M 
-0001DE 6EC9               M     movwf   SSPBUF
-                          M 
-0001E0 A69E               M     btfss   PIR1, SSPIF
+0001B6                    M     _waitl2
+0001B6 B8C5               M     btfsc   SSPCON2,ACKEN
+0001B8 EF?? F???          M     goto    _waitl2
+  00000003                M     _waitknt    set _waitknt+1
+                      00255 
+0001BC EF?? F???      00256     goto RD_END
+                      00257 
+0001C0                00258     RD_ERR1
+0001C0 0000           00259         nop
+0001C2 0E03           00260         movlw   b'00000011'
+0001C4 6E89           00261         movwf   LATA
+0001C6 EF?? F???      00262         goto    RD_END
+0001CA                00263     RD_ERR2
+0001CA 0000           00264         nop
+0001CC 0E05           00265         movlw   b'00000101'
+0001CE 6E89           00266         movwf   LATA
+0001D0 EF?? F???      00267         goto    RD_END
+0001D4                00268     RD_ERR3
+0001D4 0000           00269         nop
+0001D6 0E07           00270         movlw   b'00000111'
+0001D8 6E89           00271         movwf   LATA
+0001DA EF?? F???      00272         goto    RD_END
+0001DE                00273     RD_END
+                      00274         i2c_common_stop
+0001DE 84C5               M     bsf     SSPCON2,PEN
+0001E0 B4C5               M     btfsc   SSPCON2,PEN
 0001E2 D???               M     bra     $-2
-0001E4 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00267     i2c_common_check_ack WR_ERR1
-0001E6 BCC5               M     btfsc   SSPCON2,ACKSTAT
-0001E8 EF?? F???          M     goto    WR_ERR1
-                      00268 
-                      00269     ;Write data to I2C bus (Register Address in TCS34725)
-0001EC 50??           00270     movf    regaddress,w ;Set register pointer in TCS34725
-                      00271     i2c_common_write ;
-0001EE B0C7               M     btfsc   SSPSTAT, BF
+0001E4 969E               M     bcf     PIR1, SSPIF
+0001E6 0012           00275 return
+                      00276 
+0001E8                00277 WRITE_COLOUR_I2C
+                      00278     i2c_common_start
+0001E8 80C5               M     bsf     SSPCON2,SEN
+0001EA AEC6               M     btfss   SSPCON1, WCOL       ; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+0001EC 869E               M     bsf     PIR1, SSPIF
+0001EE A69E               M     btfss   PIR1, SSPIF
 0001F0 D???               M     bra     $-2
-                          M 
-0001F2 6EC9               M     movwf   SSPBUF
-                          M 
-0001F4 A69E               M     btfss   PIR1, SSPIF
-0001F6 D???               M     bra     $-2
-0001F8 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00272     i2c_common_check_ack WR_ERR2
-0001FA BCC5               M     btfsc   SSPCON2,ACKSTAT
-0001FC EF?? F???          M     goto    WR_ERR2
-                      00273 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 10
+0001F2 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00279 
+0001F4 0E52           00280     movlw   0x52 ;TCS34725 address | WRITE bit
+                      00281         ; NOTE: IN ORDER TO GET THIS, TAKE SLAVE ADDRESS 0x29 and LEFT SHIFT
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00274     ;Write data to I2C bus (Data to be placed in TCS34725 register)
-000200 50??           00275     movf    databyte,w ;Write data to register in TCS34725
-                      00276     i2c_common_write
-000202 B0C7               M     btfsc   SSPSTAT, BF
-000204 D???               M     bra     $-2
+                      00282     i2c_common_write
+0001F6 B0C7               M     btfsc   SSPSTAT, BF
+0001F8 D???               M     bra     $-2
                           M 
-000206 6EC9               M     movwf   SSPBUF
+0001FA 6EC9               M     movwf   SSPBUF
                           M 
-000208 A69E               M     btfss   PIR1, SSPIF
-00020A D???               M     bra     $-2
-00020C 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
-                      00277     i2c_common_check_ack WR_ERR3
-00020E BCC5               M     btfsc   SSPCON2,ACKSTAT
-000210 EF?? F???          M     goto    WR_ERR3
-                      00278 
-000214 EF?? F???      00279     goto    WR_END
-                      00280 
-000218                00281     WR_ERR1
-000218 0000           00282         nop
-00021A 0E0D           00283         movlw   b'00001101'
-00021C 6E89           00284         movwf   LATA    
-00021E EF?? F???      00285         goto    WR_END
-                      00286     
-000222                00287     WR_ERR2
-000222 0000           00288         nop
-000224 0E0F           00289         movlw   b'00001111'
-000226 6E89           00290         movwf   LATA
-000228 808D           00291         bsf     LATE,0
-00022A EF?? F???      00292         goto    WR_END
-                      00293         
-00022E                00294     WR_ERR3
-00022E 0000           00295         nop
-000230 0E09           00296         movlw   b'00001001'
-000232 6E89           00297         movwf   LATA
-000234 EF?? F???      00298         goto    WR_END
-000238                00299     WR_END
-                      00300         i2c_common_stop ;Release the I2C bus
-000238 84C5               M     bsf     SSPCON2,PEN
-00023A B4C5               M     btfsc   SSPCON2,PEN
-00023C D???               M     bra     $-2
-00023E 969E               M     bcf     PIR1, SSPIF
-                      00301         
-000240 0012           00302 return
-                      00303 end
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 11
+0001FC A69E               M     btfss   PIR1, SSPIF
+0001FE D???               M     bra     $-2
+000200 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00283     i2c_common_check_ack WR_ERR1
+000202 BCC5               M     btfsc   SSPCON2,ACKSTAT
+000204 EF?? F???          M     goto    WR_ERR1
+                      00284 
+                      00285     ;Write data to I2C bus (Register Address in TCS34725)
+000208 0E??           00286     movlw   regaddress
+                      00287     i2c_common_write
+00020A B0C7               M     btfsc   SSPSTAT, BF
+00020C D???               M     bra     $-2
+                          M 
+00020E 6EC9               M     movwf   SSPBUF
+                          M 
+000210 A69E               M     btfss   PIR1, SSPIF
+000212 D???               M     bra     $-2
+000214 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00288     i2c_common_check_ack WR_ERR2
+000216 BCC5               M     btfsc   SSPCON2,ACKSTAT
+000218 EF?? F???          M     goto    WR_ERR2
+                      00289 
+                      00290     ;Write data to I2C bus (Data to be placed in TCS34725 register)
+00021C 0E??           00291     movlw   databyte 
+                      00292     i2c_common_write
+00021E B0C7               M     btfsc   SSPSTAT, BF
+000220 D???               M     bra     $-2
+                          M 
+000222 6EC9               M     movwf   SSPBUF
+                          M 
+000224 A69E               M     btfss   PIR1, SSPIF
+000226 D???               M     bra     $-2
+000228 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
+                      00293     i2c_common_check_ack WR_ERR3
+00022A BCC5               M     btfsc   SSPCON2,ACKSTAT
+00022C EF?? F???          M     goto    WR_ERR3
+                      00294 
+000230 EF?? F???      00295     goto    WR_END
+                      00296 
+000234                00297     WR_ERR1
+000234 0000           00298         nop
+000236 0E0D           00299         movlw   b'00001101'
+000238 6E89           00300         movwf   LATA    
+00023A EF?? F???      00301         goto    WR_END
+                      00302     
+00023E                00303     WR_ERR2
+00023E 0000           00304         nop
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000240 0E0F           00305         movlw   b'00001111'
+000242 6E89           00306         movwf   LATA
+000244 808D           00307         bsf     LATE,0
+000246 EF?? F???      00308         goto    WR_END
+                      00309         
+00024A                00310     WR_ERR3
+00024A 0000           00311         nop
+00024C 0E09           00312         movlw   b'00001001'
+00024E 6E89           00313         movwf   LATA
+000250 EF?? F???      00314         goto    WR_END
+000254                00315     WR_END
+                      00316         i2c_common_stop ;Release the I2C bus
+000254 84C5               M     bsf     SSPCON2,PEN
+000256 B4C5               M     btfsc   SSPCON2,PEN
+000258 D???               M     bra     $-2
+00025A 969E               M     bcf     PIR1, SSPIF
+                      00317         
+00025C 0012           00318 return
+                      00319 end
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 12
 
 
 SYMBOL TABLE
@@ -638,7 +672,7 @@ C1OUT                             00000006
 C2INV                             00000005
 C2OUT                             00000007
 CCP1                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 12
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 13
 
 
 SYMBOL TABLE
@@ -697,7 +731,7 @@ CVR2                              00000002
 CVR3                              00000003
 CVRCON                            00000FB5
 CVREN                             00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 13
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 14
 
 
 SYMBOL TABLE
@@ -756,7 +790,7 @@ GIE_GIEH                          00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 14
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 15
 
 
 SYMBOL TABLE
@@ -815,7 +849,7 @@ IRVST                             00000005
 IVRST                             00000005
 InitLCD                           00000000
 KBI0                              00000004
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 15
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 16
 
 
 SYMBOL TABLE
@@ -874,7 +908,7 @@ LVDIN                             00000005
 LVDIP                             00000002
 LVDL0                             00000000
 LVDL1                             00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 16
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 17
 
 
 SYMBOL TABLE
@@ -933,7 +967,7 @@ PD                                00000002
 PDC0                              00000000
 PDC1                              00000001
 PDC2                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 17
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 18
 
 
 SYMBOL TABLE
@@ -992,7 +1026,7 @@ PSPIP                             00000007
 PSPMODE                           00000004
 PSSAC0                            00000002
 PSSAC1                            00000003
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 18
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 19
 
 
 SYMBOL TABLE
@@ -1049,19 +1083,19 @@ RD4                               00000004
 RD5                               00000005
 RD6                               00000006
 RD7                               00000007
-RD_END                            000001C2
+RD_END                            000001DE
 RD_END_RTC                        0000011C
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 19
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 20
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-RD_ERR1                           000001A4
+RD_ERR1                           000001C0
 RD_ERR1_RTC                       000000FE
-RD_ERR2                           000001AE
+RD_ERR2                           000001CA
 RD_ERR2_RTC                       00000108
-RD_ERR3                           000001B8
+RD_ERR3                           000001D4
 RD_ERR3_RTC                       00000112
 RE0                               00000000
 RE1                               00000001
@@ -1110,7 +1144,7 @@ SSPIF                             00000003
 SSPIP                             00000003
 SSPM0                             00000000
 SSPM1                             00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 20
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 21
 
 
 SYMBOL TABLE
@@ -1169,7 +1203,7 @@ T3CON                             00000FB1
 T3SYNC                            00000002
 TABLAT                            00000FF5
 TBLPTR                            00000FF6
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 21
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 22
 
 
 SYMBOL TABLE
@@ -1228,7 +1262,7 @@ TRISB3                            00000003
 TRISB4                            00000004
 TRISB5                            00000005
 TRISB6                            00000006
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 22
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 23
 
 
 SYMBOL TABLE
@@ -1285,21 +1319,21 @@ WR                                00000001
 WREG                              00000FE8
 WREN                              00000002
 WRERR                             00000003
-WRITE_COLOUR_I2C                  000001CC
+WRITE_COLOUR_I2C                  000001E8
 WR_DATA                           00000000
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 23
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 24
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-WR_END                            00000238
+WR_END                            00000254
 WR_END_RTC                        0000008A
-WR_ERR1                           00000218
+WR_ERR1                           00000234
 WR_ERR1_RTC                       0000006A
-WR_ERR2                           00000222
+WR_ERR2                           0000023E
 WR_ERR2_RTC                       00000074
-WR_ERR3                           0000022E
+WR_ERR3                           0000024A
 WR_ERR3_RTC                       00000080
 WR_INS                            00000000
 WUE                               00000001
@@ -1324,34 +1358,35 @@ _.code_00D4                       000000D4
 _.code_00DA                       000000DA
 _.code_00E8                       000000E8
 _.code_0120                       00000120
-_.code_0142                       00000142
-_.code_014A                       0000014A
-_.code_0150                       00000150
-_.code_015E                       0000015E
+_.code_0146                       00000146
+_.code_014E                       0000014E
+_.code_0154                       00000154
 _.code_0164                       00000164
-_.code_0172                       00000172
-_.code_017A                       0000017A
+_.code_016A                       0000016A
+_.code_0178                       00000178
 _.code_0180                       00000180
-_.code_018E                       0000018E
-_.code_01C6                       000001C6
-_.code_01D4                       000001D4
-_.code_01DC                       000001DC
+_.code_0186                       00000186
+_.code_0194                       00000194
+_.code_01AA                       000001AA
 _.code_01E2                       000001E2
 _.code_01F0                       000001F0
-_.code_01F6                       000001F6
-_.code_0204                       00000204
-_.code_020A                       0000020A
-_.code_023C                       0000023C
+_.code_01F8                       000001F8
+_.code_01FE                       000001FE
+_.code_020C                       0000020C
+_.code_0212                       00000212
+_.code_0220                       00000220
+_.code_0226                       00000226
+_.code_0258                       00000258
 _BOREN_NOSLP_2L                   000000FD
 _BOREN_OFF_2L                     000000F9
 _BOREN_ON_2L                      000000FB
-_BOREN_SBORDIS_2L                 000000FF
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 24
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 25
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_BOREN_SBORDIS_2L                 000000FF
 _BORV_0_2L                        000000E7
 _BORV_1_2L                        000000EF
 _BORV_2_2L                        000000F7
@@ -1404,13 +1439,13 @@ _IDLOC3                           00200003
 _IDLOC4                           00200004
 _IDLOC5                           00200005
 _IDLOC6                           00200006
-_IDLOC7                           00200007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 25
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 26
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_IDLOC7                           00200007
 _IESO_OFF_1H                      0000007F
 _IESO_ON_1H                       000000FF
 _LPT1OSC_OFF_3H                   000000FB
@@ -1463,23 +1498,28 @@ _WRT3_OFF_6L                      000000FF
 _WRT3_ON_6L                       000000F7
 _WRTB_OFF_6H                      000000FF
 _WRTB_ON_6H                       000000BF
-_WRTC_OFF_6H                      000000FF
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-13-2017  19:19:50         PAGE 26
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-17-2017  17:30:01         PAGE 27
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_WRTC_OFF_6H                      000000FF
 _WRTC_ON_6H                       000000DF
 _WRTD_OFF_6H                      000000FF
 _WRTD_ON_6H                       0000007F
 _XINST_OFF_4L                     000000BF
 _XINST_ON_4L                      000000FF
 __18F4620                         00000001
-_waitknt                          00000002
+_waitknt                          00000003
 _waitl0                           000000F4
-_waitl1                           0000019A
-convert_buffer                    00000005
+_waitl1                           000001A0
+_waitl2                           000001B6
+convert_buffer                    00000007
+d200us_C                          00000009
+d50ms_C                           00000008
+data_colourH                      00000003
+data_colourL                      00000004
 databyte                          00000001
 datachar                          00000002
 i2c_common_ack                    
@@ -1491,15 +1531,15 @@ i2c_common_setup                  00000000
 i2c_common_start                  
 i2c_common_stop                   
 i2c_common_write                  
-ones_digit                        00000004
+ones_digit                        00000006
 read_rtc                          00000094
 regaddress                        00000000
 rtc_convert                       00000126
-tens_digit                        00000003
+tens_digit                        00000005
 write_rtc                         0000001E
 
 Errors   :     0
-Warnings :     3 reported,    42 suppressed
+Warnings :     3 reported,    45 suppressed
 Messages :     0 reported,     0 suppressed
 
 
