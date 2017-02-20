@@ -100,10 +100,11 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TIMCNT
 	CPCNT
 	TDATA
-	CLEAR
-	RED
-	GREEN
-	BLUE
+	CLEAR:2
+	RED:2
+	GREEN:2
+	BLUE:2
+	temp_colour:2	
     endc
     
 ;*******************************************************************************
@@ -257,6 +258,18 @@ ones
 	goto	endBCD
 endBCD
 	nop
+	endm
+	
+SUB16	macro	x, y	    ; does not modify x nor y
+	local RESULTS
+	movf	y+1, WREG   ; move high y into working register
+	subwf	x+1, 0	    ; do subtraction x - w => w
+	btfsc	STATUS, Z   ; check if subtraction is zero (if Z=1)
+	goto	RESULTS	    ; if it is, need to check lower bytes
+	
+	movf	y, WREG
+	subwf	x, 0	
+RESULTS			    ; if... x=y => z=1, x<y => c=0, x>=y => c=1
 	endm
 
 WriteRTC    macro
@@ -446,6 +459,7 @@ INIT
 	call	Delay50ms
 	
 	COLOUR_INIT
+	
 	call	INIT_USART
 
 	; interrupts
@@ -486,6 +500,7 @@ INIT
 	Display	Welcome
 	call LCD_L2
 	Display	Team
+	
 	Delay50N delayR, 0x14
 
 ;*******************************************************************************
@@ -507,33 +522,87 @@ HOLD_STANDBY
 ;*******************************************************************************
 ; execution mode
 ;*******************************************************************************
+
+CHECK_CLEAR
+	SUB16	CLEAR, RED		    ; check first against red
+	btfss	STATUS, C
+	return				    ; RED > CLEAR
+	
+	SUB16	CLEAR, GREEN		    ; check against green
+	btfss	STATUS, C
+	return				    ; GREEN > CLEAR
+	
+	SUB16	CLEAR, BLUE		    ; check against blue
+	btfss	STATUS, C
+	return				    ; BLUE > CLEAR
+	
+	movlw	'c'			    ; CLEAR > everything else
+	call	WR_DATA
+	bra	LOOPING
+
+CHECK_RED
+	SUB16	RED, CLEAR		    ; check first against clear
+	btfss	STATUS, C
+	return				    ; CLEAR > RED
+	
+	SUB16	RED, GREEN		    ; check against green
+	btfss	STATUS, C
+	return				    ; GREEN > RED
+	
+	SUB16	RED, BLUE		    ; check against blue
+	btfss	STATUS, C
+	return				    ; BLUE > RED
+	
+	movlw	'r'			    ; RED > everything else
+	call	WR_DATA
+	bra	LOOPING
+	
+CHECK_GREEN
+	SUB16	GREEN, CLEAR		    ; check first against clear
+	btfss	STATUS, C
+	return				    ; CLEAR > GREEN
+	
+	SUB16	GREEN, RED		    ; check against red
+	btfss	STATUS, C
+	return				    ; RED > GREEN
+	
+	SUB16	GREEN, BLUE		    ; check against blue
+	btfss	STATUS, C
+	return				    ; BLUE > GREEN
+	
+	movlw	'g'			    ; GREEN > everything else
+	call	WR_DATA
+	bra	LOOPING
+	
+CHECK_BLUE
+	SUB16	BLUE, CLEAR		    ; check first against clear
+	btfss	STATUS, C
+	return				    ; CLEAR > BLUE
+	
+	SUB16	BLUE, RED		    ; check against red
+	btfss	STATUS, C
+	return				    ; RED > BLUE
+
+	SUB16	BLUE, GREEN		    ; check against green
+	btfss	STATUS, C
+	return				    ; GREEN > CLEAR
+	
+	movlw	'b'			    ; BLUE > everything else
+	call	WR_DATA
+	return
 	
 COLOUR_TEST
-	call	ClrLCD
-	clrf	CLEAR
-	bra LOOPIN
-CLEAR_DISP
-	call	ClrLCD
-	movlw	'c'
-	call	WR_DATA
-	Delay50N delayR, 0x03
-	bra LOOPIN
 
-RED_DISP
+LOOPING
+	Delay50N delayR, 0x28
 	call	ClrLCD
-	movlw	'r'
-	call	WR_DATA
-	Delay50N delayR, 0x03
-
-LOOPIN
-	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE, temp
-	Delay50N delayR, 0x03
+	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
 	
-	movlw	CLEAR
-	cpfsgt	GREEN
-	bra	CLEAR_DISP
-	bra	RED_DISP
-	bra	LOOPIN
+	call	CHECK_CLEAR
+	call	CHECK_RED
+	call	CHECK_GREEN
+	call	CHECK_BLUE
+	bra LOOPING
 	
 EXECUTION
 	; save the starting time
@@ -775,7 +844,7 @@ RTC_INIT
 	bcf	PORTC, 3
 	bsf	TRISC, 4
 	bsf	TRISC, 3
-
+	
 	call	i2c_common_setup
 	;call	SET_TIME
 return
@@ -809,6 +878,12 @@ DISPLAY_RTC
 	call	WR_DATA
 	movf	ones_digit,WREG
 	call	WR_DATA
+	
+	rtc_read    0x00	    ; 0x01 from DS1307 - seconds
+	movf	tens_digit,WREG
+	call	WR_DATA
+	movf	ones_digit,WREG
+	call	WR_DATA
 	movlw	" "
 	call	WR_DATA
 	
@@ -820,7 +895,7 @@ DISPLAY_RTC
 	movlw	"/"
 	call	WR_DATA
 	
-	rtc_read    0x05	    ; 0x06 from DS1307 - months
+	rtc_read    0x05	    ; 0x05 from DS1307 - months
 	movf	tens_digit,WREG
 	call	WR_DATA
 	movf	ones_digit,WREG
@@ -828,7 +903,7 @@ DISPLAY_RTC
 	movlw	"/"
 	call	WR_DATA
 	
-	rtc_read    0x04	    ; 0x06 from DS1307 - days
+	rtc_read    0x04	    ; 0x04 from DS1307 - days
 	movf	tens_digit,WREG
 	call	WR_DATA
 	movf	ones_digit,WREG
@@ -842,9 +917,9 @@ SET_TIME
 
 	rtc_set	0x06,	b'00010111'		; Year 17
 	rtc_set	0x05,	b'00000010'		; Month 2
-	rtc_set	0x04,	b'00010010'		; Date 12
-	rtc_set	0x02,	b'00010011'		; Hours 13
-	rtc_set	0x01,	b'01000111'		; Minutes 45
+	rtc_set	0x04,	b'00011001'		; Date 19
+	rtc_set	0x02,	b'00010001'		; Hours 11
+	rtc_set	0x01,	b'00111000'		; Minutes 38
 	rtc_set	0x00,	b'00000000'		; Seconds 0
 return
 	

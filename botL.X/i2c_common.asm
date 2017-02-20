@@ -15,8 +15,8 @@ udata
 regaddress res 1
 databyte res 1
 datachar res 1
-data_colourH res 1
 data_colourL res 1
+data_colourH res 1
 tens_digit res 1
 ones_digit res 1
 convert_buffer res 1
@@ -25,7 +25,7 @@ d200us_C res 1
 
 global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C
 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer, d50ms_C, d200us_C
-global data_colourH, data_colourL
+global data_colourL, data_colourH
 
 
 ;; I2C MACROS
@@ -40,7 +40,7 @@ i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_addres
     goto    err_address
 endm
 
-i2c_common_start macro
+i2c_common_start macro 
     bsf	    SSPCON2,SEN
     btfss   SSPCON1, WCOL	; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
     bsf	    PIR1, SSPIF
@@ -81,7 +81,7 @@ i2c_common_nack macro
     _waitknt	set _waitknt+1
 endm
 
-i2c_common_write macro
+i2c_common_write macro 
     btfsc   SSPSTAT, BF
     bra	    $-2
 
@@ -111,6 +111,8 @@ i2c_common_setup
 
     movlw   b'00101000' ;Config SSP for Master Mode I2C
     movwf   SSPCON1
+    
+    clrf    SSPCON2
 
     bsf	    SSPCON1,SSPEN ;Enable SSP module
 
@@ -119,7 +121,6 @@ i2c_common_setup
     bcf	    SSPSTAT, BF
     i2c_common_stop ;Ensure the bus is free
 return
-
 
 write_rtc
     i2c_common_start
@@ -171,7 +172,7 @@ read_rtc
 
     ;Write data to I2C bus (Register Address in RTC)
     movf    regaddress,w ;Set register pointer in RTC
-    i2c_common_write ;
+    i2c_common_write
     i2c_common_check_ack RD_ERR2_RTC
 
     ;Re-Select the DS1307 on the bus, in READ mode
@@ -219,39 +220,29 @@ rtc_convert
     movwf   ones_digit ; saves into 1s digit
 return
     
-READ_COLOUR_I2C
-    ; following combined read-write protocal as indicated in datasheet
-    
-        call	WR_DATA
-
-    
+READ_COLOUR_I2C  
     i2c_common_start
     
-    movlw   0x52 ;TCS34725 address | WRITE bit (+0)
-        ; NOTE: IN ORDER TO GET THIS, TAKE SLAVE ADDRESS 0x29 and LEFT SHIFT
-    i2c_common_write ;
+    movlw   0x52		;TCS34725 address 0x29 << 1, WRITE bit (+0)
+    i2c_common_write  
     i2c_common_check_ack RD_ERR1
-
-    ;Write data to I2C bus (Register Address in TCS34725)
-    movlw   regaddress
-    iorlw   0x80
-    i2c_common_write ;
+    
+    ;Write command to I2C bus (Register Address in TCS34725)
+    movff   regaddress, WREG
+    iorlw   0x80		;command bit
+    i2c_common_write
     i2c_common_check_ack RD_ERR2
-
+    
     ;Re-Select the TCS34725 on the bus, in READ mode
     i2c_common_repeatedstart
-    movlw   0x53 ;TCS34725 address | READ bit (+1)
+    movlw   0x53		;TCS34725 address 0x29 << 1, READ bit (+1)
     i2c_common_write
     i2c_common_check_ack RD_ERR3
-
+    
     ;Read data from I2C bus (Contents of Register in TCS34725)
     i2c_common_read
-    movwf data_colourL
-    i2c_common_nack ;Send acknowledgement of data reception
-    
-    i2c_common_read
-    movwf data_colourH
-    i2c_common_nack ;Send acknowledgement of data reception
+    movwf datachar
+    i2c_common_nack		;Send acknowledgement of data reception
 
     goto RD_END
 
@@ -278,17 +269,17 @@ WRITE_COLOUR_I2C
     i2c_common_start
 
     movlw   0x52 ;TCS34725 address | WRITE bit
-	; NOTE: IN ORDER TO GET THIS, TAKE SLAVE ADDRESS 0x29 and LEFT SHIFT
     i2c_common_write
     i2c_common_check_ack WR_ERR1
 
     ;Write data to I2C bus (Register Address in TCS34725)
-    movlw   regaddress
+    movff   regaddress, WREG
+    iorlw   0x80		;command bits
     i2c_common_write
     i2c_common_check_ack WR_ERR2
 
     ;Write data to I2C bus (Data to be placed in TCS34725 register)
-    movlw   databyte 
+    movff   databyte, WREG
     i2c_common_write
     i2c_common_check_ack WR_ERR3
 
