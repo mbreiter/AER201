@@ -107,6 +107,8 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	temp_colour:2	
     endc
     
+    extern tens_digit, ones_digit
+    
 ;*******************************************************************************
 ; tables
 ;*******************************************************************************
@@ -145,11 +147,11 @@ TransferTable macro table
 	movlw	low table
 	movwf	TBLPTRL
 	tblrd*
-	movf	TABLAT, W
+	movff	TABLAT, WREG
 loop
 	call	USART_WAIT
 	tblrd+*
-	movf	TABLAT, W
+	movff	TABLAT, WREG
 	bnz	loop
 	endm
 	
@@ -235,7 +237,7 @@ incf_BCD    macro   BCD
 	movff	BCD, temp
 	
 	;process ones digit
-	movlw	0x0F
+	movlw	0x0f
 	andwf	temp
 	movlw	d'9'
 	
@@ -245,9 +247,9 @@ incf_BCD    macro   BCD
 	
 	movlw	b'00010000'
 	addwf	BCD
-	movlw	0x0F
+	movlw	0xf0
 	andwf	BCD
-	movlw	0xA0
+	movlw	0xa0
 	cpfslt	BCD
 	
 	clrf	BCD
@@ -273,35 +275,35 @@ RESULTS			    ; if... x=y => z=1, x<y => c=0, x>=y => c=1
 	endm
 
 WriteRTC    macro
-	movf	tens_digit, W
+	movff	tens_digit, WREG
 	call	WR_DATA
-	movf	ones_digit, W
+	movff	ones_digit, WREG
 	call	WR_DATA
 	endm
 
 WriteEE	macro   word, addH, addL
-	movff   addH, EEADRH    ; High address
-	movff   addL, EEADRH    ; Low address
-	movff   word, EEDATA    ; set word
+	movff   addH, EEADRH	    ; High address
+	movff   addL, EEADR	    ; Low address
+	movff   word, EEDATA	    ; set word
 
 	btfsc   EECON1, WR	    ; test if WR=0, skip if so
 	bra	$-2
 
-	bcf	EECON1, EEPGD   ; Point to data memory
-	bcf	EECON1, CFGS    ; Access EEPROM
-	bsf	EECON1, WREN    ; enable write
-	bcf	EECON1, GIE	    ; disable interrupts during write
+	bcf	EECON1, EEPGD	    ; Point to data memory
+	bcf	EECON1, CFGS	    ; Access EEPROM
+	bsf	EECON1, WREN	    ; enable write
+	bcf	INTCON, GIE	    ; disable interrupts during write
 	bcf	PIR2, EEIF
 
 	movlw   0x55
-	movwf   EECON2	    ; write 55h
-	movlw   0xAA
-	movwf   EECON2	    ; write 0xAA
+	movwf   EECON2		    ; write 55h
+	movlw   0xaa
+	movwf   EECON2		    ; write 0xaa
 	bsf	EECON1, WR	    ; begin write
 	btfsc   EECON1, WR
 	bra	$-2
 
-	bsf	EECON1, GIE	    ; enable interrupts after write
+	bsf	INTCON, GIE	    ; enable interrupts after write
 	bcf	EECON1, WREN	    ; disable writes
 	endm
 
@@ -357,13 +359,11 @@ ISR_HIGH
 	saveContext
 
 	;reset timer
-	movlw	0xb
+	movlw	0xbd
 	movwf	TMR0H
 	movlw	0xdc
 	movwf	TMR0L
-	
-	;call	DISPLAY_RTC
-	
+		
 	;timer interrupt
 	btfss	INTCON, TMR0IF
 	goto	END_ISR_HIGH
@@ -480,19 +480,16 @@ INIT
 	; setting up timer to sychronize with 1 second clock intervals
 	bcf	T0CON, T08BIT
 	bcf	T0CON, T0CS
+	bcf	T0CON, T0SE
 	bcf	T0CON, PSA
-	bsf	T0CON, T0PS2
-	bcf	T0CON, T0PS1
-	bcf	T0CON, T0PS0
+	bcf	T0CON, T0PS2
+	bsf	T0CON, T0PS1
+	bsf	T0CON, T0PS0
 
 	clrf	H_EE
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
-	clrf	CLEAR
-	clrf	GREEN
-	clrf	RED
-	clrf	BLUE
 	
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
@@ -615,19 +612,36 @@ EXECUTION
 	call	    LCD_L2
 	Display	    Exe2
 	
-	; start timer
+	movlw	    0xbd		    ; setting up timer
+	movwf	    TMR0H
+	movlw	    0xdc    
+	movwf	    TMR0L
 	
-	movlw	0xb
-	movwf	TMR0H
-	movlw	0xdc
-	movwf	TMR0L
-	
-	bsf	    T0CON, TMR0ON			; Turn on timer
+	bsf	    T0CON, TMR0ON	    ; turning on timer
 	call	    ClearEEPROM_21
 	
 	; initialize variables
 	clrf	    OP_sec
 	clrf	    OP_INT
+	clrf	    CLEAR
+	clrf	    GREEN
+	clrf	    RED
+	clrf	    BLUE
+	
+;COLLECTIONS_STEP
+;	
+;TERM_CHECK
+;	
+;BOTTLE_CHECK
+;
+;COLOUR_ONE
+;
+;COLOUR_TWO
+;	
+;BRAINS
+;	
+;TRAY_STEP
+;	
 
 HOLD_EXE
 	call	    READ_KEY
@@ -674,7 +688,7 @@ ShiftLoop
 	cpfseq		counter
 	goto		ShiftLoop
 	
-	; Set EEPROM address to the previous 21 byte block, and reset TempEEPROM address
+	; Set EEPROM address to the previous 21 byte block, and reset temp address
 	movlw		d'42'
 	subwf		L_EE
 	movlw		d'220'
@@ -711,7 +725,7 @@ LOG
 	incf	L_EE
 	READEE	OP_INT, H_EE, L_EE
 	incf	L_EE
-	call	DisplayTime
+	call	DisplayExeTime
 
 	call	LCD_L2
 	clrf	L_EE
@@ -794,7 +808,7 @@ displayNum
 	incf	L_EE
 	READEE	OP_INT, H_EE, L_EE
 	incf	L_EE
-	call	DisplayTime
+	call	DisplayExeTime
 	movff	PRODL, L_EE
 	
 	; reset eeprom to beginning
@@ -805,7 +819,7 @@ displayNum
 HOLD_PLOG
 	call	READ_KEY
 	ChangeMode  key0, PERM_LOG	; back to perm log menu
-	bra HOLD_PERM_LOG
+	bra HOLD_PLOG
 	
 ;*******************************************************************************
 ; pc interface
@@ -862,51 +876,50 @@ SAVE_TIME
 	call	WriteEE_RTC
 return
 		
-DISPLAY_RTC
-	
+DISPLAY_RTC	
 	; display data in this format hh/minmin/yy yy/mm/dd
 	rtc_read    0x02	    ; 0x02 from DS1307 - hours
-	movf	tens_digit,WREG
+	movff	tens_digit,WREG
 	call	WR_DATA
-	movf	ones_digit,WREG
+	movff	ones_digit,WREG
 	call	WR_DATA
 	movlw	"h"
 	call	WR_DATA
 	
 	rtc_read    0x01	    ; 0x01 from DS1307 - minutes
-	movf	tens_digit,WREG
+	movff	tens_digit,WREG
 	call	WR_DATA
-	movf	ones_digit,WREG
+	movff	ones_digit,WREG
 	call	WR_DATA
 	
 	rtc_read    0x00	    ; 0x01 from DS1307 - seconds
-	movf	tens_digit,WREG
+	movff	tens_digit,WREG
 	call	WR_DATA
-	movf	ones_digit,WREG
+	movff	ones_digit,WREG
 	call	WR_DATA
 	movlw	" "
 	call	WR_DATA
 	
 	rtc_read    0x06	    ; 0x06 from DS1307 - years
-	movf	tens_digit,WREG
+	movff	tens_digit,WREG
 	call	WR_DATA
-	movf	ones_digit,WREG
+	movff	ones_digit,WREG
 	call	WR_DATA
 	movlw	"/"
 	call	WR_DATA
 	
 	rtc_read    0x05	    ; 0x05 from DS1307 - months
-	movf	tens_digit,WREG
+	movff	tens_digit,WREG
 	call	WR_DATA
-	movf	ones_digit,WREG
+	movff	ones_digit,WREG
 	call	WR_DATA
 	movlw	"/"
 	call	WR_DATA
 	
 	rtc_read    0x04	    ; 0x04 from DS1307 - days
-	movf	tens_digit,WREG
+	movff	tens_digit,WREG
 	call	WR_DATA
-	movf	ones_digit,WREG
+	movff	ones_digit,WREG
 	call	WR_DATA
 return
 	
@@ -1077,7 +1090,7 @@ ClearNext
 	movlw		d'21'
 	cpfseq		counter
 	goto		ClearNext
-	clrf		H_EE		; reset EEPROMaddr
+	clrf		H_EE
 	clrf		L_EE
 	return
 	
@@ -1106,21 +1119,19 @@ READ_KEY_TIME
 	goto	    $-2		; go back one instruction
 	return
 
-DisplayTime
+DisplayExeTime
 	READEE	REG_EE, H_EE, L_EE
 	movlw	0xFF
 	cpfseq	REG_EE
-	goto	NoSkipDispOpTime
+	goto	NoSkipDispExeTime
 	Display NoData
 	movlw	0xFF
 	cpfslt	REG_EE
-	goto	SkipDispOpTime
+	goto	SkipDispExeTime
 	return
 
-NoSkipDispOpTime
-	movlw	b'00100001'
-	movwf	OP_sec
-	swapf	OP_sec, W
+NoSkipDispExeTime
+	swapf	OP_sec, WREG	; 100's seconds
 	movwf	temp
 	movlw	0x0F
 	andwf	temp
@@ -1128,29 +1139,37 @@ NoSkipDispOpTime
 	addlw	0x30
 	call	WR_DATA
 
-	movff	OP_sec, temp	; 1's seconds
+	movff	OP_sec, temp	; 10's seconds
 	movlw	0x0F
 	andwf	temp		; Temp = lower nibble of Op_sec
 	movff	temp, WREG	; W = Temp
 	addlw	0x30		; Convert to ASCII
 	call	WR_DATA
+	
+	swapf	OP_INT, WREG	;1's seconds
+	movwf	temp
+	movlw	0x0f
+	andwf	temp
+	movff	temp, WREG
+	addlw	0x30
+	call	WR_DATA
 
 	movlw	0x73		; Write 's'
 	call	WR_DATA
 	call	LCD_L2
-SkipDispOpTime
+SkipDispExeTime
 	return
 
 DispOpRTC
-	movlw	d'11'
+	movlw	d'2'
 	addwf	L_EE
 
 	READEE	REG_EE, H_EE, L_EE
-	movlw	0xFF
+	movlw	0xff
 	cpfseq	REG_EE
 	goto	NoSkipDispOpRTC
 	Display	NoData
-	movlw	0xFF
+	movlw	0xff
 	cpfslt	REG_EE
 	goto	SkipDispOpRTC
 
@@ -1168,12 +1187,16 @@ NoSkipDispOpRTC
 
 	movlw		"h"
 	call		WR_DATA
+	
 	call DispOpRTC_Helper
+	
 	movlw		" "
 	call		WR_DATA
+	
 	call DispOpRTC_Helper
 	movlw		"/"
 	call		WR_DATA
+
 	call DispOpRTC_Helper
 	movlw		"/"
 	call		WR_DATA
