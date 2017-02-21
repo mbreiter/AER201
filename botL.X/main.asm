@@ -357,11 +357,38 @@ restoreContext macro
 
 ISR_HIGH
 	saveContext
+	
+	swapf	OP_sec, WREG	; 100's seconds
+	movwf	temp
+	movlw	0x0F
+	andwf	temp
+	movff	temp, WREG
+	addlw	0x30
+	call	WR_DATA
 
-	;reset timer
-	movlw	0xbd
+	movff	OP_sec, temp	; 10's seconds
+	movlw	0x0F
+	andwf	temp		; Temp = lower nibble of Op_sec
+	movff	temp, WREG	; W = Temp
+	addlw	0x30		; Convert to ASCII
+	call	WR_DATA
+	
+	swapf	OP_INT, WREG	;1's seconds
+	movwf	temp
+	movlw	0x0f
+	andwf	temp
+	movff	temp, WREG
+	addlw	0x30
+	call	WR_DATA
+
+	movlw	0x73		; Write 's'
+	call	WR_DATA
+	call	LCD_L2
+
+	;reset timer 
+	movlw	0xc6
 	movwf	TMR0H
-	movlw	0xdc
+	movlw	0x3e
 	movwf	TMR0L
 		
 	;timer interrupt
@@ -478,13 +505,14 @@ INIT
 	bcf	INTCON3, INT1IP
 	
 	; setting up timer to sychronize with 1 second clock intervals
+	bcf	T0CON, TMR0ON
 	bcf	T0CON, T08BIT
 	bcf	T0CON, T0CS
 	bcf	T0CON, T0SE
 	bcf	T0CON, PSA
-	bcf	T0CON, T0PS2
-	bsf	T0CON, T0PS1
-	bsf	T0CON, T0PS0
+	bcf	T0CON, T0PS2	    ; set prescaling to 1:16. this allows for 
+	bsf	T0CON, T0PS1	    ; a preloading of ~50750 or 0xc63e. very
+	bsf	T0CON, T0PS0	    ; good approximation within 3 minutes.
 
 	clrf	H_EE
 	clrf	L_EE
@@ -610,11 +638,11 @@ EXECUTION
 	call	    ClrLCD
 	Display	    Exe1
 	call	    LCD_L2
-	Display	    Exe2
+;	Display	    Exe2
 	
-	movlw	    0xbd		    ; setting up timer
+	movlw	    0xc5		    ; setting up timer
 	movwf	    TMR0H
-	movlw	    0xdc    
+	movlw	    0x44    
 	movwf	    TMR0L
 	
 	bsf	    T0CON, TMR0ON	    ; turning on timer
@@ -649,6 +677,8 @@ HOLD_EXE
 	bra	    HOLD_EXE
 	
 EXIT_EXE
+	; stop timer and save the time to eeprom
+	bcf	    T0CON, TMR0ON
 	WriteEE	    OP_sec, H_EE, L_EE
 	incf	    L_EE
 	WriteEE	    OP_INT, H_EE, L_EE
@@ -700,8 +730,6 @@ ShiftLoop
 	goto		ShiftLoop
 	
 	; Finish Saving Data
-	; Stop Timer and goto logs
-	bcf		T0CON, TMR0ON
 	movlw		d'9'
 	movwf		L_EE
 	WriteEE		OP_sec, H_EE, L_EE
