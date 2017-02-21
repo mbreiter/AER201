@@ -23,7 +23,7 @@ Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 126 : Found label aft
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 127 : Found label after column 1. (PC2)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 128 : Found label after column 1. (PCTransfer)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 129 : Found label after column 1. (Stopped)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 130 : Found label after column 1. (Op_Time)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 130 : Found label after column 1. (Exe_Time)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 131 : Found label after column 1. (SAVE)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 132 : Found label after column 1. (Safety)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 133 : Found label after column 1. (NoData)
@@ -54,12 +54,12 @@ Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 267 : Argument out of
 Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 272 : Argument out of range.  Least significant bits used.
 Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 267 : Argument out of range.  Least significant bits used.
 Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 272 : Argument out of range.  Least significant bits used.
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 893 : Found opcode in column 1. (return)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 906 : Found opcode in column 1. (return)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 953 : Found opcode in column 1. (return)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 891 : Found opcode in column 1. (return)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 904 : Found opcode in column 1. (return)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 951 : Found opcode in column 1. (return)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 11 : Found label after column 1. (del_loop0)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 16 : Found label after column 1. (_loopknt)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 966 : Found opcode in column 1. (return)
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1163 : Argument out of range.  Least significant bits used.
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1178 : Argument out of range.  Least significant bits used.
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1245 : Found directive in column 1. (end)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 964 : Found opcode in column 1. (return)
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1161 : Argument out of range.  Least significant bits used.
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1176 : Argument out of range.  Least significant bits used.
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1243 : Found directive in column 1. (end)

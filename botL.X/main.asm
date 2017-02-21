@@ -527,7 +527,7 @@ INIT
 	call LCD_L2
 	Display	Team
 	
-	Delay50N delayR, 0x14
+	Delay50N delayR, 0x28
 
 ;*******************************************************************************
 ; standby mode
@@ -639,8 +639,6 @@ EXECUTION
 	call	    ClrLCD
 	Display	    Exe1
 	call	    LCD_L2
-;	Display	    Exe2
-	
 	movlw	    0xc5		    ; setting up timer
 	movwf	    TMR0H
 	movlw	    0x44    
@@ -748,7 +746,7 @@ LOG
 	Display Log1
 
 	; display most recent run data
-	movlw	d'9'
+	movlw	d'0'
 	movwf	L_EE
 	READEE	OP_sec, H_EE, L_EE
 	incf	L_EE

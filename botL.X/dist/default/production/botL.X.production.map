@@ -1,5 +1,5 @@
 MPLINK 5.08, LINKER
-Linker Map File - Created Mon Feb 20 22:52:49 2017
+Linker Map File - Created Mon Feb 20 23:29:05 2017
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -67,6 +67,7 @@ Linker Map File - Created Mon Feb 20 22:52:49 2017
                  EXIT_EXE   0x000486    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                      Exe1   0x000e04    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                      Exe2   0x000e10    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 Exe_Time   0x000e48    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                  HOLD_EXE   0x00046a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                  HOLD_LOG   0x000640    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
             HOLD_LOG_INFO   0x000710    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
@@ -105,7 +106,6 @@ Linker Map File - Created Mon Feb 20 22:52:49 2017
                    NoData   0x000e6a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
         NoSkipDispExeTime   0x000c8a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
           NoSkipDispOpRTC   0x000d0c    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Op_Time   0x000e48    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                       PC1   0x000e18    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                       PC2   0x000e26    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    PCLog1   0x000e6e    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
@@ -495,7 +495,7 @@ Linker Map File - Created Mon Feb 20 22:52:49 2017
                       PC2   0x000e26    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                PCTransfer   0x000e30    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                   Stopped   0x000e40    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
-                  Op_Time   0x000e48    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
+                 Exe_Time   0x000e48    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                      SAVE   0x000e50    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    Safety   0x000e5a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
                    NoData   0x000e6a    program     static /Users/mreiter/Desktop/AER201/botL.X/main.asm
