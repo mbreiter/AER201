@@ -127,7 +127,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     PC2		db	    "Begin <#>", 0
     PCTransfer	db	    "Transferring...", 0
     Stopped	db	    "Stopped", 0
-    Op_Time	db	    "Time: ", 0
+    Exe_Time	db	    "Time: ", 0
     SAVE	db	    "Saving...", 0
     Safety	db	    "Safety check...", 0
     NoData	db	    "N/A", 0
@@ -522,6 +522,7 @@ INIT
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
 	
+	call	ClrLCD
 	Display	Welcome
 	call LCD_L2
 	Display	Team
