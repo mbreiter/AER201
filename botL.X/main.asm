@@ -639,7 +639,7 @@ LOOPING
 	bra LOOPING
 	
 EXECUTION
-	; call	    ClearEEPROM_21
+	call	    ClearEEPROM_21
 	; save the starting time
 	call	    SAVE_TIME
 		
