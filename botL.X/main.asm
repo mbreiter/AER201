@@ -5,7 +5,7 @@
 ;    File Version: 1.0
 ;    Author: Matthew Reiter
 ;    Course: AER201
-;    Description: Bottle sorting machine
+;    Description: botL - a pastic bottle sorting machine
  
 ;*******************************************************************************
 ; configuration settings
@@ -362,6 +362,7 @@ restoreContext macro
 ISR_HIGH
 	saveContext
 	
+	; displaying the execution time in seconds
 	swapf	OP_sec, WREG	; 100's seconds
 	movwf	temp
 	movlw	0x0F
@@ -437,14 +438,6 @@ ISR_LOW
 END_ISR_LOW
 	bcf			INTCON3, INT1IF         ; Clear flag for next interrupt
 	restoreContext
-	
-	movwf	temp_W		    ; save current W
-	movff	STATUS, temp_S	    ; save status
-
-	; ISR_Low routines
-	movff	temp_S, STATUS	    ; retreive status
-	swapf	temp_W, f
-	swapf	temp_W, w	    ; restore W
 	retfie
 
 ;*******************************************************************************
@@ -482,15 +475,11 @@ INIT
 	movwf	ADCON1
 	
 	; initializations
-	
 	call	InitLCD
 	ConfigLCD
-	
 	call	RTC_INIT
 	call	Delay50ms
-	
 	COLOUR_INIT
-	
 	call	INIT_USART
 
 	; interrupts
@@ -896,7 +885,7 @@ PC_TRANSFER
 ;*******************************************************************************
 
 RTC_INIT
-	; set sda and scl to high-z
+	; set sda and scl to high
 	bcf	PORTC, 4
 	bcf	PORTC, 3
 	bsf	TRISC, 4
@@ -965,7 +954,7 @@ DISPLAY_RTC
 	movff	ones_digit,WREG
 	call	WR_DATA
 	
-	rtc_read    0x00	    ; 0x01 from DS1307 - seconds
+	rtc_read    0x00	    ; 0x00 from DS1307 - seconds
 	movff	tens_digit,WREG
 	call	WR_DATA
 	movff	ones_digit,WREG

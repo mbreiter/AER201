@@ -229,7 +229,7 @@ READ_COLOUR_I2C
     
     ;Write command to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
-    iorlw   0x80		;command bit
+    iorlw   0xa0		;command bit
     i2c_common_write
     i2c_common_check_ack RD_ERR2
     
@@ -241,9 +241,13 @@ READ_COLOUR_I2C
     
     ;Read data from I2C bus (Contents of Register in TCS34725)
     i2c_common_read
-    movwf datachar
+    movwf data_colourL
+    i2c_common_ack		;Send acknowledgement of data reception
+    
+    i2c_common_read
+    movwf data_colourH
     i2c_common_nack		;Send acknowledgement of data reception
-
+    
     goto RD_END
 
     RD_ERR1
