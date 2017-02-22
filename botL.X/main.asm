@@ -22,7 +22,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     CONFIG WDT = OFF, WDTPS = 32768
     CONFIG MCLRE = ON, LPT1OSC = OFF, PBADEN = OFF
     CONFIG STVREN = ON, LVP = OFF, XINST = OFF
-    CONFIG DEBUG = OFF
+    CONFIG DEBUG = ON
     CONFIG CP0 = OFF, CP1 = OFF, CP2 = OFF, CP3 = OFF
     CONFIG CPB = OFF, CPD = OFF
     CONFIG WRT0 = OFF, WRT1 = OFF, WRT2 = OFF, WRT3 = OFF
@@ -100,11 +100,15 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TIMCNT
 	CPCNT
 	TDATA
+	ESKA
+	ESKA_CAP
+	YOP
+	YOP_CAP
 	CLEAR:2
 	RED:2
 	GREEN:2
 	BLUE:2
-	temp_colour:2	
+	temp_colour:2
     endc
     
     extern tens_digit, ones_digit
@@ -413,13 +417,13 @@ ISR_LOW
 	goto		END_ISR_LOW
 
 	;Check operation status
-;	movlw		0xFF					; If in operation, skip return
+;	movlw		0xff					; If in operation, skip return
 ;	cpfseq		InExecution
 ;	goto		END_ISR_LOW
 
 	; Process KEY
 	swapf		PORTB, W				; Read PORTB<7:4> into W<3:0>
-	andlw		0x0F
+	andlw		0x0f
 	movwf		KEY_ISR					; Put W into KEY_ISR
 ;	movlw		keyS					; Put keyStar into W to compare to KEY_ISR
 ;	cpfseq		KEY_ISR					; If key was '*', skip return
@@ -518,6 +522,10 @@ INIT
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
+	clrf	ESKA
+	clrf	ESKA_CAP
+	clrf	YOP
+	clrf	YOP_CAP
 	
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
@@ -631,6 +639,7 @@ LOOPING
 	bra LOOPING
 	
 EXECUTION
+	; call	    ClearEEPROM_21
 	; save the starting time
 	call	    SAVE_TIME
 		
@@ -645,8 +654,6 @@ EXECUTION
 	movwf	    TMR0L
 	
 	bsf	    T0CON, TMR0ON	    ; turning on timer
-	call	    ClearEEPROM_21
-	
 	; initialize variables
 	clrf	    OP_sec
 	clrf	    OP_INT
@@ -676,18 +683,34 @@ HOLD_EXE
 	bra	    HOLD_EXE
 	
 EXIT_EXE
-	; stop timer and save the time to eeprom
+	; stop timer and save the execution time to eeprom
 	bcf	    T0CON, TMR0ON
-	WriteEE	    OP_sec, H_EE, L_EE
-	incf	    L_EE
-	WriteEE	    OP_INT, H_EE, L_EE
-	incf	    L_EE
-	
-	call	    SAVE_TIME
-	
+	call	    SAVE_EXE_TIME
+		
 	; Clear inExecution flag to stop '*' interrupts
 	clrf	    inExecution
-        goto        SaveData
+	
+	movff	    ESKA, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    ESKA_CAP, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    YOP, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    YOP_CAP, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	goto        SaveData
 
 SaveData
 	call	    ClrLCD
@@ -704,7 +727,7 @@ SaveData
 	
 	clrf	    counter2
 	clrf	    counter
-
+	
 ShiftLoop
 	incf		counter
 	READEE		REG_EE, H_EE, L_EE
@@ -727,14 +750,7 @@ ShiftLoop
 	movlw		d'9'
 	cpfseq		counter2	; Skip if 9 shifts were made
 	goto		ShiftLoop
-	
-	; Finish Saving Data
-	movlw		d'9'
-	movwf		L_EE
-	WriteEE		OP_sec, H_EE, L_EE
-	incf		L_EE
-	WriteEE		OP_INT, H_EE, L_EE
-	incf		L_EE
+
 	goto		LOG
 
 ;*******************************************************************************
@@ -746,12 +762,12 @@ LOG
 	Display Log1
 
 	; display most recent run data
-	movlw	d'0'
+	movlw	d'10'
 	movwf	L_EE
-	READEE	OP_sec, H_EE, L_EE
-	incf	L_EE
-	READEE	OP_INT, H_EE, L_EE
-	incf	L_EE
+;	READEE	OP_sec, H_EE, L_EE
+;	incf	L_EE
+;	READEE	OP_INT, H_EE, L_EE
+;	incf	L_EE
 	call	DisplayExeTime
 
 	call	LCD_L2
@@ -771,7 +787,7 @@ LOG_INFO
 	Display LogInfo2
 	clrf	H_EE
 	clrf	L_EE
-	DisplayLog  H_EE, L_EE
+	;DisplayLog  H_EE, L_EE
 HOLD_LOG_INFO
 	call	READ_KEY
 	ChangeMode key0, LOG
@@ -902,6 +918,36 @@ SAVE_TIME
 	rtc_read    0x04	; days
 	call	WriteEE_RTC
 return
+	
+SAVE_EXE_TIME
+	
+	swapf	OP_sec, WREG	; 100's seconds
+	movwf	temp
+	movlw	0x0F
+	andwf	temp
+	movff	temp, WREG
+	addlw	0x30	
+	WriteEE	WREG, H_EE, L_EE
+	incf	L_EE
+	
+	movff	OP_sec, temp	; 10's seconds
+	movlw	0x0F
+	andwf	temp		; Temp = lower nibble of Op_sec
+	movff	temp, WREG	; W = Temp
+	addlw	0x30		; Convert to ASCII
+	WriteEE	WREG, H_EE, L_EE
+	incf	L_EE
+	
+	swapf	OP_INT, WREG	;1's seconds
+	movwf	temp
+	movlw	0x0f
+	andwf	temp
+	movff	temp, WREG
+	addlw	0x30
+	WriteEE	WREG, H_EE, L_EE
+	incf	L_EE
+return
+	
 		
 DISPLAY_RTC	
 	; display data in this format hh/minmin/yy yy/mm/dd
@@ -1158,28 +1204,17 @@ DisplayExeTime
 	return
 
 NoSkipDispExeTime
-	swapf	OP_sec, WREG	; 100's seconds
-	movwf	temp
-	movlw	0x0F
-	andwf	temp
-	movff	temp, WREG
-	addlw	0x30
+	READEE	WREG, H_EE, L_EE
 	call	WR_DATA
-
-	movff	OP_sec, temp	; 10's seconds
-	movlw	0x0F
-	andwf	temp		; Temp = lower nibble of Op_sec
-	movff	temp, WREG	; W = Temp
-	addlw	0x30		; Convert to ASCII
-	call	WR_DATA
+	incf	L_EE
 	
-	swapf	OP_INT, WREG	;1's seconds
-	movwf	temp
-	movlw	0x0f
-	andwf	temp
-	movff	temp, WREG
-	addlw	0x30
+	READEE	WREG, H_EE, L_EE
 	call	WR_DATA
+	incf	L_EE
+	
+	READEE	WREG, H_EE, L_EE
+	call	WR_DATA
+	incf	L_EE
 
 	movlw	0x73		; Write 's'
 	call	WR_DATA
@@ -1188,9 +1223,6 @@ SkipDispExeTime
 	return
 
 DispOpRTC
-	movlw	d'2'
-	addwf	L_EE
-
 	READEE	REG_EE, H_EE, L_EE
 	movlw	0xff
 	cpfseq	REG_EE
@@ -1203,31 +1235,30 @@ DispOpRTC
 NoSkipDispOpRTC
 	READEE	REG_EE, H_EE, L_EE
 	movff	REG_EE, WREG
-	andlw	b'11110001'
 	call	WR_DATA
-	
 	incf	L_EE
+	
 	READEE	REG_EE, H_EE, L_EE
 	movff	REG_EE, WREG
 	call	WR_DATA
 	incf	L_EE
 
-	movlw		"h"
-	call		WR_DATA
+	movlw	"h"
+	call	WR_DATA
 	
-	call DispOpRTC_Helper
+	call	DispOpRTC_Helper
 	
-	movlw		" "
-	call		WR_DATA
+	movlw	" "
+	call	WR_DATA
 	
-	call DispOpRTC_Helper
-	movlw		"/"
-	call		WR_DATA
+	call	DispOpRTC_Helper
+	movlw	"/"
+	call	WR_DATA
 
-	call DispOpRTC_Helper
-	movlw		"/"
-	call		WR_DATA
-	call DispOpRTC_Helper
+	call	DispOpRTC_Helper
+	movlw	"/"
+	call	WR_DATA
+	call	DispOpRTC_Helper
 SkipDispOpRTC
 		return
 DispOpRTC_Helper
