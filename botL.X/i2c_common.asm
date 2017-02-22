@@ -20,13 +20,10 @@ data_colourH res 1
 tens_digit res 1
 ones_digit res 1
 convert_buffer res 1
-d50ms_C res 1
-d200us_C res 1
 
 global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C
-global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer, d50ms_C, d200us_C
+global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
 global data_colourL, data_colourH
-
 
 ;; I2C MACROS
 ;;
@@ -36,12 +33,12 @@ global data_colourL, data_colourH
 ;; relocatable labels
 
 i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
-    btfsc   SSPCON2,ACKSTAT
+    btfsc   SSPCON2, ACKSTAT
     goto    err_address
 endm
 
 i2c_common_start macro 
-    bsf	    SSPCON2,SEN
+    bsf	    SSPCON2, SEN
     btfss   SSPCON1, WCOL	; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
     bsf	    PIR1, SSPIF
     btfss   PIR1, SSPIF
@@ -84,9 +81,7 @@ endm
 i2c_common_write macro 
     btfsc   SSPSTAT, BF
     bra	    $-2
-
     movwf   SSPBUF
-
     btfss   PIR1, SSPIF
     bra	    $-2
     bcf	    PIR1, SSPIF ;clear SSPIF interrupt bit
@@ -97,7 +92,7 @@ i2c_common_read macro
     btfss   PIR1, SSPIF
     bra	    $-2
     bcf	    PIR1, SSPIF
-    movf    SSPBUF,w
+    movff   SSPBUF, WREG
 endm
 
 code
@@ -116,7 +111,7 @@ i2c_common_setup
 
     bsf	    SSPCON1,SSPEN ;Enable SSP module
 
-    bcf	    PIR2, SSPIE ;don't cause an interrupt on SSPIF, please. We're just polling it.
+    bcf	    PIR2, SSPIE
     bcf	    PIR1, SSPIF
     bcf	    SSPSTAT, BF
     i2c_common_stop ;Ensure the bus is free
@@ -130,12 +125,12 @@ write_rtc
     i2c_common_check_ack WR_ERR1_RTC
 
     ;Write data to I2C bus (Register Address in RTC)
-    movf    regaddress,w ;Set register pointer in RTC
+    movff   regaddress, WREG ;Set register pointer in RTC
     i2c_common_write ;
     i2c_common_check_ack WR_ERR2_RTC
 
     ;Write data to I2C bus (Data to be placed in RTC register)
-    movf    databyte,w ;Write data to register in RTC
+    movff   databyte, WREG ;Write data to register in RTC
     i2c_common_write
     i2c_common_check_ack WR_ERR3_RTC
 
@@ -171,19 +166,19 @@ read_rtc
     i2c_common_check_ack RD_ERR1_RTC
 
     ;Write data to I2C bus (Register Address in RTC)
-    movf    regaddress,w ;Set register pointer in RTC
+    movff   regaddress, WREG	; Set register pointer in RTC
     i2c_common_write
     i2c_common_check_ack RD_ERR2_RTC
 
     ;Re-Select the DS1307 on the bus, in READ mode
     i2c_common_repeatedstart
-    movlw   0xD1 ;DS1307 address | READ bit
+    movlw   0xD1		; DS1307 address | READ bit
     i2c_common_write
     i2c_common_check_ack RD_ERR3_RTC
 
     ;Read data from I2C bus (Contents of Register in RTC)
     i2c_common_read
-    movwf datachar
+    movwf   datachar
     i2c_common_nack ;Send acknowledgement of data reception
 
     goto RD_END_RTC
@@ -208,45 +203,41 @@ read_rtc
 return
 
 rtc_convert
-    movwf   convert_buffer ; B1 = HHHH LLLL
-    swapf   convert_buffer,w ; W = LLLL HHHH
-    andlw   0x0f ; Mask upper four bits 0000 HHHH
-    addlw   0x30 ; convert to ASCII
-    movwf   tens_digit ;saves into 10ths digit
+    movwf   convert_buffer	; B1 = HHHH LLLL
+    swapf   convert_buffer, WREG; W = LLLL HHHH
+    andlw   0x0f		; Mask upper four bits 0000 HHHH
+    addlw   0x30		; convert to ASCII
+    movwf   tens_digit		; saves into 10ths digit
 
-    movf    convert_buffer,w
-    andlw   0x0f ; w = 0000 LLLL
-    addlw   0x30 ; convert to ASCII
-    movwf   ones_digit ; saves into 1s digit
+    movff   convert_buffer, WREG
+    andlw   0x0f		; w = 0000 LLLL
+    addlw   0x30		; convert to ASCII
+    movwf   ones_digit		; saves into 1s digit
 return
     
 READ_COLOUR_I2C  
     i2c_common_start
     
-    movlw   0x52		;TCS34725 address 0x29 << 1, WRITE bit (+0)
+    movlw   0x52		; TCS34725 address 0x29 << 1, WRITE bit (+0)
     i2c_common_write  
     i2c_common_check_ack RD_ERR1
     
     ;Write command to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
-    iorlw   0xa0		;command bit
+    iorlw   0x80		; command bit
     i2c_common_write
     i2c_common_check_ack RD_ERR2
     
     ;Re-Select the TCS34725 on the bus, in READ mode
     i2c_common_repeatedstart
-    movlw   0x53		;TCS34725 address 0x29 << 1, READ bit (+1)
+    movlw   0x53		; TCS34725 address 0x29 << 1, READ bit (+1)
     i2c_common_write
     i2c_common_check_ack RD_ERR3
     
     ;Read data from I2C bus (Contents of Register in TCS34725)
     i2c_common_read
-    movwf data_colourL
-    i2c_common_ack		;Send acknowledgement of data reception
-    
-    i2c_common_read
-    movwf data_colourH
-    i2c_common_nack		;Send acknowledgement of data reception
+    movwf   databyte
+    i2c_common_nack		; Send acknowledgement of data reception
     
     goto RD_END
 
@@ -272,13 +263,13 @@ return
 WRITE_COLOUR_I2C
     i2c_common_start
 
-    movlw   0x52 ;TCS34725 address | WRITE bit
+    movlw   0x52		; TCS34725 address | WRITE bit
     i2c_common_write
     i2c_common_check_ack WR_ERR1
 
     ;Write data to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
-    iorlw   0x80		;command bits
+    iorlw   0x80		; command bits
     i2c_common_write
     i2c_common_check_ack WR_ERR2
 
@@ -308,7 +299,7 @@ WRITE_COLOUR_I2C
 	movwf	LATA
 	goto	WR_END
     WR_END
-	i2c_common_stop ;Release the I2C bus
+	i2c_common_stop		; Release the I2C bus
 	
 return
 end

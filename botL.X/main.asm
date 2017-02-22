@@ -267,14 +267,14 @@ endBCD
 	endm
 	
 SUB16	macro	x, y	    ; does not modify x nor y
-	local RESULTS
-	movf	y+1, WREG   ; move high y into working register
-	subwf	x+1, 0	    ; do subtraction x - w => w
-	btfsc	STATUS, Z   ; check if subtraction is zero (if Z=1)
-	goto	RESULTS	    ; if it is, need to check lower bytes
+	local	RESULTS
+	movff	y+1, WREG   ; move high y into working register
+	subwf	x+1, 0	    ; do subtraction xH - yH => w
+	btfss	STATUS, Z   ; check if subtraction is zero (if Z=1)
+	goto	RESULTS	    ; if it is, need to check lower bytes (so skip this)
 	
-	movf	y, WREG
-	subwf	x, 0	
+	movff	y+0, WREG
+	subwf	x+0, 0	
 RESULTS			    ; if... x=y => z=1, x<y => c=0, x>=y => c=1
 	endm
 
@@ -562,7 +562,6 @@ CHECK_CLEAR
 	movlw	'c'			    ; CLEAR > everything else
 	call	WR_DATA
 	bra	LOOPING
-
 CHECK_RED
 	SUB16	RED, CLEAR		    ; check first against clear
 	btfss	STATUS, C
@@ -579,7 +578,6 @@ CHECK_RED
 	movlw	'r'			    ; RED > everything else
 	call	WR_DATA
 	bra	LOOPING
-	
 CHECK_GREEN
 	SUB16	GREEN, CLEAR		    ; check first against clear
 	btfss	STATUS, C
@@ -596,7 +594,6 @@ CHECK_GREEN
 	movlw	'g'			    ; GREEN > everything else
 	call	WR_DATA
 	bra	LOOPING
-	
 CHECK_BLUE
 	SUB16	BLUE, CLEAR		    ; check first against clear
 	btfss	STATUS, C
@@ -620,7 +617,8 @@ LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
 	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
-	
+	Delay50N delayR, 0x02
+
 	call	CHECK_CLEAR
 	call	CHECK_RED
 	call	CHECK_GREEN

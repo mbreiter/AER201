@@ -1,3 +1,4 @@
 Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm 4 : Found directive in column 1. (errorlevel)
 Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm 5 : Found directive in column 1. (errorlevel)
 Warning[205] /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm 6 : Found directive in column 1. (errorlevel)
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm 207 : Argument out of range.  Least significant bits used.

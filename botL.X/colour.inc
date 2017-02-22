@@ -81,33 +81,23 @@
 	call	delay5ms
 	
 	COLOUR_READ 0x14    ; read clear colour address low, command bits set later
-	movff	data_colourL, clear+0
-	movff	data_colourH, clear+1
-	;Send acknowledgement of data reception
-;	movff	datachar, clear+0
-;	COLOUR_READ 0x15    ; read clear colour address high, command bits set later
-;	movff	datachar, clear+1
+	movff	databyte, clear+0
+	COLOUR_READ 0x15    ; read clear colour address high, command bits set later
+	movff	databyte, clear+1
 		
 	COLOUR_READ 0x16    ; read red colour address low, command bits set later
-	movff	data_colourL, red+0
-	movff	data_colourH, red+1
-	
-;	movff	datachar, red+0
-;	COLOUR_READ 0x17    ; read red colour address high, command bits set later
-;	movff	datachar, red+1
+	movff	databyte, red+0
+	COLOUR_READ 0x17    ; read red colour address high, command bits set later
+	movff	databyte, red+1
 	
 	COLOUR_READ 0x18    ; read green colour address low, command bits set later
-	movff	data_colourL, green+0
-	movff	data_colourH, green+1
-;	movff	datachar, green+0
-;	COLOUR_READ 0x19    ; read green colour address high, command bits set later
-;	movff	datachar, green+1
+	movff	databyte, green+0
+	COLOUR_READ 0x19    ; read green colour address high, command bits set later
+	movff	databyte, green+1
 	
 	COLOUR_READ 0x1a    ; read blue colour address low, command bits set later
-	movff	data_colourL, blue+0
-	movff	data_colourH, blue+1
-;	movff	datachar, blue+0
-;	COLOUR_READ 0x1b    ; read blue colour address high, command bits set later
-;	movff	datachar, blue+1
+	movff	databyte, blue+0
+	COLOUR_READ 0x1b    ; read blue colour address high, command bits set later
+	movff	databyte, blue+1
     endm
     

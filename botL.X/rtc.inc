@@ -28,6 +28,6 @@ rtc_read macro addliteral
     movlw   addliteral
     movwf   regaddress
     call    read_rtc
-    movf    datachar,w
+    movff   datachar, WREG
     call    rtc_convert
 endm
