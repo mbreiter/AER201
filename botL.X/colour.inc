@@ -57,7 +57,7 @@
 	call	delay5ms
 	COLOUR_WRITE	0x00, 0x02 ; Enable Register (0x00), RGBC enable (0x02)
 	call	delay5ms
-	COLOUR_WRITE	0x01, 0xf6 ; Timing Register (0x01), 24ms (0xf6) cycle
+	COLOUR_WRITE	0x01, 0xff ; Timing Register (0x01), 2.4ms (0xff) cycle
 	call	delay5ms
 	COLOUR_WRITE	0x0f, 0x03 ; Control Register (0x0f), 60x gain (0x03)
 	call	delay5ms
@@ -77,27 +77,27 @@
 	call	WRITE_COLOUR_I2C
     endm
     
-    COLOUR_GET_DATA macro clear, red, green, blue
+    COLOUR_GET_DATA macro clearL, clearH, redL, redH, greenL, greenH, blueL, blueH
 	call	delay5ms
 	
 	COLOUR_READ 0x14    ; read clear colour address low, command bits set later
-	movff	databyte, clear+0
+	movff	databyte, clearL
 	COLOUR_READ 0x15    ; read clear colour address high, command bits set later
-	movff	databyte, clear+1
+	movff	databyte, clearH
 		
 	COLOUR_READ 0x16    ; read red colour address low, command bits set later
-	movff	databyte, red+0
+	movff	databyte, redL
 	COLOUR_READ 0x17    ; read red colour address high, command bits set later
-	movff	databyte, red+1
+	movff	databyte, redH
 	
 	COLOUR_READ 0x18    ; read green colour address low, command bits set later
-	movff	databyte, green+0
+	movff	databyte, greenL
 	COLOUR_READ 0x19    ; read green colour address high, command bits set later
-	movff	databyte, green+1
+	movff	databyte, greenH
 	
 	COLOUR_READ 0x1a    ; read blue colour address low, command bits set later
-	movff	databyte, blue+0
+	movff	databyte, blueL
 	COLOUR_READ 0x1b    ; read blue colour address high, command bits set later
-	movff	databyte, blue+1
+	movff	databyte, blueH
     endm
     

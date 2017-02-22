@@ -22,7 +22,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     CONFIG WDT = OFF, WDTPS = 32768
     CONFIG MCLRE = ON, LPT1OSC = OFF, PBADEN = OFF
     CONFIG STVREN = ON, LVP = OFF, XINST = OFF
-    CONFIG DEBUG = ON
+    CONFIG DEBUG = OFF
     CONFIG CP0 = OFF, CP1 = OFF, CP2 = OFF, CP3 = OFF
     CONFIG CPB = OFF, CPD = OFF
     CONFIG WRT0 = OFF, WRT1 = OFF, WRT2 = OFF, WRT3 = OFF
@@ -515,6 +515,14 @@ INIT
 	clrf	ESKA_CAP
 	clrf	YOP
 	clrf	YOP_CAP
+	clrf	CLEAR+0
+	clrf	CLEAR+1	
+	clrf	RED+0
+	clrf	RED+1
+	clrf	GREEN+0
+	clrf	GREEN+1
+	clrf	BLUE+0
+	clrf	BLUE+1
 	
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
@@ -616,8 +624,17 @@ COLOUR_TEST
 LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
-	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
+	COLOUR_GET_DATA CLEAR+0, CLEAR+1, RED+0, RED+1, GREEN+0, GREEN+1, BLUE+0, BLUE+1
 	Delay50N delayR, 0x02
+	
+;	movlw	0x01		testing
+;	movwf	CLEAR+0
+;	movlw	0x06
+;	movwf	GREEN+0
+;	movlw	0x03
+;	movwf	RED+1
+;	movlw	0x01
+;	movwf	BLUE+0
 
 	call	CHECK_CLEAR
 	call	CHECK_RED
@@ -644,10 +661,20 @@ EXECUTION
 	; initialize variables
 	clrf	    OP_sec
 	clrf	    OP_INT
+	
+	clrf	    ESKA
+	clrf	    ESKA_CAP
+	clrf	    YOP
+	clrf	    YOP_CAP
+	
 	clrf	    CLEAR
-	clrf	    GREEN
+	clrf	    CLEAR+1	
 	clrf	    RED
+	clrf	    RED+1
+	clrf	    GREEN
+	clrf	    GREEN+1
 	clrf	    BLUE
+	clrf	    BLUE+1
 	
 ;COLLECTIONS_STEP
 ;	
