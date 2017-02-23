@@ -77,27 +77,27 @@
 	call	WRITE_COLOUR_I2C
     endm
     
-    COLOUR_GET_DATA macro clearL, clearH, redL, redH, greenL, greenH, blueL, blueH
+    COLOUR_GET_DATA macro clear, red, green, blue
 	call	delay5ms
 	
 	COLOUR_READ 0x14    ; read clear colour address low, command bits set later
-	movff	databyte, clearL
+	movff	databyte, clear+0
 	COLOUR_READ 0x15    ; read clear colour address high, command bits set later
-	movff	databyte, clearH
+	movff	databyte, clear+1
 		
 	COLOUR_READ 0x16    ; read red colour address low, command bits set later
-	movff	databyte, redL
+	movff	databyte, red+0
 	COLOUR_READ 0x17    ; read red colour address high, command bits set later
-	movff	databyte, redH
+	movff	databyte, red+0
 	
 	COLOUR_READ 0x18    ; read green colour address low, command bits set later
-	movff	databyte, greenL
+	movff	databyte, green+0
 	COLOUR_READ 0x19    ; read green colour address high, command bits set later
-	movff	databyte, greenH
+	movff	databyte, green+1
 	
 	COLOUR_READ 0x1a    ; read blue colour address low, command bits set later
-	movff	databyte, blueL
+	movff	databyte, blue+0
 	COLOUR_READ 0x1b    ; read blue colour address high, command bits set later
-	movff	databyte, blueH
+	movff	databyte, blue+1
     endm
     

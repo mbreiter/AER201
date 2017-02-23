@@ -225,6 +225,7 @@ READ_COLOUR_I2C
     ;Write command to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
     iorlw   0x80		; command bit
+    
     i2c_common_write
     i2c_common_check_ack RD_ERR2
     
@@ -269,12 +270,13 @@ WRITE_COLOUR_I2C
 
     ;Write data to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
-    iorlw   0x80		; command bits
+    iorlw   0xa0		; command bits
     i2c_common_write
     i2c_common_check_ack WR_ERR2
 
     ;Write data to I2C bus (Data to be placed in TCS34725 register)
     movff   databyte, WREG
+    andlw   0xff
     i2c_common_write
     i2c_common_check_ack WR_ERR3
 

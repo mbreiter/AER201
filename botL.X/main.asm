@@ -543,17 +543,37 @@ STANDBY
 
 HOLD_STANDBY
 	call	READ_KEY_TIME
-	ChangeMode key5, COLOUR_TEST
-	ChangeMode keyA, EXECUTION
-	ChangeMode keyB, LOG
-	ChangeMode keyC, PERM_LOG
-	ChangeMode keyD, PC_MODE
+	ChangeMode  key5, COLOUR_TEST
+	ChangeMode  key8, STEP_TEST
+	ChangeMode  keyA, EXECUTION
+	ChangeMode  keyB, LOG
+	ChangeMode  keyC, PERM_LOG
+	ChangeMode  keyD, PC_MODE
 	bra	HOLD_STANDBY
 
 ;*******************************************************************************
 ; execution mode
 ;*******************************************************************************
+	
+STEP_TEST
+	movlw	b'00000011'
+	movwf	PORTD
+	call	delay5ms
+	
+	movlw	b'00000110'
+	movwf	PORTD
+	call	delay5ms
+	
+	movlw	b'00001100'
+	movwf	PORTD
+	call	delay5ms
 
+	movlw	b'00001001'
+	movwf	PORTD
+	call	delay5ms
+
+	bra STEP_TEST
+	
 CHECK_CLEAR
 	SUB16	CLEAR, RED		    ; check first against red
 	btfss	STATUS, C
@@ -624,19 +644,24 @@ COLOUR_TEST
 LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
-	COLOUR_GET_DATA CLEAR+0, CLEAR+1, RED+0, RED+1, GREEN+0, GREEN+1, BLUE+0, BLUE+1
+	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
 	Delay50N delayR, 0x02
 	
-;	movlw	0x01		testing
-;	movwf	CLEAR+0
+;	movlw	0x01		;testing
+;	movwf	CLEAR+1
 ;	movlw	0x06
 ;	movwf	GREEN+0
 ;	movlw	0x03
-;	movwf	RED+1
+;	movwf	RED+0
 ;	movlw	0x01
 ;	movwf	BLUE+0
+	
+;	movlw	d'0'
+;	cpfseq	RED+0
+;	movlw	'w'
+;	call	WR_DATA
 
-	call	CHECK_CLEAR
+	;call	CHECK_CLEAR
 	call	CHECK_RED
 	call	CHECK_GREEN
 	call	CHECK_BLUE

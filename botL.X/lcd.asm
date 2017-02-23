@@ -31,7 +31,7 @@ LCD_DELAY macro
 	endm
 
 	code
-	global InitLCD,WrtLCD,ClkLCD,ClrLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2, delay5ms		;Only these functions are visible to other asm files.
+	global InitLCD,WrtLCD,ClkLCD,ClrLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms
 
 ; ****************************************************************************
 ; GLOBAL SUBROUTINES
@@ -187,7 +187,6 @@ Delay44usLoop
 		decfsz	delay1, f
 		goto	Delay44usLoop
 		return
-
 delay5ms
 		movlw	0xC2
 		movwf	delay1,0
