@@ -16,7 +16,7 @@
   int sensorPin2 = 3;
   int sensorValue2 = 0;
   
-  int sort_bottle = 0;
+  char sort_bottle = 0;
   int state = 0;
   char incomingByte;
   char buf[3];
@@ -136,7 +136,7 @@
 
 // sending sorting determination to the pic
 void requestEvent() {
-  Wire.write(sort_bottle);
+  Wire.write(sort_bottle);    // send one byte of data, containing result of detection
 }
 
 

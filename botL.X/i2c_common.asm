@@ -21,7 +21,7 @@ tens_digit res 1
 ones_digit res 1
 convert_buffer res 1
 
-global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C
+global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C, READ_ARDUINO
 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
 global data_colourL, data_colourH
 
@@ -304,4 +304,20 @@ WRITE_COLOUR_I2C
 	i2c_common_stop		; Release the I2C bus
 	
 return
-end
+
+READ_ARDUINO
+    i2c_common_start
+    
+    movlw   0x11		; Arudino address << 1 + READ
+    i2c_common_write
+    i2c_common_check_ack WR_ERR1
+    
+    i2c_common_read
+    movwf   databyte		; put result into databyte
+    i2c_common_nack
+    
+    i2c_common_stop
+    
+return
+
+    end

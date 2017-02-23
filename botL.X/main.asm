@@ -16,6 +16,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 #include <lcd.inc>
 #include <rtc.inc>
 #include <colour.inc>
+#include <sorting.inc>
 
     CONFIG OSC=HS, FCMEN=OFF, IESO=OFF
     CONFIG PWRT = OFF, BOREN = SBORDIS, BORV = 3
@@ -100,6 +101,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TIMCNT
 	CPCNT
 	TDATA
+	DETECTION_VAL
 	ESKA
 	ESKA_CAP
 	YOP
@@ -511,6 +513,7 @@ INIT
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
+	clrf	DETECTION_VAL
 	clrf	ESKA
 	clrf	ESKA_CAP
 	clrf	YOP
@@ -644,8 +647,15 @@ COLOUR_TEST
 LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
-	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
-	Delay50N delayR, 0x02
+	ARDUINO_READ	DETECTION_VAL
+	
+	movlw	d'1'
+	cpfseq	DETECTION_VAL
+	movlw	'1'
+	call	WR_DATA
+	
+;	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
+;	Delay50N delayR, 0x02
 	
 ;	movlw	0x01		;testing
 ;	movwf	CLEAR+1
@@ -662,9 +672,9 @@ LOOPING
 ;	call	WR_DATA
 
 	;call	CHECK_CLEAR
-	call	CHECK_RED
-	call	CHECK_GREEN
-	call	CHECK_BLUE
+;	call	CHECK_RED
+;	call	CHECK_GREEN
+;	call	CHECK_BLUE
 	bra LOOPING
 	
 EXECUTION
