@@ -114,6 +114,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     endc
     
     extern tens_digit, ones_digit
+    extern READ_ARDUINO
     
 ;*******************************************************************************
 ; tables
@@ -545,8 +546,9 @@ STANDBY
 
 HOLD_STANDBY
 	call	READ_KEY_TIME
-	ChangeMode  key5, COLOUR_TEST
-	ChangeMode  key8, STEP_TEST
+	ChangeMode  key1, COLOUR_TEST
+	ChangeMode  key2, STEP_TEST
+	ChangeMode  key3, IR_TEST
 	ChangeMode  keyA, EXECUTION
 	ChangeMode  keyB, LOG
 	ChangeMode  keyC, PERM_LOG
@@ -556,6 +558,16 @@ HOLD_STANDBY
 ;*******************************************************************************
 ; execution mode
 ;*******************************************************************************
+
+IR_TEST
+	movlw	'c'
+	btfsc	PORTA, 0
+	movlw	'n'
+	call	WR_DATA
+	Delay50N delayR, 0x14
+	call	ClrLCD
+	Delay50N delayR, 0x14
+bra IR_TEST
 	
 STEP_TEST
 	movlw	b'00000011'
@@ -646,11 +658,12 @@ COLOUR_TEST
 LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
-	ARDUINO_READ	DETECTION_VAL
+	movlw	'w'
+	call	WR_DATA
+	Delay50N delayR, 0x28
+	call	ClrLCD
 	
-	movlw	d'1'
-	cpfseq	DETECTION_VAL
-	movlw	'1'
+	call READ_ARDUINO
 	call	WR_DATA
 	
 ;	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE

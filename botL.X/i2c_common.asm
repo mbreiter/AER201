@@ -380,6 +380,11 @@ return
 READ_ARDUINO
     i2c_common_start
     
+    movlw   0x10		; Arudino address << 1 + WRITE
+    i2c_common_write
+    i2c_common_check_ack WR_ERR1
+    
+    i2c_common_repeatedstart
     movlw   0x11		; Arudino address << 1 + READ
     i2c_common_write
     i2c_common_check_ack WR_ERR1
