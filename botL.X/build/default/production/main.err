@@ -23,21 +23,22 @@ Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 131 : Found label aft
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 132 : Found label after column 1. (PC1)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 133 : Found label after column 1. (PC2)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 134 : Found label after column 1. (PCTransfer)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 135 : Found label after column 1. (Stopped)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 136 : Found label after column 1. (Exe_Time)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 137 : Found label after column 1. (SAVE)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 138 : Found label after column 1. (Safety)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 139 : Found label after column 1. (NoData)
-Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 140 : Found label after column 1. (PCLog1)
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 368 : Argument out of range.  Least significant bits used.
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 383 : Argument out of range.  Least significant bits used.
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 956 : Found opcode in column 1. (return)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 969 : Found opcode in column 1. (return)
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 973 : Argument out of range.  Least significant bits used.
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 990 : Argument out of range.  Least significant bits used.
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 998 : Found opcode in column 1. (return)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1046 : Found opcode in column 1. (return)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 135 : Found label after column 1. (PCComplete)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 136 : Found label after column 1. (Stopped)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 137 : Found label after column 1. (Exe_Time)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 138 : Found label after column 1. (SAVE)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 139 : Found label after column 1. (Safety)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 140 : Found label after column 1. (NoData)
+Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 141 : Found label after column 1. (PCLog1)
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 369 : Argument out of range.  Least significant bits used.
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 384 : Argument out of range.  Least significant bits used.
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 955 : Found opcode in column 1. (return)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 968 : Found opcode in column 1. (return)
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 972 : Argument out of range.  Least significant bits used.
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 989 : Argument out of range.  Least significant bits used.
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 997 : Found opcode in column 1. (return)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1045 : Found opcode in column 1. (return)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 11 : Found label after column 1. (del_loop0)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 16 : Found label after column 1. (_loopknt)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1059 : Found opcode in column 1. (return)
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1323 : Found directive in column 1. (end)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1058 : Found opcode in column 1. (return)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1286 : Found directive in column 1. (end)

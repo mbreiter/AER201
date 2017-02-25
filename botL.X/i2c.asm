@@ -31,8 +31,8 @@ I2C_Master_INIT
     movlw   b'00101000'
     movwf   SSPCON1
     clrf    SSPCON2
-    movlw   24		    ;100kHz baud rate: 10000000 osc / [4*100000] -1
-    movwf   SSPADD	    ;RTC only supports 100kHz
+    movlw   24		    ; 100kHz baud rate: 10000000 osc / [4*100000] -1
+    movwf   SSPADD	    ; RTC only supports 100kHz
     bsf	    TRISC, 3
     bsf	    TRISC, 4
     return
@@ -43,7 +43,7 @@ WAIT
     goto    WAIT
    
     movlw   0x1F
-    andwf   SSPCON2, w
+    andwf   SSPCON2, 0
     iorlw   0x00
     bnz	    WAIT
     return

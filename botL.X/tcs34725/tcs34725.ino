@@ -1,40 +1,37 @@
-  #include <Wire.h>
-  #include "Adafruit_TCS34725.h"
-  /* Connect SCL    to analog 5
-     Connect SDA    to analog 4
-     Connect VDD    to 3.3V DC
-     Connect GROUND to common ground */
+//Interface Arduino with PIC over I2C Connection
+//Outputs keypad char to serial monitor until AAA sequence is given
+//Then it will output serial input to LCD display
+//Remember to enable the Arduino-PIC switches on RC3 and RC4! 
+
+#include <Wire.h>
+#include "Adafruit_TCS34725.h"
+
+
+void setup() {
+  Wire.begin(8);                // join i2c bus with address 8
+  Wire.onReceive(receiveEvent); 
+  Wire.onRequest(requestEvent); 
+
+  Serial.begin(9600);           
+}
+
+int state = 1;
+char incomingByte;
+char sort_bottle = 0;
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X);
+int sensorPin1 = 2;
+int sensorValue1 = 0;
+int sensorPin2 = 3;
+int sensorValue2 = 0;
   
-  /* Initialise with default values (int time = 2.4ms, gain = 1x) */
-  // Adafruit_TCS34725 tcs = Adafruit_TCS34725();
-  
-  /* Initialise with specific int time and gain values */
-  Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X);
-  
-  int sensorPin1 = 2;
-  int sensorValue1 = 0;
-  int sensorPin2 = 3;
-  int sensorValue2 = 0;
-  
-  char sort_bottle = 0;
-  int state = 0;
-  char incomingByte;
-  char buf[3];
-  int counter = 0;
-  
-  void setup(void) {
-    // join the i2c bus with address 8
-    Wire.begin(8);
-    Wire.onReceive(receiveEvent);
-    Wire.onRequest(requestEvent);
-  
-    Serial.begin(9600);
+void loop() {
+  if (state && Serial.available() > 0 && !incomingByte) {
+    incomingByte = Serial.read();
   }
+
+  uint16_t r, g, b, c, colorTemp, lux;
   
-  void loop(void) {
-    uint16_t r, g, b, c, colorTemp, lux;
-  
-    // read from the colour sensor
+  // read from the colour sensor
   tcs.getRawData(&r, &g, &b, &c);
   colorTemp = tcs.calculateColorTemperature(r, g, b);
   lux = tcs.calculateLux(r, g, b);
@@ -55,93 +52,35 @@
     Serial.print("Detecting  ");
   }
 
-  else if (colorTemp < 7000) {
-    if ((sensorValue1 == 0) & (sensorValue2 == 0)) {
-      Serial.print("Eska Water Bottle Detected with cap  ");
-      sort_bottle = 0;
-    }
-    else if ((sensorValue1 == 1) & (sensorValue2 == 0)) {
-      Serial.print("Eska Water Bottle Detected without cap  ");
-      sort_bottle = 1;
-    }
-    else if ((sensorValue1 == 0) & (sensorValue2 == 1)) {
-      Serial.print("Eska Water Bottle Detected without cap  ");
-      sort_bottle = 1;
-    }
-    else {
-      Serial.print("Eska Water Bottle Detected  ");
-      sort_bottle = 0;
-    }
-  }
-  else if ((r > g) & (r > b) & (colorTemp >= 7000)) {
-    if ((sensorValue1 == 0) & (sensorValue2 == 0)) {
-      Serial.print("Red YOP Bottle Detected with cap  ");
-      sort_bottle = 2;
-    }
-    else if ((sensorValue1 == 1) & (sensorValue2 == 0)) {
-      Serial.print("Red YOP Bottle Detected without cap ");
-      sort_bottle = 3;
-    }
-    else if ((sensorValue1 == 0) & (sensorValue2 == 1)) {
-      Serial.print("Red YOP Bottle Detected without cap ");
-      sort_bottle = 3;
-    }
-    else {
-      Serial.print("Red YOP Bottle Detected ");
-      sort_bottle = 2;
-    }
-  }
-  else if ((b > g) & (b > r) & (colorTemp >= 7000)) {
-    if ((sensorValue1 == 0) & (sensorValue2 == 0)) {
-      Serial.print("Blue YOP Bottle Detected with cap  ");
-      sort_bottle = 2;
-    }
-    else if ((sensorValue1 == 1) & (sensorValue2 == 0)) {
-      Serial.print("Blue YOP Bottle Detected without cap  ");
-      sort_bottle = 3;
-    }
-    else if ((sensorValue1 == 0) & (sensorValue2 == 1)) {
-      Serial.print("Blue YOP Bottle Detected without cap  ");
-      sort_bottle = 3;
-    }
-    else {
-      Serial.print("Blue YOP Bottle Detected");
-      sort_bottle = 3;
-    }
-  }
-  else if (colorTemp > 7000) {
-    if ((sensorValue1 == 0) & (sensorValue2 == 0)) {
-      Serial.print("YOP Bottle Detected - Colour Unknown with cap  ");
-      sort_bottle = 2;
-    }
-    else if ((sensorValue1 == 1) & (sensorValue2 == 0)) {
-      Serial.print("YOP Bottle Detected - Colour Unknown without cap ");
-      sort_bottle = 3;
-    }
-    else if ((sensorValue1 == 0) & (sensorValue2 == 1)) {
-      Serial.print("YOP Bottle Detected - Colour Unknown without cap ");
-      sort_bottle = 3;
-    }
-    else {
-      Serial.print("YOP Bottle Detected - Colour Unknown  ");
-      sort_bottle = 2;
-    }
+    if ((r > g) & (r > g)) {
+    sort_bottle=1;
+  } else if ((g > b) & (g > r)) {
+    sort_bottle=2;
+  } else if ((b > g) & (b > r)) {
+    sort_bottle=3;
   }
 
+  Serial.println(sort_bottle, DEC);
+  
+}
 
-  if (state && Serial.available() > 0 && !incomingByte) {
-    incomingByte = Serial.read();
+char buf[3];
+int counter=0;
+
+void receiveEvent(int howMany) {
+
+  char x = Wire.read();    // receive byte as char
+  Serial.println(x);       // print to serial output
+
+  buf[counter++] = x;
+  counter=counter==3?0:counter;
+
+  if(buf[0]=='A' && buf[1]=='A' && buf[2]=='A'){
+    state = 1;
   }
 }
 
-// sending sorting determination to the pic
 void requestEvent() {
-  Wire.write(sort_bottle);    // send one byte of data, containing result of detection
+  Wire.write(sort_bottle + 0x31); // respond with message of 1 byte
+  incomingByte=0;           // clear output buffer
 }
-
-
-
-
-
-
-

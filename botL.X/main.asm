@@ -132,6 +132,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     PC1		db	    "PC Interface", 0
     PC2		db	    "Begin <#>", 0
     PCTransfer	db	    "Transferring...", 0
+    PCComplete	db	    "Complete!", 0
     Stopped	db	    "Stopped", 0
     Exe_Time	db	    "Time: ", 0
     SAVE	db	    "Saving...", 0
@@ -465,16 +466,14 @@ INIT
 	; clear ports
         clrf	LATA
         clrf	LATB
-;	bcf	TRISC, SCL
-;	bcf	TRISC, SDA
         clrf	LATC
         clrf	LATD
 	clrf	LATE
 	
 	movlw	b'00000000'
 	movwf	ADCON0
-	movlw	b'11111111'
-	movwf	ADCON1
+;	movlw	b'11111111'
+;	movwf	ADCON1
 	
 	; initializations
 	call	InitLCD
@@ -482,7 +481,7 @@ INIT
 	call	RTC_INIT
 	call	Delay50ms
 	COLOUR_INIT
-	call	INIT_USART
+	;call	INIT_USART
 
 	; interrupts
 	clrf	RCON
@@ -936,9 +935,9 @@ PC_TRANSFER
 	setf	transferring
 	call	ClrLCD
 	Display	PCTransfer
-	;call	DataUSART
+	call	DataUSART
 	clrf	transferring
-	bra	HOLD_PC
+	bra	STANDBY
 	
 ;*******************************************************************************
 ; subroutines
@@ -1059,7 +1058,11 @@ SET_TIME
 return
 	
 INIT_USART
-	movlw	15	; baud rate 9600
+	
+	bsf	TRISC, 7	; set RC7=USART RC
+	bcf	TRISC, 6	; clear RC6=USART TX
+
+	movlw	15		; baud rate 9600
 	movwf	SPBRG
 	clrf	TXSTA
 	
@@ -1070,95 +1073,55 @@ INIT_USART
 	bsf	TXSTA, TXEN	; transmit enabled
 	return
 
-;DataUSART
-;	
-;	movlw	0x02
-;	call	USART_WAIT
-;	movlw	0x0D
-;	call	USART_WAIT
-;	
-;	movlw	d'21'	    ; start of permanent logs
-;	movff	w, L_EE
-;	TransferTable	PCLog1
-;	
-;	; display time here
-;;	rtc_read	0x02
-;;		movf        tens_digit, W
-;;        andlw       b'00000001'
-;;        addlw       0x30
-;;        call        TransmitWaitUSART
-;;        movf        ones_digit, W
-;;        call        TransmitWaitUSART
-;;		movlw		":"
-;;		call		TransmitWaitUSART
-;;		; Dispay minutes
-;;		rtc_read	0x01
-;;		call        SendRTC_USART
-;;		; Dispay AM/PM
-;;		rtc_read	0x02
-;;        movlw       "P"
-;;        btfss       tens_digit, 1
-;;        movlw       "A"
-;;        call        TransmitWaitUSART
-;;        movlw       "M"
-;;        call        TransmitWaitUSART
-;;		movlw		" "
-;;        call        TransmitWaitUSART
-;;		; Display month
-;;		rtc_read	0x05
-;;		call        SendRTC_USART
-;;		movlw		0x2F		; ASCII '/'
-;;		call		TransmitWaitUSART
-;;		; Display day
-;;		rtc_read	0x04
-;;		call        SendRTC_USART
-;;		movlw		0x2F		; ASCII '/'
-;;		call		TransmitWaitUSART
-;;		; Display year
-;;		rtc_read	0x06
-;;		call        SendRTC_USART
-;	
-;	call	USART_LINE
-;	call	USART_LINE
-;	
-;	clrf	counter
-;	incf	counter
-;
-;USART_TRANSFER
-;	movlw	d'21'
-;	mulwf	counter
-;	movff	PRODL, L_EE
-;	movlw	d'9'
-;	addwf	L_EE
-;	READEE	OP_sec, H_EE, L_EE
-;	incf	L_EE
-;	READEE	OP_INT, H_EE, L_EE
-;	incf	L_EE
-;	; call	TransferTime
-;	
-;	; send rtc
-;	movlw	0x09
-;	call	USART_WAIT
-;	movff	PRODL, L_EE
-;	;call	TransferRTC
-;	call	USART_LINE
-;	
-;	
-;	
-;	
-;USART_WAIT
-;	movwf	TXREG
-;	btfss	TXSTA,1
-;	goto	$-2
-;	return
-;
-;USART_LINE
-;	movlw	0x0A
-;	call	USART_WAIT
-;	movlw	0x0D
-;	call	USART_WAIT
-;	return
+DataUSART
+	movlw	0x02
+	call	USART_WAIT
+	movlw	0x0D
+	call	USART_WAIT
 	
+	clrf	counter		; used to cycle through past 9 eeprom logs
+	clrf	counter2	; used to transmit all 18 bits of saved data
+	
+TRANSFER_LOGS
+	movlw	d'21'		; logs are 21 bits apart
+	mulwf	counter		; log number one starts at eeprom address 0
+	movff	PRODL, L_EE	; low address now points to count X 21
+	clrf	counter2
+	
+TRANSFER_DATA	
+	READEE	WREG, H_EE, L_EE
+	call	USART_WAIT	; transfer bit
+    	incf	L_EE
+	
+	incf	counter2
+	movlw	d'18'		; each perm log has 18 bits of saved data, so 
+	cpfseq	counter2	; see if we're at 18. if so, we're done reading
+	bra TRANSFER_DATA	; this permanent log and onto next.
+	
+	call	USART_LINE	; new line because a e s t h e t i c
+	
+	incf	counter
+	movlw	d'8'		; we save up to the last 9 permanent logs
+	cpfseq	counter
+	bra	TRANSFER_LOGS
+	
+	call	LCD_L2
+	Display	PCComplete
+	Delay50N delayR, 0x28	
+	return			; done transmitting data
+	
+USART_WAIT
+	movwf	TXREG
+	btfss	TXSTA,1
+	goto	$-2
+	return
+
+USART_LINE
+	movlw	0x0A
+	call	USART_WAIT
+	movlw	0x0D
+	call	USART_WAIT
+	return
 	
 Delay5us
 	movlw	d'120'

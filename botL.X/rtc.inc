@@ -1,4 +1,4 @@
-extern write_rtc,read_rtc,rtc_convert,i2c_common_setup, regaddress, databyte, datachar,tens_digit,ones_digit
+extern	write_rtc,read_rtc,rtc_convert,i2c_common_setup, regaddress, databyte, datachar,tens_digit,ones_digit
 
 variable _loopknt=0
 
