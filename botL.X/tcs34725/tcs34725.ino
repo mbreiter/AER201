@@ -48,14 +48,14 @@ void loop() {
   // TODO: test plain white yop bottle
 
   // yop bottles almost always have a very high lux
-  if (lux < 1500) {
+  if (lux > 1500) {
     if (((sensorValue1 == 0) & (sensorValue2 == 0))) {
       // there is a cap detected
-      if ((r > g) & (r > g) & r>20000){
+      if ((r > g) & (r > b) & r>2000){
         //  red is detected, and it is intense enough to register a yop
         sort_bottle = 3;
         Serial.println("RED YOP CAP");
-      } else if(((b > r) & (b > g) & b>20000)) {
+      } else if(((b > r) & (b > g) & b>2000)) {
       //  blue is detected, and it is intense enough to register a yop
           sort_bottle = 3;
           Serial.println("BLUE YOP CAP");
@@ -72,11 +72,11 @@ void loop() {
       }      
     } else if( ((sensorValue1 == 0) & (sensorValue2 == 1)) | ((sensorValue1 == 1) & (sensorValue2 == 0))){
       // here no cap is detection, go through same protocal as above
-      if ((r > g) & (r > g) & r>20000){
+      if ((r > g) & (r > b) & r>2000){
         //  red is detected, and it is intense enough to register a yop
         sort_bottle = 4;
         Serial.println("RED YOP NO CAP");
-      } else if(((b > r) & (b > g) & b>20000)) {
+      } else if(((b > r) & (b > g) & b>2000)) {
       //  blue is detected, and it is intense enough to register a yop
           sort_bottle = 4;
           Serial.println("BLUE YOP NO CAP");
@@ -88,7 +88,7 @@ void loop() {
       }
       else {
         // eska without cap
-        sort_bottle = 1;
+        sort_bottle = 2;
         Serial.println("ESKA NO CAP");
       }      
     }     

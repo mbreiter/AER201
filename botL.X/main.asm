@@ -455,7 +455,7 @@ INIT
 	movwf	TRISC
 	movlw	b'00000000'
 	movwf	TRISD
-	movlw	b'00000000'
+	movlw	b'00000111'
 	movwf	TRISE
 
 	; clear ports
@@ -563,7 +563,7 @@ HOLD_STANDBY
 
 IR_TEST
 	movlw	'c'
-	btfsc	PORTA, 0
+	btfsc	PORTE, 0
 	movlw	'n'
 	call	WR_DATA
 	Delay50N delayR, 0x14
@@ -573,87 +573,22 @@ bra IR_TEST
 	
 STEP_TEST
 	movlw	b'00000011'
-	movwf	PORTD
+	movwf	PORTA
 	call	delay5ms
 	
 	movlw	b'00000110'
-	movwf	PORTD
+	movwf	PORTA
 	call	delay5ms
 	
 	movlw	b'00001100'
-	movwf	PORTD
+	movwf	PORTA
 	call	delay5ms
 
 	movlw	b'00001001'
-	movwf	PORTD
+	movwf	PORTA
 	call	delay5ms
 
 	bra STEP_TEST
-	
-CHECK_CLEAR
-	SUB16	CLEAR, RED		    ; check first against red
-	btfss	STATUS, C
-	return				    ; RED > CLEAR
-	
-	SUB16	CLEAR, GREEN		    ; check against green
-	btfss	STATUS, C
-	return				    ; GREEN > CLEAR
-	
-	SUB16	CLEAR, BLUE		    ; check against blue
-	btfss	STATUS, C
-	return				    ; BLUE > CLEAR
-	
-	movlw	'c'			    ; CLEAR > everything else
-	call	WR_DATA
-	bra	LOOPING
-CHECK_RED
-	SUB16	RED, CLEAR		    ; check first against clear
-	btfss	STATUS, C
-	return				    ; CLEAR > RED
-	
-	SUB16	RED, GREEN		    ; check against green
-	btfss	STATUS, C
-	return				    ; GREEN > RED
-	
-	SUB16	RED, BLUE		    ; check against blue
-	btfss	STATUS, C
-	return				    ; BLUE > RED
-	
-	movlw	'r'			    ; RED > everything else
-	call	WR_DATA
-	bra	LOOPING
-CHECK_GREEN
-	SUB16	GREEN, CLEAR		    ; check first against clear
-	btfss	STATUS, C
-	return				    ; CLEAR > GREEN
-	
-	SUB16	GREEN, RED		    ; check against red
-	btfss	STATUS, C
-	return				    ; RED > GREEN
-	
-	SUB16	GREEN, BLUE		    ; check against blue
-	btfss	STATUS, C
-	return				    ; BLUE > GREEN
-	
-	movlw	'g'			    ; GREEN > everything else
-	call	WR_DATA
-	bra	LOOPING
-CHECK_BLUE
-	SUB16	BLUE, CLEAR		    ; check first against clear
-	btfss	STATUS, C
-	return				    ; CLEAR > BLUE
-	
-	SUB16	BLUE, RED		    ; check against red
-	btfss	STATUS, C
-	return				    ; RED > BLUE
-
-	SUB16	BLUE, GREEN		    ; check against green
-	btfss	STATUS, C
-	return				    ; GREEN > CLEAR
-	
-	movlw	'b'			    ; BLUE > everything else
-	call	WR_DATA
-	return
 	
 COLOUR_TEST
 
@@ -664,33 +599,10 @@ LOOPING
 	call	WR_DATA
 	Delay50N delayR, 0x28
 	call	ClrLCD
-	
-	movlw	'r'
-	
+		
 	call	READ_ARDUINO
 	call	WR_DATA
-	
-;	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
-;	Delay50N delayR, 0x02
-	
-;	movlw	0x01		;testing
-;	movwf	CLEAR+1
-;	movlw	0x06
-;	movwf	GREEN+0
-;	movlw	0x03
-;	movwf	RED+0
-;	movlw	0x01
-;	movwf	BLUE+0
-	
-;	movlw	d'0'
-;	cpfseq	RED+0
-;	movlw	'w'
-;	call	WR_DATA
 
-	;call	CHECK_CLEAR
-;	call	CHECK_RED
-;	call	CHECK_GREEN
-;	call	CHECK_BLUE
 	bra LOOPING
 	
 EXECUTION
