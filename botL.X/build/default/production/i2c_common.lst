@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -57,7 +57,7 @@ Warning[205]: Found directive in column 1. (errorlevel)
                       00030 i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
                       00031     btfsc   SSPCON2, ACKSTAT
                       00032     goto    err_address
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -116,7 +116,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00083     bcf     PIR1, SSPIF         ;clear SSPIF interrupt bit
                       00084 endm
                       00085 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  3
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -175,7 +175,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000036 A69E               M     btfss   PIR1, SSPIF
 000038 D???               M     bra     $-2
 00003A EC?? F???          M     call    delay44us
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  4
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -234,7 +234,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000096 0E04           00152         movlw   b'00000100'
 000098 6E89           00153         movwf   LATA
 00009A EF?? F???      00154         goto    WR_END_RTC
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  5
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -293,7 +293,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                           M 
 0000F0 969E               M     bcf     PIR1, SSPIF ;clear SSPIF interrupt bit
 0000F2 0ED1           00174     movlw   0xd1                ; DS1307 address | READ bit
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  6
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -352,7 +352,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00014C D???               M     bra     $-2
 00014E 969E               M     bcf     PIR1, SSPIF
 000150 0012           00201 return
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  7
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -411,7 +411,7 @@ Warning[202]: Argument out of range.  Least significant bits used.
                       00224     i2c_common_stop 
 0001AA 84C5               M     bsf     SSPCON2,PEN
 0001AC B4C5               M     btfsc   SSPCON2,PEN
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  8
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -470,7 +470,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00244     i2c_common_write
 0001FE B0C7               M     btfsc   SSPSTAT, BF
 000200 D???               M     bra     $-2
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE  9
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -529,7 +529,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00025A 0012           00271 return  
                       00272         
 00025C                00273 WRITE_COLOUR_I2C
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 10
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -588,7 +588,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00291 
 0002B8 EF?? F???      00292     goto    WR_END
                       00293 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 11
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 11
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -647,7 +647,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00030A 84C5               M     bsf     SSPCON2,PEN
 00030C B4C5               M     btfsc   SSPCON2,PEN
 00030E D???               M     bra     $-2
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 12
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 12
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -706,14 +706,14 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00339     
 00035C 0012           00340 return
                       00341 
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 13
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 13
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
                       00342     end
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 14
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 14
 
 
 SYMBOL TABLE
@@ -772,7 +772,7 @@ C1OUT                             00000006
 C2INV                             00000005
 C2OUT                             00000007
 CCP1                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 15
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 15
 
 
 SYMBOL TABLE
@@ -831,7 +831,7 @@ CVR2                              00000002
 CVR3                              00000003
 CVRCON                            00000FB5
 CVREN                             00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 16
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 16
 
 
 SYMBOL TABLE
@@ -890,7 +890,7 @@ GIE_GIEH                          00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 17
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 17
 
 
 SYMBOL TABLE
@@ -949,7 +949,7 @@ IRCF1                             00000005
 IRCF2                             00000006
 IRVST                             00000005
 IVRST                             00000005
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 18
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 18
 
 
 SYMBOL TABLE
@@ -1008,7 +1008,7 @@ LVDIE                             00000002
 LVDIF                             00000002
 LVDIN                             00000005
 LVDIP                             00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 19
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 19
 
 
 SYMBOL TABLE
@@ -1067,7 +1067,7 @@ PCLATH                            00000FFA
 PCLATU                            00000FFB
 PD                                00000002
 PDC0                              00000000
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 20
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 20
 
 
 SYMBOL TABLE
@@ -1126,7 +1126,7 @@ PSPIE                             00000007
 PSPIF                             00000007
 PSPIP                             00000007
 PSPMODE                           00000004
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 21
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 21
 
 
 SYMBOL TABLE
@@ -1185,7 +1185,7 @@ RD4                               00000004
 RD5                               00000005
 RD6                               00000006
 RD7                               00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 22
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 22
 
 
 SYMBOL TABLE
@@ -1244,7 +1244,7 @@ SSPCON2                           00000FC5
 SSPEN                             00000005
 SSPIE                             00000003
 SSPIF                             00000003
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 23
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 23
 
 
 SYMBOL TABLE
@@ -1303,7 +1303,7 @@ T3CCP2                            00000006
 T3CKPS0                           00000004
 T3CKPS1                           00000005
 T3CON                             00000FB1
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 24
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 24
 
 
 SYMBOL TABLE
@@ -1362,7 +1362,7 @@ TRISB0                            00000000
 TRISB1                            00000001
 TRISB2                            00000002
 TRISB3                            00000003
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 25
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 25
 
 
 SYMBOL TABLE
@@ -1421,7 +1421,7 @@ WDTCON                            00000FD1
 WR                                00000001
 WREG                              00000FE8
 WREN                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 26
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 26
 
 
 SYMBOL TABLE
@@ -1480,7 +1480,7 @@ _.code_0206                       00000206
 _.code_0218                       00000218
 _.code_0256                       00000256
 _.code_0264                       00000264
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 27
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 27
 
 
 SYMBOL TABLE
@@ -1539,7 +1539,7 @@ _CPD_ON_5H                        0000007F
 _DEBUG_OFF_4L                     000000FF
 _DEBUG_ON_4L                      0000007F
 _DEVID1                           003FFFFE
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 28
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 28
 
 
 SYMBOL TABLE
@@ -1598,7 +1598,7 @@ _WDTPS_1_2H                       000000E1
 _WDTPS_2048_2H                    000000F7
 _WDTPS_256_2H                     000000F1
 _WDTPS_2_2H                       000000E3
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 29
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 29
 
 
 SYMBOL TABLE
@@ -1657,7 +1657,7 @@ regaddress                        00000000
 rtc_convert                       00000152
 tens_digit                        00000005
 write_rtc                         00000022
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  8:55:48         PAGE 30
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   2-26-2017  11:38:53         PAGE 30
 
 
 

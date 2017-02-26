@@ -102,6 +102,12 @@ void loop() {
         Serial.println("ESKA NO CAP");    
     }   
   }
+
+  if (((sensorValue1 == 1) & (sensorValue2 == 1))) {
+        // eska with cap
+        sort_bottle = 5;
+        Serial.println("NO BOTTLE!");    
+    }  
 }
 
 char buf[3];
@@ -121,5 +127,5 @@ void receiveEvent(int howMany) {
 }
 
 void requestEvent() {
-  Wire.write(sort_bottle + 0x30); // respond with message of 1 byte
+  Wire.write(sort_bottle); // respond with message of 1 byte
 }

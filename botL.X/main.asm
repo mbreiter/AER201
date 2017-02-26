@@ -54,6 +54,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	keyH
 	keyD
 	KEY
+	KEY_DETAILS
 	temp_KEY
 	KEY_ISR
 	temp_S	
@@ -87,8 +88,6 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	endHo
 	endMt
 	endMo
-	LED_Count
-	SkipCount
 	exe_sec
 	exe_int
 	timer_H
@@ -103,14 +102,14 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TDATA
 	DETECTION_VAL
 	ESKA
-	ESKA_CAP
+	ESKA_NOCAP
 	YOP
-	YOP_CAP
-	CLEAR:2
-	RED:2
-	GREEN:2
-	BLUE:2
-	temp_colour:2
+	YOP_NOCAP
+	TOTAL_BOTTLES
+	COLLECTIONS_COUNT
+	TRAY_COUNT
+	TRAY_CURRENT
+	TRAY_GOTO
     endc
     
     extern tens_digit, ones_digit
@@ -134,12 +133,8 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     PC2		db	    "Begin <#>", 0
     PCTransfer	db	    "Transferring...", 0
     PCComplete	db	    "Complete!", 0
-    Stopped	db	    "Stopped", 0
-    Exe_Time	db	    "Time: ", 0
     SAVE	db	    "Saving...", 0
-    Safety	db	    "Safety check...", 0
     NoData	db	    "N/A", 0
-    PCLog1	db	    "Time and Date:", 0
 	
 ;*******************************************************************************
 ; macros
@@ -425,13 +420,16 @@ ISR_LOW
 ;	goto		END_ISR_LOW
 
 	; Process KEY
-	swapf		PORTB, W				; Read PORTB<7:4> into W<3:0>
+	swapf		PORTB, 0				; Read PORTB<7:4> into W<3:0>
 	andlw		0x0f
 	movwf		KEY_ISR					; Put W into KEY_ISR
-;	movlw		keyS					; Put keyStar into W to compare to KEY_ISR
-;	cpfseq		KEY_ISR					; If key was '*', skip return
+	movlw		0xff
+	cpfseq		inExecution
 	goto		END_ISR_LOW
-
+	movlw		keyS					; Put keyStar into W to compare to KEY_ISR
+	cpfseq		KEY_ISR					; If key was '*', skip return
+	goto		END_ISR_LOW
+	goto	EXIT_EXE
 	; Reset program counter
 	clrf		TOSU
 	clrf		TOSH
@@ -515,19 +513,14 @@ INIT
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
+	
 	clrf	DETECTION_VAL
 	clrf	ESKA
-	clrf	ESKA_CAP
+	clrf	ESKA_NOCAP
 	clrf	YOP
-	clrf	YOP_CAP
-	clrf	CLEAR+0
-	clrf	CLEAR+1	
-	clrf	RED+0
-	clrf	RED+1
-	clrf	GREEN+0
-	clrf	GREEN+1
-	clrf	BLUE+0
-	clrf	BLUE+1
+	clrf	YOP_NOCAP
+	clrf	TOTAL_BOTTLES
+	clrf	COLLECTIONS_COUNT
 	
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
@@ -556,11 +549,10 @@ HOLD_STANDBY
 	ChangeMode  keyC, PERM_LOG
 	ChangeMode  keyD, PC_MODE
 	bra	HOLD_STANDBY
-
+	
 ;*******************************************************************************
-; execution mode
+; super fun awesome tests that are my favorite thing to do at 3am yay fun great
 ;*******************************************************************************
-
 IR_TEST
 	movlw	'c'
 	btfsc	PORTE, 0
@@ -595,15 +587,14 @@ COLOUR_TEST
 LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
-	movlw	'w'
-	call	WR_DATA
-	Delay50N delayR, 0x28
-	call	ClrLCD
-		
 	call	READ_ARDUINO
+	;addlw	0x30
 	call	WR_DATA
-
 	bra LOOPING
+
+;*******************************************************************************
+; execution mode
+;*******************************************************************************
 	
 EXECUTION
 	call	    ClearEEPROM_21
@@ -626,33 +617,168 @@ EXECUTION
 	clrf	    OP_INT
 	
 	clrf	    ESKA
-	clrf	    ESKA_CAP
+	clrf	    ESKA_NOCAP
 	clrf	    YOP
-	clrf	    YOP_CAP
+	clrf	    YOP_NOCAP
+	clrf	    TOTAL_BOTTLES
+	movlw	    d'1'
+	movwf	    TRAY_CURRENT
 	
-	clrf	    CLEAR
-	clrf	    CLEAR+1	
-	clrf	    RED
-	clrf	    RED+1
-	clrf	    GREEN
-	clrf	    GREEN+1
-	clrf	    BLUE
-	clrf	    BLUE+1
+	; todo: make sure tray is in position one on reset, add some delay
 	
-;COLLECTIONS_STEP
-;	
-;TERM_CHECK
-;	
-;BOTTLE_CHECK
-;
-;COLOUR_ONE
-;
-;COLOUR_TWO
-;	
-;BRAINS
-;	
-;TRAY_STEP
-;	
+COLLECTIONS_STEP
+	clrf	COLLECTIONS_COUNT
+ROTATE_90
+	movlw	b'00000011'
+	movwf	PORTA
+	
+	movlw	b'00000110'
+	movwf	PORTA
+	
+	movlw	b'00001100'
+	movwf	PORTA
+
+	movlw	b'00001001'
+	movwf	PORTA
+	
+	incf	COLLECTIONS_COUNT
+	movlw	d'15'
+	cpfseq	COLLECTIONS_COUNT
+	bra	ROTATE_90
+	
+	bra	DETECTIONS
+	
+DETECTIONS
+	; first up, lets give the 0.5 seconds to process its data
+	Delay50N delayR, 0x0a
+	
+	; reading data from arduino - expect: 1 for eska cap, 2 for eska no cap
+	;				      3 for yop cap, 4 for yop no cap
+	;				      5 for no bottle, get outta here
+	;call	READ_ARDUINO
+	movlw	d'3'			; testing!!!
+	movwf	DETECTION_VAL
+	
+	; now for handling the comparisions
+	movlw	d'5'
+	cpfslt	DETECTION_VAL		; If DETECTION_VAL = 5, make another collections step
+	goto	COLLECTIONS_STEP
+	
+	; okay we have a bottle, increment toal and see what it is
+	incf	TOTAL_BOTTLES
+
+	movlw	d'4'
+	subwf	DETECTION_VAL, 0
+	bz	INC_YOPNOCAP
+	
+	movlw	d'3'
+	subwf	DETECTION_VAL, 0
+	bz	INC_YOPCAP
+	
+	movlw	d'2'
+	subwf	DETECTION_VAL, 0
+	bz	INC_ESKANOCAP
+	
+	movlw	d'1'
+	subwf	DETECTION_VAL, 0
+	bz	INC_ESKACAP
+	
+	;make some kind of fail safe here.
+	
+INC_YOPNOCAP
+	incf	YOP_NOCAP
+
+	; determine what position to rotate the tray to: brute force, but w/e
+	movlw	d'4'
+	movwf	TRAY_GOTO
+	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
+	bz	TRAY_STEP_END
+	
+	movlw	d'3'
+	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CW
+	bz	ONE_CW	
+	
+	movlw	d'2'
+	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 2 spots over CW
+	bz	TWO_CW
+	
+	movlw	d'1'
+	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 3 spots over CW
+	bz	THREE_CW
+	
+INC_YOPCAP
+	incf	YOP
+	
+	; determine what position to rotate the tray to: brute force, but w/e
+	movlw	d'3'
+	movwf	TRAY_GOTO
+	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
+	bz	TRAY_STEP_END
+	
+	movlw	d'4'
+	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 1 spot over CCW
+	bz	ONE_CCW	
+	
+	movlw	d'2'
+	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CW
+	bz	ONE_CW
+	
+	movlw	d'1'
+	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 2 spots over CW
+	bz	TWO_CW
+	
+INC_ESKANOCAP
+	incf	ESKA_NOCAP
+	
+	; determine what position to rotate the tray to: brute force, but w/e
+	movlw	d'2'
+	movwf	TRAY_GOTO
+	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
+	bz	TRAY_STEP_END
+	
+	movlw	d'4'
+	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 2 spots over CCW
+	bz	TWO_CCW	
+	
+	movlw	d'3'
+	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CCW
+	bz	ONE_CCW
+	
+	movlw	d'1'
+	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 1 spot over CW
+	bz	ONE_CW
+	
+INC_ESKACAP
+	incf	ESKA
+	
+	; determine what position to rotate the tray to: brute force, but w/e
+	movlw	d'1'
+	movwf	TRAY_GOTO
+	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
+	bz	TRAY_STEP_END
+	
+	movlw	d'4'
+	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 3 spots over CCW
+	bz	THREE_CCW	
+	
+	movlw	d'3'
+	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 2 spots over CCW
+	bz	TWO_CCW
+	
+	movlw	d'1'
+	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CCW
+	bz	ONE_CCW
+
+TRAY_STEP
+
+TRAY_STEP_END
+	
+CHECK_DONE
+	movlw	d'9'
+	cpfseq	TOTAL_BOTTLES
+	goto	COLLECTIONS_STEP
+	
+	bra	EXIT_EXE	
 
 HOLD_EXE
 	call	    READ_KEY
@@ -672,7 +798,7 @@ EXIT_EXE
 	WriteEE	    WREG, H_EE, L_EE
 	incf	    L_EE
 	
-	movff	    ESKA_CAP, WREG
+	movff	    ESKA_NOCAP, WREG
 	addlw	    0x30
 	WriteEE	    WREG, H_EE, L_EE
 	incf	    L_EE
@@ -682,7 +808,7 @@ EXIT_EXE
 	WriteEE	    WREG, H_EE, L_EE
 	incf	    L_EE
 	
-	movff	    YOP_CAP, WREG
+	movff	    YOP_NOCAP, WREG
 	addlw	    0x30
 	WriteEE	    WREG, H_EE, L_EE
 	incf	    L_EE
@@ -741,15 +867,12 @@ LOG
 	; display most recent run data
 	movlw	d'10'
 	movwf	L_EE
-;	READEE	OP_sec, H_EE, L_EE
-;	incf	L_EE
-;	READEE	OP_INT, H_EE, L_EE
-;	incf	L_EE
 	call	DisplayExeTime
 
 	call	LCD_L2
-	clrf	L_EE
-	call	DispOpRTC
+	movlw	d'13'		    ; sorting stats begin at bit 14 in eeprom
+	movwf	L_EE
+	call	DispOpSort
 
 HOLD_LOG
 	call	READ_KEY
@@ -759,7 +882,9 @@ HOLD_LOG
 
 LOG_INFO
 	call	ClrLCD
-	Display	LogInfo1
+	clrf	L_EE
+	call	DispOpRTC
+	
 	call	LCD_L2
 	Display LogInfo2
 	clrf	H_EE
@@ -838,8 +963,23 @@ displayNum
 	
 HOLD_PLOG
 	call	READ_KEY
+	ChangeMode  keyA, PLOG_DETAILS
 	ChangeMode  key0, PERM_LOG	; back to perm log menu
 	bra HOLD_PLOG
+	
+PLOG_DETAILS
+	call	ClrLCD
+	
+	Display	Log1
+	call	DisplayExeTime
+	
+	call	LCD_L2
+	call	DispOpSort
+	
+HOLD_PLOG_DETAILS
+	call	READ_KEY
+	ChangeMode  key0, PERM_LOG	; back to perm log menu
+	bra HOLD_PLOG_DETAILS
 	
 ;*******************************************************************************
 ; pc interface
@@ -1167,6 +1307,61 @@ NoSkipDispExeTime
 SkipDispExeTime
 	return
 
+DispOpSort
+	READEE	REG_EE, H_EE, L_EE
+	movlw	0xff
+	cpfseq	REG_EE
+	goto	NoSkipDispOpSort
+	Display	NoData
+	movlw	0xff
+	cpfslt	REG_EE
+	goto	SkipDispOpSort
+
+NoSkipDispOpSort
+	movlw	"a"
+	call	WR_DATA
+	
+	READEE	REG_EE, H_EE, L_EE
+	movff	REG_EE, WREG
+	call	WR_DATA
+	incf	L_EE
+	
+	movlw	" "
+	call	WR_DATA
+	
+	movlw	"b"
+	call	WR_DATA
+	
+	READEE	REG_EE, H_EE, L_EE
+	movff	REG_EE, WREG
+	call	WR_DATA
+	incf	L_EE
+	
+	movlw	" "
+	call	WR_DATA
+	
+	movlw	"c"
+	call	WR_DATA
+	
+	READEE	REG_EE, H_EE, L_EE
+	movff	REG_EE, WREG
+	call	WR_DATA
+	incf	L_EE
+	
+	movlw	" "
+	call	WR_DATA
+	
+	movlw	"d"
+	call	WR_DATA
+	
+	READEE	REG_EE, H_EE, L_EE
+	movff	REG_EE, WREG
+	call	WR_DATA
+	incf	L_EE
+
+SkipDispOpSort
+	return
+	
 DispOpRTC
 	READEE	REG_EE, H_EE, L_EE
 	movlw	0xff
