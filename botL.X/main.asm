@@ -1214,7 +1214,7 @@ READ_KEY_TIME
 	call	    LCD_L2	    ; go to second line to print RTC
 
 	; display the time
-	; call	DISPLAY_RTC
+	call	DISPLAY_RTC
 
 	btfss	    PORTB, 1	; keypad interrupt
 	goto	    READ_KEY_TIME
