@@ -82,5 +82,4 @@ void receiveEvent(int howMany) {
 
 void requestEvent() {
   Wire.write(sort_bottle + 0x31); // respond with message of 1 byte
-set  incomingByte=0;           // clear output buffer
 }

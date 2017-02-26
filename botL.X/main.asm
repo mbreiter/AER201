@@ -114,7 +114,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     endc
     
     extern tens_digit, ones_digit
-    extern READ_ARDUINO
+    extern READ_ARDUINO, INIT_RTC
     
 ;*******************************************************************************
 ; tables
@@ -169,8 +169,6 @@ ConfigLCD   macro
 
           movlw     b'00001100'    ; display on/off
           call      WR_INS
-         ; movlw     B'00000110'    ; Entry mode
-         ; call      WR_INS
           movlw     b'00000001'    ; Clear ram
           call      WR_INS
 	  endm
@@ -348,7 +346,7 @@ saveContext macro
     endm
 
 restoreContext macro
-    swapf   temp_W, W               ; restore W first
+    swapf   temp_W, 0               ; restore W first
     movff   temp_S, STATUS	    ; restore STATUS last without affecting W
     endm
 ;*******************************************************************************
@@ -449,7 +447,7 @@ END_ISR_LOW
 ;*******************************************************************************
 INIT
 	; i/o
-	movlw	b'11111111'
+	movlw	b'00000000'
 	movwf	TRISA
 	movlw	b'11111111'
 	movwf	TRISB		    ; keypad
@@ -457,32 +455,36 @@ INIT
 	movwf	TRISC
 	movlw	b'00000000'
 	movwf	TRISD
-	movlw	b'00000111'
+	movlw	b'00000000'
 	movwf	TRISE
 
-	; analog/digital pins
-	movlw	b'00001111'     ; Set all AN pins to Digital
-	movwf   ADCON1
-
 	; clear ports
-        clrf	LATA
-        clrf	LATB
-        clrf	LATC
-        clrf	LATD
-	clrf	LATE
+	movlw	b'00000000'
+	movwf	LATA
+	movlw	b'00000000'
+	movwf	LATB
+	movlw	b'00000000'
+	movwf	LATC
+	movlw	b'00000000'
+	movwf	LATD
+	movlw	b'00000000'
+	movwf	LATE
 	
 	movlw	b'00000000'
 	movwf	ADCON0
-;	movlw	b'11111111'
-;	movwf	ADCON1
+	movlw	b'11111111'
+	movwf	ADCON1
 	
 	; initializations
 	call	InitLCD
 	ConfigLCD
+	
+	call	i2c_common_setup
+	
 	call	RTC_INIT
-	call	Delay50ms
-	COLOUR_INIT
-	;call	INIT_USART
+	call	ARDUINO_INIT
+	;COLOUR_INIT
+	call	INIT_USART
 
 	; interrupts
 	clrf	RCON
@@ -663,7 +665,9 @@ LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
 	
-	call READ_ARDUINO
+	movlw	'r'
+	
+	call	READ_ARDUINO
 	call	WR_DATA
 	
 ;	COLOUR_GET_DATA CLEAR, RED, GREEN, BLUE
@@ -956,6 +960,9 @@ PC_TRANSFER
 ; subroutines
 ;*******************************************************************************
 
+ARDUINO_INIT
+return
+	
 RTC_INIT
 	; set sda and scl to high
 	bcf	PORTC, 4
@@ -963,7 +970,8 @@ RTC_INIT
 	bsf	TRISC, 4
 	bsf	TRISC, 3
 	
-	call	i2c_common_setup
+	call	INIT_RTC
+	
 	;call	SET_TIME
 return
 	
@@ -1010,7 +1018,7 @@ SAVE_EXE_TIME
 return
 	
 		
-DISPLAY_RTC	
+DISPLAY_RTC
 	; display data in this format hh/minmin/yy yy/mm/dd
 	rtc_read    0x02	    ; 0x02 from DS1307 - hours
 	movff	tens_digit,WREG
@@ -1064,9 +1072,9 @@ SET_TIME
 
 	rtc_set	0x06,	b'00010111'		; Year 17
 	rtc_set	0x05,	b'00000010'		; Month 2
-	rtc_set	0x04,	b'00011001'		; Date 19
-	rtc_set	0x02,	b'00010001'		; Hours 11
-	rtc_set	0x01,	b'00111000'		; Minutes 38
+	rtc_set	0x04,	b'00100101'		; Date 25
+	rtc_set	0x02,	b'00100010'		; Hours 
+	rtc_set	0x01,	b'00100101'		; Minutes 25
 	rtc_set	0x00,	b'00000000'		; Seconds 0
 return
 	
@@ -1206,7 +1214,7 @@ READ_KEY_TIME
 	call	    LCD_L2	    ; go to second line to print RTC
 
 	; display the time
-	call	DISPLAY_RTC
+	; call	DISPLAY_RTC
 
 	btfss	    PORTB, 1	; keypad interrupt
 	goto	    READ_KEY_TIME

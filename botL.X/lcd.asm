@@ -31,7 +31,7 @@ LCD_DELAY macro
 	endm
 
 	code
-	global InitLCD,WrtLCD,ClkLCD,ClrLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms
+	global InitLCD,WrtLCD,ClkLCD,ClrLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms,delay44us
 
 ; ****************************************************************************
 ; GLOBAL SUBROUTINES
