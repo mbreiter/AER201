@@ -33,13 +33,14 @@ void loop() {
   sensorValue1 = digitalRead(sensorPin1);
   sensorValue2 = digitalRead(sensorPin2);
 
-//  Serial.print("Color Temp: "); Serial.print(colorTemp, DEC); Serial.print(" K - ");
-//  Serial.print("Lux: "); Serial.print(lux, DEC); Serial.print(" - ");
-//  Serial.print("Red: "); Serial.print(r, DEC); Serial.print(" ");
-//  Serial.print("Green: "); Serial.print(g, DEC); Serial.print(" ");
-//  Serial.print("Blue: "); Serial.print(b, DEC); Serial.print(" ");
-//  Serial.print("Clear: "); Serial.print(c, DEC); Serial.print(" ");
-//  Serial.println(" ");
+  Serial.print("Color Temp: "); Serial.print(colorTemp, DEC); Serial.print(" K - ");
+  Serial.print("Lux: "); Serial.print(lux, DEC); Serial.print(" - ");
+  Serial.print("Red: "); Serial.print(r, DEC); Serial.print(" ");
+  Serial.print("Green: "); Serial.print(g, DEC); Serial.print(" ");
+  Serial.print("Blue: "); Serial.print(b, DEC); Serial.print(" ");
+  Serial.print("Clear: "); Serial.print(c, DEC); Serial.println(" ");
+  Serial.print("Sensor 1: "); Serial.print(sensorValue1); Serial.println(" ");
+  Serial.print("Sensor 2: "); Serial.print(sensorValue2); Serial.println(" ");  
 
   if (lux < 100) {
     Serial.print("Detecting  ");
@@ -108,6 +109,9 @@ void loop() {
         sort_bottle = 5;
         Serial.println("NO BOTTLE!");    
     }  
+
+    Serial.println(" ____ ");
+
 }
 
 char buf[3];

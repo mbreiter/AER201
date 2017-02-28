@@ -564,19 +564,19 @@ IR_TEST
 bra IR_TEST
 	
 STEP_TEST
-	movlw	b'00000011'
+	movlw	b'00100011'
 	movwf	PORTA
 	call	delay5ms
 	
-	movlw	b'00000110'
+	movlw	b'00100110'
 	movwf	PORTA
 	call	delay5ms
 	
-	movlw	b'00001100'
+	movlw	b'00101100'
 	movwf	PORTA
 	call	delay5ms
 
-	movlw	b'00001001'
+	movlw	b'00101001'
 	movwf	PORTA
 	call	delay5ms
 
@@ -687,6 +687,7 @@ DETECTIONS
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
+	goto	TRAY_STEP_END
 
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'4'
@@ -696,78 +697,81 @@ INC_YOPNOCAP
 	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CW
-	bz	ONE_CW	
+	;bz	ONE_CW	
 	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 2 spots over CW
-	bz	TWO_CW
+	;bz	TWO_CW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 3 spots over CW
-	bz	THREE_CW
+	;bz	THREE_CW
 	
 INC_YOPCAP
 	incf	YOP
+	goto	TRAY_STEP_END
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'3'
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
+	;bz	TRAY_STEP_END
 	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 1 spot over CCW
-	bz	ONE_CCW	
+	;bz	ONE_CCW	
 	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CW
-	bz	ONE_CW
+	;bz	ONE_CW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 2 spots over CW
-	bz	TWO_CW
+	;bz	TWO_CW
 	
 INC_ESKANOCAP
 	incf	ESKA_NOCAP
+	goto	TRAY_STEP_END
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'2'
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
+	;bz	TRAY_STEP_END
 	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 2 spots over CCW
-	bz	TWO_CCW	
+	;bz	TWO_CCW	
 	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CCW
-	bz	ONE_CCW
+	;bz	ONE_CCW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 1 spot over CW
-	bz	ONE_CW
+	;bz	ONE_CW
 	
 INC_ESKACAP
 	incf	ESKA
+	goto	TRAY_STEP_END
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'1'
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
+	;bz	TRAY_STEP_END
 	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 3 spots over CCW
-	bz	THREE_CCW	
+	;bz	THREE_CCW	
 	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 2 spots over CCW
-	bz	TWO_CCW
+	;bz	TWO_CCW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CCW
-	bz	ONE_CCW
+	;bz	ONE_CCW
 
 TRAY_STEP
 
@@ -1185,7 +1189,7 @@ TRANSFER_DATA
 	
 USART_WAIT
 	movwf	TXREG
-	btfss	TXSTA,1
+	btfss	TXSTA, 1
 	goto	$-2
 	return
 
