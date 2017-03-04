@@ -15,15 +15,12 @@ udata
 regaddress res 1
 databyte res 1
 datachar res 1
-data_colourL res 1
-data_colourH res 1
 tens_digit res 1
 ones_digit res 1
 convert_buffer res 1
 
 global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C, READ_ARDUINO, INIT_ARDUINO, INIT_RTC
 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
-global data_colourL, data_colourH
  
 extern delay44us
 
@@ -79,7 +76,6 @@ i2c_common_write macro
     movwf   SSPBUF
     btfss   PIR1, SSPIF
     bra	    $-2
-    call    delay44us
     bcf	    PIR1, SSPIF		;clear SSPIF interrupt bit
 endm
 
@@ -88,7 +84,6 @@ i2c_common_read macro
     btfss   PIR1, SSPIF
     bra	    $-2
     bcf	    PIR1, SSPIF
-    call    delay44us
     movff   SSPBUF, WREG
 endm
 
@@ -159,14 +154,13 @@ return
 read_rtc
     i2c_common_start
     
-    movlw   0xd0 ;DS1307 address | WRITE bit
+    movlw   0xd0		;DS1307 address | WRITE bit
     i2c_common_write
     i2c_common_check_ack RD_ERR1_RTC
         
     ;Write data to I2C bus (Register Address in RTC)
     movff   regaddress, WREG	; Set register pointer in RTC
     i2c_common_write
-    call delay44us
     i2c_common_check_ack RD_ERR2_RTC
         
     ;Re-Select the DS1307 on the bus, in READ mode
@@ -178,7 +172,7 @@ read_rtc
     ;Read data from I2C bus (Contents of Register in RTC)
     i2c_common_read
     movwf   datachar
-    i2c_common_nack ;Send acknowledgement of data reception
+    i2c_common_nack		;Send acknowledgement of data reception
     goto RD_END_RTC
 
     RD_ERR1_RTC

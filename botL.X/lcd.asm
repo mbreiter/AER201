@@ -7,14 +7,14 @@ E 	equ 3
 #define		LCD_RS      LATD, 2        ; for v 1.0 used PORTD.3
 #define		LCD_E       LATD, 3        ; for v 1.0 used PORTD.2
 
-lcd_tmp		equ		0x70
-lcd_d1		equ		0x71
-lcd_d2		equ		0x72
-temp_lcd	equ		0x73           ; buffer for Instruction
-dat		equ		0x74           ; buffer for data
-delay1		equ		0x75
-delay2		equ		0x76
-delay3		equ		0x77
+lcd_tmp		equ		0x68
+lcd_d1		equ		0x69
+lcd_d2		equ		0x70
+temp_lcd	equ		0x71           ; buffer for Instruction
+dat		equ		0x72           ; buffer for data
+delay1		equ		0x73
+delay2		equ		0x74
+delay3		equ		0x75
 
 ;Helper macros
 WRT_LCD macro val
@@ -44,7 +44,7 @@ InitLCD
 	call lcdLongDelay
 	;Ensure 8-bit mode first (no way to immediately guarantee 4-bit mode)
 	; -> Send b'0011' 3 times
-    bcf     PORTD,RS       ;Instruction mode
+	bcf     PORTD,RS       ;Instruction mode
 	movlw   B'00110000'
 	call    MovMSB
 	call    ClkLCD         ;Finish last 4-bit send (if reset occurred in middle of a send)
@@ -76,11 +76,11 @@ InitLCD
 WR_INS
 		bcf	LCD_RS	  				; clear Register Status bit
 		movwf	temp_lcd			; store instruction
-		andlw	0xF0			  	; mask 4 bits MSB
+		andlw	0xf0			  	; mask 4 bits MSB
 		movwf	LATD			  	; send 4 bits MSB
 
 		bsf	LCD_E					; pulse enable high
-		swapf	temp_lcd, WREG		; swap nibbles
+		swapf	temp_lcd, 0		; swap nibbles
 		andlw	0xF0			  	; mask 4 bits LSB
 		bcf	LCD_E
 		movwf	LATD			  	; send 4 bits LSB
@@ -98,13 +98,13 @@ WR_INS
 WR_DATA
 		bcf		LCD_RS					; clear Register Status bit
         movwf   dat					; store character
-        movf	dat, WREG
+        movff	dat, WREG
 		andlw   0xF0			  	; mask 4 bits MSB
         addlw   4					; set Register Status
         movwf   PORTD			  	; send 4 bits MSB
 
 		bsf		LCD_E					; pulse enable high
-        swapf   dat, WREG		  	; swap nibbles
+        swapf   dat, 0		  	; swap nibbles
         andlw   0xF0			  	; mask 4 bits LSB
 		bcf		LCD_E
         addlw   4					; set Register Status
@@ -121,7 +121,7 @@ WrtLCD
 	movwf   lcd_tmp ; store original value
 	call    MovMSB  ; move MSB to PORTD
 	call    ClkLCD
-	swapf   lcd_tmp,w ; Swap LSB of value into MSB of W
+	swapf   lcd_tmp,0 ; Swap LSB of value into MSB of W
     call    MovMSB    ; move to PORTD
     call    ClkLCD
 
@@ -159,9 +159,9 @@ LCD_L2
 ;MovMSB: Move MSB of W to PORTD, without disturbing LSB
 MovMSB
     andlw 0xF0
-    iorwf PORTD,f
+    iorwf PORTD,1
     iorlw 0x0F
-    andwf PORTD,f
+    andwf PORTD,1
     return
 
     ;Delay: ~5ms
@@ -170,7 +170,7 @@ lcdLongDelay
     movwf lcd_d2
 LLD_LOOP
     LCD_DELAY
-    decfsz lcd_d2,f
+    decfsz lcd_d2,1
     goto LLD_LOOP
     return
 
@@ -184,7 +184,7 @@ delay44us
 
 Delay44usLoop
 
-		decfsz	delay1, f
+		decfsz	delay1, 1
 		goto	Delay44usLoop
 		return
 delay5ms
@@ -194,9 +194,9 @@ delay5ms
 		movwf	delay2,0
 
 Delay5msLoop
-		decfsz	delay1, f
+		decfsz	delay1, 1
 		goto	d2
-		decfsz	delay2, f
+		decfsz	delay2, 1
 d2		goto	Delay5msLoop
 		return
 

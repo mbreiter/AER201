@@ -54,7 +54,6 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	keyH
 	keyD
 	KEY
-	KEY_DETAILS
 	temp_KEY
 	KEY_ISR
 	temp_S	
@@ -64,7 +63,6 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	temp
 	OP_sec
 	OP_INT
-	temp_ISR
 	delayR
 	d5us
 	d200us
@@ -78,28 +76,11 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	tempL_EE
 	tempL_EEC
 	MAX_EE   
-	READ_EE
 	last_log
-	startHt
-	startHo
-	startMt
-	startMo
-	endHt
-	endHo
-	endMt
-	endMo
-	exe_sec
-	exe_int
-	timer_H
-	timer_L
-	convert_buffer
 	transferring
 	PC_PCL
 	PC_PCLATH
 	PC_PCLATU
-	TIMCNT
-	CPCNT
-	TDATA
 	DETECTION_VAL
 	ESKA
 	ESKA_NOCAP
@@ -108,8 +89,10 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TOTAL_BOTTLES
 	COLLECTIONS_COUNT
 	TRAY_COUNT
+	TRAY_DELAY
 	TRAY_CURRENT
 	TRAY_GOTO
+	STOP_CONDITION
     endc
     
     extern tens_digit, ones_digit
@@ -228,10 +211,7 @@ Again
 	    btfsc	REG_EE, 7	; if bit 7 set then done
 	    goto	Finish
 Finish
-	    endm
-	    
-;TransferLog macro   addrH, addrL
-	
+	    endm	
 
 incf_BCD    macro   BCD
 	local ones, endBCD
@@ -360,32 +340,32 @@ ISR_HIGH
 	saveContext
 	
 	; displaying the execution time in seconds
-	swapf	OP_sec, WREG	; 100's seconds
-	movwf	temp
-	movlw	0x0F
-	andwf	temp
-	movff	temp, WREG
-	addlw	0x30
-	call	WR_DATA
-
-	movff	OP_sec, temp	; 10's seconds
-	movlw	0x0F
-	andwf	temp		; Temp = lower nibble of Op_sec
-	movff	temp, WREG	; W = Temp
-	addlw	0x30		; Convert to ASCII
-	call	WR_DATA
-	
-	swapf	OP_INT, WREG	;1's seconds
-	movwf	temp
-	movlw	0x0f
-	andwf	temp
-	movff	temp, WREG
-	addlw	0x30
-	call	WR_DATA
-
-	movlw	0x73		; Write 's'
-	call	WR_DATA
-	call	LCD_L2
+;	swapf	OP_sec, 0	; 100's seconds
+;	movwf	temp
+;	movlw	0x0f
+;	andwf	temp
+;	movff	temp, WREG
+;	addlw	0x30
+;	call	WR_DATA
+;
+;	movff	OP_sec, temp	; 10's seconds
+;	movlw	0x0f
+;	andwf	temp		; Temp = lower nibble of Op_sec
+;	movff	temp, WREG	; W = Temp
+;	addlw	0x30		; Convert to ASCII
+;	call	WR_DATA
+;	
+;	swapf	OP_INT, WREG	;1's seconds
+;	movwf	temp
+;	movlw	0x0f
+;	andwf	temp
+;	movff	temp, WREG
+;	addlw	0x30
+;	call	WR_DATA
+;
+;	movlw	0x73		; Write 's'
+;	call	WR_DATA
+;	call	LCD_L2
 
 	;reset timer 
 	movlw	0xc6
@@ -411,29 +391,39 @@ END_ISR_HIGH
 ISR_LOW
 	saveContext
 	; KEYPAD INTERRUPT
-	btfss		INTCON3, INT1IF			; If KEYPAD interrupt, skip return
-	goto		END_ISR_LOW
+	btfss	INTCON3, INT1IF		; If KEYPAD interrupt, skip return
+	goto	END_ISR_LOW
 
-	;Check operation status
-;	movlw		0xff					; If in operation, skip return
-;	cpfseq		InExecution
-;	goto		END_ISR_LOW
+	; check operation status
+	movlw	0xff			; If in operation, skip return
+	cpfseq	inExecution
+	goto	END_ISR_LOW
 
-	; Process KEY
-	swapf		PORTB, 0				; Read PORTB<7:4> into W<3:0>
-	andlw		0x0f
-	movwf		KEY_ISR					; Put W into KEY_ISR
-	movlw		0xff
-	cpfseq		inExecution
-	goto		END_ISR_LOW
-	movlw		keyS					; Put keyStar into W to compare to KEY_ISR
-	cpfseq		KEY_ISR					; If key was '*', skip return
-	goto		END_ISR_LOW
-	goto	EXIT_EXE
-	; Reset program counter
-	clrf		TOSU
-	clrf		TOSH
-	clrf		TOSL
+	; process KEY
+	swapf	PORTB, 0		; Read PORTB<7:4> into W<3:0>
+	andlw	0x0f
+	movwf	KEY_ISR
+	
+	movlw	keyS			; Put keyStar into W to compare to KEY_ISR
+	cpfseq	KEY_ISR			; If key was '*', skip return
+	goto	END_ISR_LOW
+	
+	; reset program counter - emergency stop recorded. 
+	bcf	T0CON, TMR0ON
+	call	SAVE_EXE_TIME
+		
+	; Clear inExecution flag to stop '*' interrupts
+	clrf	inExecution
+	movlw	d'1'
+	movwf	STOP_CONDITION
+	call	SaveData
+	
+	clrf	TOSU
+	clrf	TOSH
+	clrf	TOSL
+	bcf	INTCON3, INT1IF         ; Clear flag for next interrupt
+	restoreContext
+	retfie
 
 END_ISR_LOW
 	bcf			INTCON3, INT1IF         ; Clear flag for next interrupt
@@ -453,7 +443,7 @@ INIT
 	movwf	TRISC
 	movlw	b'00000000'
 	movwf	TRISD
-	movlw	b'00000111'
+	movlw	b'00000000'
 	movwf	TRISE
 
 	; clear ports
@@ -470,8 +460,8 @@ INIT
 	
 	movlw	b'00000000'
 	movwf	ADCON0
-	movlw	b'11111111'
-	movwf	ADCON1
+;	movlw	b'11111111'
+;	movwf	ADCON1
 	
 	; initializations
 	call	InitLCD
@@ -480,7 +470,6 @@ INIT
 	call	i2c_common_setup
 	
 	call	RTC_INIT
-	call	ARDUINO_INIT
 	;COLOUR_INIT
 	call	INIT_USART
 
@@ -536,6 +525,11 @@ INIT
 ; standby mode
 ;*******************************************************************************
 STANDBY
+	movlw	b'00000000'
+	movwf	PORTE
+	movlw	b'00000000'
+	movwf	PORTA
+	
 	call	ClrLCD
 	Display	StandBy
 
@@ -543,7 +537,8 @@ HOLD_STANDBY
 	call	READ_KEY_TIME
 	ChangeMode  key1, COLOUR_TEST
 	ChangeMode  key2, STEP_TEST
-	ChangeMode  key3, IR_TEST
+	ChangeMode  key3, DC_TEST_CW
+	ChangeMode  key4, DC_TEST_CCW
 	ChangeMode  keyA, EXECUTION
 	ChangeMode  keyB, LOG
 	ChangeMode  keyC, PERM_LOG
@@ -553,17 +548,36 @@ HOLD_STANDBY
 ;*******************************************************************************
 ; super fun awesome tests that are my favorite thing to do at 3am yay fun great
 ;*******************************************************************************
-IR_TEST
-	movlw	'c'
-	btfsc	PORTE, 0
-	movlw	'n'
-	call	WR_DATA
-	Delay50N delayR, 0x14
-	call	ClrLCD
-	Delay50N delayR, 0x14
-bra IR_TEST
+
+DC_TEST_CW
+	movlw	b'00000000'
+	movwf	PORTE
+	Delay50N    delayR, 0x0a   
+DC_TEST_CW_HOLD
+	movlw	b'00000001'
+	movwf	PORTE
+
+	call	READ_KEY
+	ChangeMode  key0, STANDBY
+	bra	DC_TEST_CW_HOLD
 	
+DC_TEST_CCW
+	movlw	b'00000000'
+	movwf	PORTE
+	Delay50N    delayR, 0x0a
+DC_TEST_CCW_HOLD
+	movlw	b'00000010'
+	movwf	PORTE
+	
+	call	READ_KEY
+	ChangeMode  key0, STANDBY
+	bra	DC_TEST_CCW_HOLD
+		
 STEP_TEST
+	clrf	COLLECTIONS_COUNT
+	Delay50N    delayR, 0x14
+    
+ROTATE_90_TEST
 	movlw	b'00100011'
 	movwf	PORTA
 	call	delay5ms
@@ -579,16 +593,21 @@ STEP_TEST
 	movlw	b'00101001'
 	movwf	PORTA
 	call	delay5ms
-
-	bra STEP_TEST
 	
+	incf	COLLECTIONS_COUNT
+	movlw	d'120'
+	cpfseq	COLLECTIONS_COUNT
+	bra	ROTATE_90_TEST
+	
+	bra STEP_TEST
+
 COLOUR_TEST
 
 LOOPING
 	Delay50N delayR, 0x28
 	call	ClrLCD
 	call	READ_ARDUINO
-	;addlw	0x30
+	addlw	0x30
 	call	WR_DATA
 	bra LOOPING
 
@@ -598,6 +617,7 @@ LOOPING
 	
 EXECUTION
 	call	    ClearEEPROM_21
+	
 	; save the starting time
 	call	    SAVE_TIME
 		
@@ -606,12 +626,14 @@ EXECUTION
 	call	    ClrLCD
 	Display	    Exe1
 	call	    LCD_L2
+	
 	movlw	    0xc5		    ; setting up timer
 	movwf	    TMR0H
 	movlw	    0x44    
 	movwf	    TMR0L
 	
 	bsf	    T0CON, TMR0ON	    ; turning on timer
+	
 	; initialize variables
 	clrf	    OP_sec
 	clrf	    OP_INT
@@ -623,40 +645,51 @@ EXECUTION
 	clrf	    TOTAL_BOTTLES
 	movlw	    d'1'
 	movwf	    TRAY_CURRENT
+	clrf	    TRAY_DELAY
 	
 	; todo: make sure tray is in position one on reset, add some delay
 	
-COLLECTIONS_STEP
-	clrf	COLLECTIONS_COUNT
-ROTATE_90
-	movlw	b'00000011'
-	movwf	PORTA
-	
-	movlw	b'00000110'
-	movwf	PORTA
-	
-	movlw	b'00001100'
-	movwf	PORTA
+	goto	    COLLECTIONS_STEP
 
-	movlw	b'00001001'
+COLLECTIONS_STEP
+	clrf	    COLLECTIONS_COUNT
+
+ROTATE_90
+	movlw	b'00100011'
 	movwf	PORTA
+	call	delay5ms
+
+	movlw	b'00100110'
+	movwf	PORTA
+	call	delay5ms
+	
+	movlw	b'00101100'
+	movwf	PORTA
+	call	delay5ms
+
+	movlw	b'00101001'
+	movwf	PORTA
+	call	delay5ms
 	
 	incf	COLLECTIONS_COUNT
-	movlw	d'15'
+	movlw	d'120'
 	cpfseq	COLLECTIONS_COUNT
 	bra	ROTATE_90
 	
-	bra	DETECTIONS
+	bra DETECTIONS
 	
 DETECTIONS
 	; first up, lets give the 0.5 seconds to process its data
-	Delay50N delayR, 0x0a
+	;Delay50N delayR, 0x0a
+;	movlw	d'1000'
+;	movwf	TRAY_DELAY
 	
 	; reading data from arduino - expect: 1 for eska cap, 2 for eska no cap
 	;				      3 for yop cap, 4 for yop no cap
 	;				      5 for no bottle, get outta here
 	;call	READ_ARDUINO
-	movlw	d'3'			; testing!!!
+	
+	movlw	d'2'			; testing!!!
 	movwf	DETECTION_VAL
 	
 	; now for handling the comparisions
@@ -687,7 +720,6 @@ DETECTIONS
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
-	goto	TRAY_STEP_END
 
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'4'
@@ -697,97 +729,123 @@ INC_YOPNOCAP
 	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CW
-	;bz	ONE_CW	
+	bz	TRAY_STEP_CW		
 	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 2 spots over CW
-	;bz	TWO_CW
+	bz	TRAY_STEP_CW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 3 spots over CW
-	;bz	THREE_CW
+	bz	TRAY_STEP_CW
 	
 INC_YOPCAP
 	incf	YOP
-	goto	TRAY_STEP_END
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'3'
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	;bz	TRAY_STEP_END
+	bz	TRAY_STEP_END
 	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 1 spot over CCW
-	;bz	ONE_CCW	
+	bz	TRAY_STEP_CCW	
 	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CW
-	;bz	ONE_CW
+	bz	TRAY_STEP_CW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 2 spots over CW
-	;bz	TWO_CW
+	bz	TRAY_STEP_CW
 	
 INC_ESKANOCAP
 	incf	ESKA_NOCAP
-	goto	TRAY_STEP_END
+	goto	CHECK_DONE
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'2'
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	;bz	TRAY_STEP_END
+	bz	TRAY_STEP_END
 	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 2 spots over CCW
-	;bz	TWO_CCW	
+	bz	TRAY_STEP_CCW	
 	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CCW
-	;bz	ONE_CCW
+	bz	TRAY_STEP_CCW
 	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 1 spot over CW
-	;bz	ONE_CW
+	bz	TRAY_STEP_CW
 	
 INC_ESKACAP
 	incf	ESKA
-	goto	TRAY_STEP_END
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'1'
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	;bz	TRAY_STEP_END
+	bz	TRAY_STEP_END
 	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 3 spots over CCW
-	;bz	THREE_CCW	
+	bz	TRAY_STEP_CCW	
 	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 2 spots over CCW
-	;bz	TWO_CCW
+	bz	TRAY_STEP_CCW
 	
-	movlw	d'1'
+	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CCW
-	;bz	ONE_CCW
+	bz	TRAY_STEP_CCW
 
-TRAY_STEP
+TRAY_STEP_CW
+	clrf	TRAY_COUNT
+	movlw	b'00000000'
+	movwf	PORTE
 
+TRAY_CW_HOLD
+	movlw	b'00000001'
+	movwf	PORTE
+
+	incf	TRAY_COUNT
+	movff	TRAY_COUNT, WREG
+	cpfseq	TRAY_DELAY
+	goto	TRAY_CW_HOLD
+	
+	bra	TRAY_STEP_END
+	
+TRAY_STEP_CCW
+	clrf	TRAY_COUNT
+	movlw	b'00000000'
+	movwf	PORTE
+
+TRAY_CCW_HOLD
+	movlw	b'00000010'
+	movwf	PORTE
+
+	incf	TRAY_COUNT
+	movff	TRAY_COUNT, WREG
+	cpfseq	TRAY_DELAY
+	bra	TRAY_CCW_HOLD
+	
+	bra	TRAY_STEP_END
+	
 TRAY_STEP_END
+	movff	TRAY_GOTO, TRAY_CURRENT
+	movlw	b'00000000'
+	movwf	PORTE
 	
 CHECK_DONE
 	movlw	d'9'
 	cpfseq	TOTAL_BOTTLES
 	goto	COLLECTIONS_STEP
 	
-	bra	EXIT_EXE	
-
-HOLD_EXE
-	call	    READ_KEY
-	ChangeMode  keyS, EXIT_EXE
-	bra	    HOLD_EXE
+	goto	EXIT_EXE
 	
 EXIT_EXE
 	; stop timer and save the execution time to eeprom
@@ -796,69 +854,12 @@ EXIT_EXE
 		
 	; Clear inExecution flag to stop '*' interrupts
 	clrf	    inExecution
+	clrf	    STOP_CONDITION	; regular stop, saved in eeprom as 0
 	
-	movff	    ESKA, WREG
-	addlw	    0x30
-	WriteEE	    WREG, H_EE, L_EE
-	incf	    L_EE
-	
-	movff	    ESKA_NOCAP, WREG
-	addlw	    0x30
-	WriteEE	    WREG, H_EE, L_EE
-	incf	    L_EE
-	
-	movff	    YOP, WREG
-	addlw	    0x30
-	WriteEE	    WREG, H_EE, L_EE
-	incf	    L_EE
-	
-	movff	    YOP_NOCAP, WREG
-	addlw	    0x30
-	WriteEE	    WREG, H_EE, L_EE
-	incf	    L_EE
-	
-	goto        SaveData
-
-SaveData
-	call	    ClrLCD
+		call	    ClrLCD
 	Display	    SAVE
-
-	movlw	    d'0'
-	movwf	    H_EE
-	movlw	    d'168'		; take d'168' as last
-	movwf	    L_EE
-	movlw	    d'0'
-	movwf	    tempH_EE
-	movlw	    d'220'		; temp for low constant
-	movwf	    tempL_EE
-	
-	clrf	    counter2
-	clrf	    counter
-	
-ShiftLoop
-	incf		counter
-	READEE		REG_EE, H_EE, L_EE
-	movlw		d'21'
-	addwf		L_EE
-	WriteEE		REG_EE, H_EE, L_EE
-	movlw		d'20'
-	subwf		L_EE
-	movlw		d'21'
-	cpfseq		counter
-	goto		ShiftLoop
-	
-	; Set EEPROM address to the previous 21 byte block, and reset temp address
-	movlw		d'42'
-	subwf		L_EE
-	movlw		d'220'
-	movwf		tempL_EE
-	clrf		counter
-	incf		counter2
-	movlw		d'9'
-	cpfseq		counter2	; Skip if 9 shifts were made
-	goto		ShiftLoop
-
-	goto		LOG
+	call        SaveData
+	goto	    LOG
 
 ;*******************************************************************************
 ; sorting statistics log mode
@@ -1010,14 +1011,74 @@ PC_TRANSFER
 	Display	PCTransfer
 	call	DataUSART
 	clrf	transferring
-	bra	STANDBY
+	goto	STANDBY
 	
 ;*******************************************************************************
 ; subroutines
 ;*******************************************************************************
 
-ARDUINO_INIT
-return
+SaveData
+	movff	    ESKA, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    ESKA_NOCAP, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    YOP, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    YOP_NOCAP, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movff	    STOP_CONDITION, WREG
+	addlw	    0x30
+	WriteEE	    WREG, H_EE, L_EE
+	incf	    L_EE
+	
+	movlw	    d'0'
+	movwf	    H_EE
+	movlw	    d'168'		; take d'168' as last
+	movwf	    L_EE
+	movlw	    d'0'
+	movwf	    tempH_EE
+	movlw	    d'220'		; temp for low constant
+	movwf	    tempL_EE
+	
+	clrf	    counter2
+	clrf	    counter
+	
+ShiftLoop
+	incf		counter
+	READEE		REG_EE, H_EE, L_EE
+	movlw		d'21'
+	addwf		L_EE
+	WriteEE		REG_EE, H_EE, L_EE
+	movlw		d'20'
+	subwf		L_EE
+	movlw		d'21'
+	cpfseq		counter
+	goto		ShiftLoop
+	
+	; Set EEPROM address to the previous 21 byte block, and reset temp address
+	movlw		d'42'
+	subwf		L_EE
+	movlw		d'220'
+	movwf		tempL_EE
+	clrf		counter
+	incf		counter2
+	movlw		d'9'
+	cpfseq		counter2	; Skip if 9 shifts were made
+	goto		ShiftLoop
+
+	return
 	
 RTC_INIT
 	; set sda and scl to high
@@ -1076,6 +1137,7 @@ return
 		
 DISPLAY_RTC
 	; display data in this format hh/minmin/yy yy/mm/dd
+	
 	rtc_read    0x02	    ; 0x02 from DS1307 - hours
 	movff	tens_digit,WREG
 	call	WR_DATA
@@ -1127,10 +1189,10 @@ SET_TIME
 	rtc_set	0x00,	b'10000000'
 
 	rtc_set	0x06,	b'00010111'		; Year 17
-	rtc_set	0x05,	b'00000010'		; Month 2
-	rtc_set	0x04,	b'00100101'		; Date 25
-	rtc_set	0x02,	b'00100010'		; Hours 
-	rtc_set	0x01,	b'00100101'		; Minutes 25
+	rtc_set	0x05,	b'00000011'		; Month 03
+	rtc_set	0x04,	b'00000011'		; Date 03
+	rtc_set	0x02,	b'00100000'		; Hours 20
+	rtc_set	0x01,	b'00100111'		; Minutes 27
 	rtc_set	0x00,	b'00000000'		; Seconds 0
 return
 	

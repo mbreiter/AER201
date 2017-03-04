@@ -1,4 +1,4 @@
-    extern	i2c_common_setup, regaddress, databyte, datachar, READ_COLOUR_I2C, WRITE_COLOUR_I2C, WR_DATA, data_colourL, data_colourH, delay5ms
+    extern	i2c_common_setup, regaddress, databyte, datachar, READ_COLOUR_I2C, WRITE_COLOUR_I2C, WR_DATA, delay5ms
 
 ;    #define TCS34725_ADDRESS          (0x29)
 ;
