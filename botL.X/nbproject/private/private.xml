@@ -5,6 +5,7 @@
         <group>
             <file>file:/Users/mreiter/Desktop/AER201/botL.X/colour.inc</file>
             <file>file:/Users/mreiter/Desktop/AER201/botL.X/main.asm</file>
+            <file>file:/Users/mreiter/Desktop/AER201/botL.X/i2c_common.asm</file>
             <file>file:/Users/mreiter/Desktop/AER201/botL.X/rtc.inc</file>
             <file>file:/Users/mreiter/Desktop/AER201/botL.X/lcd.asm</file>
         </group>

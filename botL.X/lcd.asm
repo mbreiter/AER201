@@ -31,7 +31,7 @@ LCD_DELAY macro
 	endm
 
 	code
-	global InitLCD,WrtLCD,ClkLCD,ClrLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms,delay44us
+	global InitLCD,Shift,WrtLCD,ClkLCD,ClrLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms,delay44us
 
 ; ****************************************************************************
 ; GLOBAL SUBROUTINES
@@ -142,6 +142,11 @@ ClkLCD
 	;LCD_DELAY   ; __    __
     bcf PORTD,E ;   |__|
 	LCD_DELAY
+    return
+    
+Shift
+    movlw   b'00011011'
+    call    WR_INS
     return
 
 ; Change LCD Lines

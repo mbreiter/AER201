@@ -93,6 +93,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TRAY_CURRENT
 	TRAY_GOTO
 	STOP_CONDITION
+	inStandby
     endc
     
     extern tens_digit, ones_digit
@@ -104,6 +105,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     Welcome	db	    "botL", 0
     Team	db	    "mr hl hg", 0
     StandBy	db	    "Standby", 0
+    StandbyInfo db	    "<A>Sort <B>Last Log <C>Perm Logs <D>PC", 0
     Log1	db	    "Time:",0
     Log2	db	    "12:00 2/3/14", 0
     LogInfo1	db	    "Saved:", 0
@@ -338,6 +340,13 @@ restoreContext macro
 
 ISR_HIGH
 	saveContext
+
+	;reset timer 
+	movlw	0xc6
+	movwf	TMR0H
+	movlw	0x3e
+	movwf	TMR0L
+	
 	
 	; displaying the execution time in seconds
 ;	swapf	OP_sec, 0	; 100's seconds
@@ -366,12 +375,6 @@ ISR_HIGH
 ;	movlw	0x73		; Write 's'
 ;	call	WR_DATA
 ;	call	LCD_L2
-
-	;reset timer 
-	movlw	0xc6
-	movwf	TMR0H
-	movlw	0x3e
-	movwf	TMR0L
 		
 	;timer interrupt
 	btfss	INTCON, TMR0IF
@@ -530,11 +533,23 @@ STANDBY
 	movlw	b'00000000'
 	movwf	PORTA
 	
+	setf	inStandby
+	
+	movlw	    0xc5		    ; setting up timer
+	movwf	    TMR0H
+	movlw	    0x44    
+	movwf	    TMR0L
+	
+	bsf	    T0CON, TMR0ON	    ; turning on timer
+	
 	call	ClrLCD
 	Display	StandBy
+	call	LCD_L2
+	Display	StandbyInfo
 
 HOLD_STANDBY
 	call	READ_KEY_TIME
+
 	ChangeMode  key1, COLOUR_TEST
 	ChangeMode  key2, STEP_TEST
 	ChangeMode  key3, DC_TEST_CW
@@ -550,6 +565,7 @@ HOLD_STANDBY
 ;*******************************************************************************
 
 DC_TEST_CW
+	clrf	inStandby
 	movlw	b'00000000'
 	movwf	PORTE
 	Delay50N    delayR, 0x0a   
@@ -562,6 +578,7 @@ DC_TEST_CW_HOLD
 	bra	DC_TEST_CW_HOLD
 	
 DC_TEST_CCW
+	clrf	inStandby
 	movlw	b'00000000'
 	movwf	PORTE
 	Delay50N    delayR, 0x0a
@@ -574,6 +591,7 @@ DC_TEST_CCW_HOLD
 	bra	DC_TEST_CCW_HOLD
 		
 STEP_TEST
+	clrf	inStandby
 	clrf	COLLECTIONS_COUNT
 	Delay50N    delayR, 0x14
     
@@ -602,6 +620,7 @@ ROTATE_90_TEST
 	bra STEP_TEST
 
 COLOUR_TEST
+	clrf	inStandby
 
 LOOPING
 	Delay50N delayR, 0x28
@@ -616,6 +635,9 @@ LOOPING
 ;*******************************************************************************
 	
 EXECUTION
+	clrf	inStandby
+	bcf	    T0CON, TMR0ON
+	
 	call	    ClearEEPROM_21
 	
 	; save the starting time
@@ -866,6 +888,7 @@ EXIT_EXE
 ;*******************************************************************************
 	
 LOG
+	clrf	inStandby
 	call	ClrLCD
 	Display Log1
 
@@ -905,6 +928,7 @@ HOLD_LOG_INFO
 ;*******************************************************************************
 
 PERM_LOG
+	clrf	inStandby
 	call	ClrLCD
 	Display	PermLog1
 	call	LCD_L2
@@ -991,6 +1015,7 @@ HOLD_PLOG_DETAILS
 ;*******************************************************************************
 
 PC_MODE
+	clrf	inStandby
 	call	ClrLCD
 	Display	PC1
 	call	LCD_L2
@@ -1092,7 +1117,8 @@ RTC_INIT
 	;call	SET_TIME
 return
 	
-SAVE_TIME   
+SAVE_TIME
+	rtc_read    0x02	; hours	    ; need to call this twice idk y
 	rtc_read    0x02	; hours
 	call	WriteEE_RTC
 	rtc_read    0x01	; minutes
@@ -1190,9 +1216,9 @@ SET_TIME
 
 	rtc_set	0x06,	b'00010111'		; Year 17
 	rtc_set	0x05,	b'00000011'		; Month 03
-	rtc_set	0x04,	b'00000011'		; Date 03
-	rtc_set	0x02,	b'00100000'		; Hours 20
-	rtc_set	0x01,	b'00100111'		; Minutes 27
+	rtc_set	0x04,	b'00000100'		; Date 04
+	rtc_set	0x02,	b'00010010'		; Hours 12
+	rtc_set	0x01,	b'01001000'		; Minutes 27
 	rtc_set	0x00,	b'00000000'		; Seconds 0
 return
 	
@@ -1330,9 +1356,11 @@ READ_KEY
 
 READ_KEY_TIME
 	call	    LCD_L2	    ; go to second line to print RTC
-
+;	call	    Shift
+;	Delay50N delayR, 0x04
+	
 	; display the time
-	call	DISPLAY_RTC
+	; call	    DISPLAY_RTC	
 
 	btfss	    PORTB, 1	; keypad interrupt
 	goto	    READ_KEY_TIME

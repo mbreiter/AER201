@@ -11,7 +11,7 @@ errorlevel -207
 
 variable _waitknt=0
 
-udata
+udata_acs 0x60
 regaddress res 1
 databyte res 1
 datachar res 1

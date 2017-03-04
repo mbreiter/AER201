@@ -1,4 +1,4 @@
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  1
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -16,7 +16,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00009 
                       01440         LIST
                       00002 #include <lcd.inc>
-  0000                00001     extern      InitLCD,WrtLCD,ClrLCD,ClkLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms
+  0000                00001     extern      InitLCD,WrtLCD,ClrLCD,ClkLCD,WR_INS,WR_DATA,LCD_L1,LCD_L2,delay5ms,Shift
                       00002 
                       00003 
                       00004 
@@ -57,7 +57,7 @@ Warning[205]: Found directive in column 1. (global)
 00000E 0012           00027     return
                       00028     
 000010                00029 I2C_Master_INIT
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  2
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -116,7 +116,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00005A EC?? F???      00077     call    I2C_Master_WAIT   
 00005E                00078 LOOP
 00005E B6C5           00079     btfsc   SSPCON2, RCEN
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  3
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -135,7 +135,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00006E 0012           00090     return
                       00091     
                       00092     end
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  4
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  4
 
 
 SYMBOL TABLE
@@ -194,7 +194,7 @@ C1OUT                             00000006
 C2INV                             00000005
 C2OUT                             00000007
 CCP1                              00000002
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  5
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  5
 
 
 SYMBOL TABLE
@@ -253,7 +253,7 @@ CVR0                              00000000
 CVR1                              00000001
 CVR2                              00000002
 CVR3                              00000003
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  6
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  6
 
 
 SYMBOL TABLE
@@ -312,7 +312,7 @@ GIEH                              00000007
 GIEL                              00000006
 GIE_GIEH                          00000007
 GO                                00000001
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  7
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  7
 
 
 SYMBOL TABLE
@@ -371,7 +371,7 @@ INTCON                            00000FF2
 INTCON2                           00000FF1
 INTCON3                           00000FF0
 INTEDG0                           00000006
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  8
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  8
 
 
 SYMBOL TABLE
@@ -430,7 +430,7 @@ LATD4                             00000004
 LATD5                             00000005
 LATD6                             00000006
 LATD7                             00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE  9
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE  9
 
 
 SYMBOL TABLE
@@ -489,7 +489,7 @@ OV                                00000003
 P                                 00000004
 P1B                               00000005
 P1C                               00000006
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 10
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 10
 
 
 SYMBOL TABLE
@@ -548,7 +548,7 @@ PROD                              00000FF3
 PRODH                             00000FF4
 PRODL                             00000FF3
 PRSEN                             00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 11
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 11
 
 
 SYMBOL TABLE
@@ -607,7 +607,7 @@ RCIE                              00000005
 RCIF                              00000005
 RCIP                              00000005
 RCMT                              00000006
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 12
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 12
 
 
 SYMBOL TABLE
@@ -666,7 +666,7 @@ SSPADD                            00000FC8
 SSPBUF                            00000FC9
 SSPCON1                           00000FC6
 SSPCON2                           00000FC5
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 13
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 13
 
 
 SYMBOL TABLE
@@ -695,6 +695,7 @@ STKUNF                            00000006
 SWDTE                             00000000
 SWDTEN                            00000000
 SYNC                              00000004
+Shift                             00000000
 T016BIT                           00000006
 T08BIT                            00000006
 T0CKI                             00000004
@@ -724,13 +725,13 @@ T2OUTPS1                          00000004
 T2OUTPS2                          00000005
 T2OUTPS3                          00000006
 T3CCP1                            00000003
-T3CCP2                            00000006
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 14
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+T3CCP2                            00000006
 T3CKPS0                           00000004
 T3CKPS1                           00000005
 T3CON                             00000FB1
@@ -783,13 +784,13 @@ TRISA3                            00000003
 TRISA4                            00000004
 TRISA5                            00000005
 TRISA6                            00000006
-TRISA7                            00000007
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 15
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 15
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+TRISA7                            00000007
 TRISB                             00000F93
 TRISB0                            00000000
 TRISB1                            00000001
@@ -842,13 +843,13 @@ VCFG0                             00000004
 VCFG1                             00000005
 VDIRMAG                           00000007
 VPP                               00000003
-W                                 00000000
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 16
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 16
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+W                                 00000000
 WAIT                              00000022
 WCOL                              00000007
 WDTCON                            00000FD1
@@ -901,13 +902,13 @@ _DEVID2                           003FFFFF
 _EBTR0_OFF_7L                     000000FF
 _EBTR0_ON_7L                      000000FE
 _EBTR1_OFF_7L                     000000FF
-_EBTR1_ON_7L                      000000FD
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 17
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 17
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_EBTR1_ON_7L                      000000FD
 _EBTR2_OFF_7L                     000000FF
 _EBTR2_ON_7L                      000000FB
 _EBTR3_OFF_7L                     000000FF
@@ -960,13 +961,13 @@ _WDTPS_32768_2H                   000000FF
 _WDTPS_32_2H                      000000EB
 _WDTPS_4096_2H                    000000F9
 _WDTPS_4_2H                       000000E5
-_WDTPS_512_2H                     000000F3
-MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-3-2017  20:24:44         PAGE 18
+MPASM 5.71  /USERS/MREITER/DESKTOP/AER201/BO   3-4-2017  14:13:49         PAGE 18
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_WDTPS_512_2H                     000000F3
 _WDTPS_64_2H                      000000ED
 _WDTPS_8192_2H                    000000FB
 _WDTPS_8_2H                       000000E7
