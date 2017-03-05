@@ -104,7 +104,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 ;*******************************************************************************
     Welcome	db	    "botL", 0
     Team	db	    "mr hl hg", 0
-    StandBy	db	    "Standby", 0
+    StandBy	db	    "Standing by ... Standing by", 0
     StandbyInfo db	    "<A>Sort <B>Last Log <C>Perm Logs <D>PC", 0
     Log1	db	    "Time:",0
     Log2	db	    "12:00 2/3/14", 0
@@ -338,16 +338,39 @@ restoreContext macro
 	ORG	0x018
 	goto    ISR_LOW
 
-ISR_HIGH
-	saveContext
-
-	;reset timer 
-	movlw	0xc6
+LOAD_STANDBY_TIME
+	movlw	0xff
 	movwf	TMR0H
-	movlw	0x3e
+	movlw	0xff
+	movwf	TMR0L
+
+	return	
+
+LOAD_EXE_TIME
+	movlw	0xc5
+	movwf	TMR0H
+	movlw	0x44
 	movwf	TMR0L
 	
+	return
 	
+ISR_HIGH
+	saveContext
+	
+	movlw	0x00
+	cpfseq	inStandby
+	call	Shift
+	
+	;reset timer, but need to check which time increment 
+	movlw	0x00
+	cpfseq	inStandby
+	call	LOAD_STANDBY_TIME
+	
+	movlw	0xff
+	cpfseq	inStandby
+	call	LOAD_EXE_TIME
+
+		
 	; displaying the execution time in seconds
 ;	swapf	OP_sec, 0	; 100's seconds
 ;	movwf	temp
@@ -533,19 +556,18 @@ STANDBY
 	movlw	b'00000000'
 	movwf	PORTA
 	
-	setf	inStandby
-	
-	movlw	    0xc5		    ; setting up timer
-	movwf	    TMR0H
-	movlw	    0x44    
-	movwf	    TMR0L
-	
-	bsf	    T0CON, TMR0ON	    ; turning on timer
-	
+	setf	inStandby	
 	call	ClrLCD
 	Display	StandBy
 	call	LCD_L2
 	Display	StandbyInfo
+	
+	movlw	0xff
+	movwf	TMR0H
+	movlw	0xff
+	movwf	TMR0L
+	bsf	T0CON, TMR0ON	    ; turning on timer
+
 
 HOLD_STANDBY
 	call	READ_KEY_TIME
@@ -635,9 +657,8 @@ LOOPING
 ;*******************************************************************************
 	
 EXECUTION
-	clrf	inStandby
-	bcf	    T0CON, TMR0ON
-	
+	bcf	    T0CON, TMR0ON	    ; turning on timer
+	clrf	inStandby	
 	call	    ClearEEPROM_21
 	
 	; save the starting time
@@ -1355,10 +1376,7 @@ READ_KEY
 	return
 
 READ_KEY_TIME
-	call	    LCD_L2	    ; go to second line to print RTC
-;	call	    Shift
-;	Delay50N delayR, 0x04
-	
+	call	    LCD_L2	    ; go to second line to print RTC	
 	; display the time
 	; call	    DISPLAY_RTC	
 

@@ -140,13 +140,14 @@ ClkLCD
     bsf PORTD,E
     nop
 	;LCD_DELAY   ; __    __
-    bcf PORTD,E ;   |__|
+    bcf PORTD,E	     ;   |__|
 	LCD_DELAY
     return
     
 Shift
     movlw   b'00011011'
     call    WR_INS
+    call    lcdLongDelay
     return
 
 ; Change LCD Lines
