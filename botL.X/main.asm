@@ -104,7 +104,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 ;*******************************************************************************
     Welcome	db	    "botL", 0
     Team	db	    "mr hl hg", 0
-    StandBy	db	    "Standing by ... Standing by", 0
+    StandBy	db	    "Standing by ... ... Standing by ... ...", 0
     StandbyInfo db	    "<A>Sort <B>Last Log <C>Perm Logs <D>PC", 0
     Log1	db	    "Time:",0
     Log2	db	    "12:00 2/3/14", 0
