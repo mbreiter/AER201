@@ -14,7 +14,7 @@ Adafruit_TCS34725 tcs2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34
 
 int state = 1;
 char incomingByte;
-char sort_bottle = 1;   // 1=eksa cap, 2=eksa no cap, 3=yop cap, 4=yop no cap 
+char sort_bottle = 2;   // 1=eksa cap, 2=eksa no cap, 3=yop cap, 4=yop no cap 
 int irPin = 2;
 int ir = 0;
 
@@ -23,10 +23,9 @@ void setup() {
   Wire.onReceive(receiveEvent); 
   Wire.onRequest(requestEvent); 
 
-while (!Serial) ;
-  
   Serial.begin(9600);    
-
+  while (!Serial) ;
+ 
   for (uint8_t t=0; t<8; t++) {
     tcaselect(t);
     //Serial.print("TCA Port #"); Serial.println(t);
@@ -56,17 +55,17 @@ void loop() {
   colorTemp1 = tcs1.calculateColorTemperature(r1, g1, b1);
   lux1 = tcs1.calculateLux(r1, g1, b1);
 
-//  Serial.println(" ");
-//  Serial.println("colour sensor 1");
-//  Serial.println(" ");
-//  
-//  Serial.print("Color Temp: "); Serial.print(colorTemp1, DEC); Serial.print(" K - ");
-//  Serial.print("Lux: "); Serial.print(lux1, DEC); Serial.print(" - ");
-//  Serial.print("Red: "); Serial.print(r1, DEC); Serial.print(" ");
-//  Serial.print("Green: "); Serial.print(g1, DEC); Serial.print(" ");
-//  Serial.print("Blue: "); Serial.print(b1, DEC); Serial.print(" ");
-//  Serial.print("Clear: "); Serial.print(c1, DEC); Serial.println(" ");
-//  Serial.print("ir: "); Serial.print(ir); Serial.println(" ");
+  Serial.println(" ");
+  Serial.println("colour sensor 1");
+  Serial.println(" ");
+  
+  Serial.print("Color Temp: "); Serial.print(colorTemp1, DEC); Serial.print(" K - ");
+  Serial.print("Lux: "); Serial.print(lux1, DEC); Serial.print(" - ");
+  Serial.print("Red: "); Serial.print(r1, DEC); Serial.print(" ");
+  Serial.print("Green: "); Serial.print(g1, DEC); Serial.print(" ");
+  Serial.print("Blue: "); Serial.print(b1, DEC); Serial.print(" ");
+  Serial.print("Clear: "); Serial.print(c1, DEC); Serial.println(" ");
+  Serial.print("ir: "); Serial.print(ir); Serial.println(" ");
 
   // select colour sensor number 2
   tcaselect(6);
@@ -76,17 +75,17 @@ void loop() {
   colorTemp2 = tcs2.calculateColorTemperature(r2, g2, b2);
   lux2 = tcs2.calculateLux(r2, g2, b2);
 
-//  Serial.println(" ");
-//  Serial.println("colour sensor 2");
-//  Serial.println(" ");
-//
-//  Serial.print("Color Temp: "); Serial.print(colorTemp2, DEC); Serial.print(" K - ");
-//  Serial.print("Lux: "); Serial.print(lux2, DEC); Serial.print(" - ");
-//  Serial.print("Red: "); Serial.print(r2, DEC); Serial.print(" ");
-//  Serial.print("Green: "); Serial.print(g2, DEC); Serial.print(" ");
-//  Serial.print("Blue: "); Serial.print(b2, DEC); Serial.print(" ");
-//  Serial.print("Clear: "); Serial.print(c2, DEC); Serial.println(" ");
-//  Serial.print("ir: "); Serial.print(ir); Serial.println(" ");
+  Serial.println(" ");
+  Serial.println("colour sensor 2");
+  Serial.println(" ");
+
+  Serial.print("Color Temp: "); Serial.print(colorTemp2, DEC); Serial.print(" K - ");
+  Serial.print("Lux: "); Serial.print(lux2, DEC); Serial.print(" - ");
+  Serial.print("Red: "); Serial.print(r2, DEC); Serial.print(" ");
+  Serial.print("Green: "); Serial.print(g2, DEC); Serial.print(" ");
+  Serial.print("Blue: "); Serial.print(b2, DEC); Serial.print(" ");
+  Serial.print("Clear: "); Serial.print(c2, DEC); Serial.println(" ");
+  Serial.print("ir: "); Serial.print(ir); Serial.println(" ");
   
 //  if (lux < 100) {
 //    Serial.print("Detecting  ");
