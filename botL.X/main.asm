@@ -276,9 +276,9 @@ LOAD_STANDBY_TIME
 	return	
 
 LOAD_EXE_TIME
-	movlw	0xc5
+	movlw	0xc3
 	movwf	TMR0H
-	movlw	0x44
+	movlw	0x25
 	movwf	TMR0L
 	
 	return
@@ -599,10 +599,10 @@ EXECUTION
 	Display	    Exe1
 	call	    LCD_L2
 	
-	movlw	    0xc5		    ; setting up timer
-	movwf	    TMR0H
-	movlw	    0x44    
-	movwf	    TMR0L
+	movlw	0xc3
+	movwf	TMR0H
+	movlw	0x25
+	movwf	TMR0L
 	
 	bsf	    T0CON, TMR0ON	    ; turning on timer
 	
