@@ -124,24 +124,6 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 ;*******************************************************************************
 ; macros
 ;*******************************************************************************
-
-TransferTable macro table
-	local loop
-	
-	movlw	upper table
-	movwf	TBLPTRU
-	movlw	high table
-	movwf	TBLPTRH
-	movlw	low table
-	movwf	TBLPTRL
-	tblrd*
-	movff	TABLAT, WREG
-loop
-	call	USART_WAIT
-	tblrd+*
-	movff	TABLAT, WREG
-	bnz	loop
-	endm
 	
 ConfigLCD   macro
           movlw     b'00101000'    ; 4 bits, 2 lines,5X7 dots seems to work best instead of the above setting
@@ -152,13 +134,6 @@ ConfigLCD   macro
           movlw     b'00000001'    ; Clear ram
           call      WR_INS
 	  endm
-	
-movMSB	macro	port
-	andlw	0xF0
-	iorwf	port, f
-	iorlw	0x0F
-	andwf	port, f
-	endm
 
 Delay50N macro count, N
 	local	loop
@@ -186,34 +161,7 @@ loop
 	tblrd+*			; next row in table
 	movf    TABLAT, W
 	bnz	loop
-	endm
-
-DisplayLog  macro   addrH, addrL
-	    local   Again, Finish
-	    
-	    clrf    SkipCount
-	    clrf    MAX_EE
-
-	    ; Check if there is No Data first
-	    READEE	REG_EE, addrH, addrL
-	    movlw	0xFF
-	    cpfseq	REG_EE
-	    goto	Again
-	    Display	NoData
-	    goto	Finish
-Again
-	    ; Put a space every 3 Writes
-	    movlw	d'3'
-	    cpfslt	SkipCount
-	    cpfslt	MAX_EE
-	    goto	Finish
-
-	    ; read EEPROM
-	    READEE	REG_EE, addrH, addrL
-	    btfsc	REG_EE, 7	; if bit 7 set then done
-	    goto	Finish
-Finish
-	    endm	
+	endm	
 
 incf_BCD    macro   BCD
 	local ones, endBCD
@@ -243,25 +191,6 @@ ones
 	goto	endBCD
 endBCD
 	nop
-	endm
-	
-SUB16	macro	x, y	    ; does not modify x nor y
-	local	RESULTS
-	movff	y+1, WREG   ; move high y into working register
-	subwf	x+1, 0	    ; do subtraction xH - yH => w
-	btfss	STATUS, Z   ; check if subtraction is zero (if Z=1)
-	goto	RESULTS	    ; if it is, need to check lower bytes (so skip this)
-	
-	movff	y+0, WREG
-	subwf	x+0, 0	
-RESULTS			    ; if... x=y => z=1, x<y => c=0, x>=y => c=1
-	endm
-
-WriteRTC    macro
-	movff	tens_digit, WREG
-	call	WR_DATA
-	movff	ones_digit, WREG
-	call	WR_DATA
 	endm
 
 WriteEE	macro   word, addH, addL
@@ -722,51 +651,56 @@ ROTATE_90
 	bra DETECTIONS
 	
 DETECTIONS
-	; first up, lets give the 0.5 seconds to process its data
-	;Delay50N delayR, 0x0a
+
 ;	movlw	d'1000'
 ;	movwf	TRAY_DELAY
 	
-	; reading data from arduino - expect: 1 for eska cap, 2 for eska no cap
-	;				      3 for yop cap, 4 for yop no cap
-	;				      5 for no bottle, get outta here
-	;call	READ_ARDUINO
-	
-	movlw	d'2'			; testing!!!
+	; reading data from arduino 
+	; expect:   1 for eska cap
+	;	    2 for eska no cap
+	;	    3 for yop cap
+	;	    4 for yop no cap
+	;	    5 for no bottle, get outta here
+	call	READ_ARDUINO
+	;movlw	d'2'			; testing!!!
 	movwf	DETECTION_VAL
 	
-	; now for handling the comparisions
+	; first check if there was a bottle detected, if go to COLLECTIONS_STEP
 	movlw	d'5'
-	cpfslt	DETECTION_VAL		; If DETECTION_VAL = 5, make another collections step
-	goto	COLLECTIONS_STEP
+	subwf	DETECTION_VAL, 0
+	bz	INC_YOPNOCAP
 	
-	; okay we have a bottle, increment toal and see what it is
+	; okay we have a bottle, first increment total count then see what it is
 	incf	TOTAL_BOTTLES
-
+	
+	; yop no cap
 	movlw	d'4'
 	subwf	DETECTION_VAL, 0
 	bz	INC_YOPNOCAP
 	
+	; yop with cap
 	movlw	d'3'
 	subwf	DETECTION_VAL, 0
 	bz	INC_YOPCAP
 	
+	; eska no cap
 	movlw	d'2'
 	subwf	DETECTION_VAL, 0
 	bz	INC_ESKANOCAP
 	
+	; eksa with cap
 	movlw	d'1'
 	subwf	DETECTION_VAL, 0
 	bz	INC_ESKACAP
 	
-	;make some kind of fail safe here.
+	bra	DETECTIONS
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
 
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'4'
-	movwf	TRAY_GOTO
+	movwf	TRAY_GOTO		; new position will be 4
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
 	bz	TRAY_STEP_END
 	
@@ -884,10 +818,64 @@ TRAY_STEP_END
 	movwf	PORTE
 	
 CHECK_DONE
+	
+	; Challenging:	logic to figure out when the machine is done sorting 
+	;		if the TOTAL_BOTTLES count is less than 10. 
+	
+	; NUMBER: 
+	; if the total bottle count is 10, then we are done (most basic end condition)
+	clrf	    STOP_CONDITION	; denote regular stop, saved in eeprom as 0
 	movlw	d'9'
-	cpfseq	TOTAL_BOTTLES
+	subwf	TOTAL_BOTTLES, 0
+	bz	EXIT_EXE
+	
+	; OPTIMAL/MAX QUALIFIED TIME: 
+	; if the execution time exceeds the optimal threshold of 120s, check for 
+	; qualified run and then stop. if the time exceeds the max threshold of 
+	; 150s then stop.
+	swapf	OP_sec, 0	; 100's seconds
+	movwf	temp
+	movlw	0x0f
+	andwf	temp
+	movlw	d'0'
+	cpfsgt	temp
+	goto	COLLECTIONS_STEP; if 100 second, continue to check for 150s then 120s.
+
+	; MAX
+	movlw	d'2'
+	movwf	STOP_CONDITION	; timeout stop, saved in eeprom as 2
+	movff	OP_sec, temp	; 10's seconds
+	movlw	0x0f
+	andwf	temp
+	movlw	d'5'
+	subwf	temp, 0
+	bz	EXIT_EXE	; if 150 second, terminate
+	
+	; here we know that bottles < 10 and 100 < time < 150, so check for qualified run
+	; qualified run has at least 4 bottles, with 1 of each different kind
+	movlw	d'3'
+	cpfsgt	TOTAL_BOTTLES
+	goto	COLLECTIONS_STEP
+
+	movlw	d'0'
+	cpfsgt	YOP_NOCAP, 0
 	goto	COLLECTIONS_STEP
 	
+	movlw	d'0'
+	cpfsgt	YOP, 0
+	goto	COLLECTIONS_STEP
+	
+	movlw	d'0'
+	cpfsgt	ESKA_NOCAP, 0
+	goto	COLLECTIONS_STEP
+	
+	movlw	d'0'
+	cpfsgt	ESKA, 0
+	goto	COLLECTIONS_STEP
+	
+	; finally, if we get here then consider the termination optimized.
+	movlw	d'3'
+	movwf	STOP_CONDITION	; optimized stop, saved in eeprom as 3
 	goto	EXIT_EXE
 	
 EXIT_EXE
@@ -897,9 +885,8 @@ EXIT_EXE
 		
 	; Clear inExecution flag to stop '*' interrupts
 	clrf	    inExecution
-	clrf	    STOP_CONDITION	; regular stop, saved in eeprom as 0
 	
-		call	    ClrLCD
+	call	    ClrLCD
 	Display	    SAVE
 	call        SaveData
 	goto	    LOG
@@ -938,7 +925,6 @@ LOG_INFO
 	Display LogInfo2
 	clrf	H_EE
 	clrf	L_EE
-	;DisplayLog  H_EE, L_EE
 HOLD_LOG_INFO
 	call	READ_KEY
 	ChangeMode key0, LOG
@@ -1156,7 +1142,7 @@ SAVE_EXE_TIME
 	
 	swapf	OP_sec, WREG	; 100's seconds
 	movwf	temp
-	movlw	0x0F
+	movlw	0x0f
 	andwf	temp
 	movff	temp, WREG
 	addlw	0x30	
@@ -1164,7 +1150,7 @@ SAVE_EXE_TIME
 	incf	L_EE
 	
 	movff	OP_sec, temp	; 10's seconds
-	movlw	0x0F
+	movlw	0x0f
 	andwf	temp		; Temp = lower nibble of Op_sec
 	movff	temp, WREG	; W = Temp
 	addlw	0x30		; Convert to ASCII

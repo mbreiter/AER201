@@ -27,13 +27,13 @@ Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 119 : Found label aft
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 120 : Found label after column 1. (PCComplete)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 121 : Found label after column 1. (SAVE)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/main.asm 122 : Found label after column 1. (NoData)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1125 : Found opcode in column 1. (return)
 Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1139 : Found opcode in column 1. (return)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1153 : Found opcode in column 1. (return)
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1157 : Argument out of range.  Least significant bits used.
-Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1174 : Argument out of range.  Least significant bits used.
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1182 : Found opcode in column 1. (return)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1231 : Found opcode in column 1. (return)
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1143 : Argument out of range.  Least significant bits used.
+Warning[202] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1160 : Argument out of range.  Least significant bits used.
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1168 : Found opcode in column 1. (return)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1217 : Found opcode in column 1. (return)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 11 : Found label after column 1. (del_loop0)
 Warning[207] /Users/mreiter/Desktop/AER201/botL.X/rtc.inc 16 : Found label after column 1. (_loopknt)
-Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1244 : Found opcode in column 1. (return)
-Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1526 : Found directive in column 1. (end)
+Warning[203] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1230 : Found opcode in column 1. (return)
+Warning[205] /Users/mreiter/Desktop/AER201/botL.X/main.asm 1512 : Found directive in column 1. (end)
