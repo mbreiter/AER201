@@ -389,6 +389,9 @@ END_ISR_LOW
 ; main
 ;*******************************************************************************
 INIT
+	movlw	b'01110000'	;Set internal oscillator frequency to 8MHz
+	movwf	OSCCON
+	
 	; i/o
 	movlw	b'00000000'
 	movwf	TRISA
@@ -417,6 +420,18 @@ INIT
 	movwf	ADCON0
 ;	movlw	b'11111111'
 ;	movwf	ADCON1
+	
+	; setting up pwm
+;	clrf	CM1CONO		; disable comparators
+;	clrf	CM2CONO
+;	movlw	0x3c		; pwm mode and 2 lsb of duty cycle
+;	movwf	CCP2CON
+;	movlw	0x00		; bits 9:2 of pwm duty cycle
+;	movwf	CCPR2L
+;	
+;	bcf	PIR1, TMR2IF
+;	bcf	T2CON, T2CKPS1
+;	bsf	T2CON, TMR2ON
 	
 	; initializations
 	call	InitLCD
@@ -449,9 +464,9 @@ INIT
 	bcf	T0CON, T0CS
 	bcf	T0CON, T0SE
 	bcf	T0CON, PSA
-	bcf	T0CON, T0PS2	    ; set prescaling to 1:16. this allows for 
-	bsf	T0CON, T0PS1	    ; a preloading of ~50750 or 0xc63e. very
-	bsf	T0CON, T0PS0	    ; good approximation within 3 minutes.
+	bcf	T0CON, T0PS2	    ; set prescaling to 1:16.
+	bsf	T0CON, T0PS1
+	bsf	T0CON, T0PS0
 
 	clrf	H_EE
 	clrf	L_EE
@@ -739,7 +754,6 @@ INC_YOPCAP
 	
 INC_ESKANOCAP
 	incf	ESKA_NOCAP
-	goto	CHECK_DONE
 	
 	; determine what position to rotate the tray to: brute force, but w/e
 	movlw	d'2'
@@ -789,10 +803,11 @@ TRAY_CW_HOLD
 	movlw	b'00000001'
 	movwf	PORTE
 
-	incf	TRAY_COUNT
-	movff	TRAY_COUNT, WREG
-	cpfseq	TRAY_DELAY
-	goto	TRAY_CW_HOLD
+;	incf	TRAY_COUNT
+;	movff	TRAY_COUNT, WREG
+;	cpfseq	TRAY_DELAY
+;	goto	TRAY_CW_HOLD
+	Delay50N    delayR, 0x24
 	
 	bra	TRAY_STEP_END
 	
@@ -800,16 +815,17 @@ TRAY_STEP_CCW
 	clrf	TRAY_COUNT
 	movlw	b'00000000'
 	movwf	PORTE
-
+	
 TRAY_CCW_HOLD
 	movlw	b'00000010'
 	movwf	PORTE
 
-	incf	TRAY_COUNT
-	movff	TRAY_COUNT, WREG
-	cpfseq	TRAY_DELAY
-	bra	TRAY_CCW_HOLD
-	
+;	incf	TRAY_COUNT
+;	movff	TRAY_COUNT, WREG
+;	cpfseq	TRAY_DELAY
+;	bra	TRAY_CCW_HOLD
+	Delay50N    delayR, 0x24
+
 	bra	TRAY_STEP_END
 	
 TRAY_STEP_END

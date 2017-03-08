@@ -28,14 +28,14 @@ void setup() {
  
   for (uint8_t t=0; t<8; t++) {
     tcaselect(t);
-    //Serial.print("TCA Port #"); Serial.println(t);
+    Serial.print("TCA Port #"); Serial.println(t);
 
     for (uint8_t addr = 0; addr<=127; addr++) {
       if (addr == TCAADDR) continue;
     
       uint8_t data;
       if (! twi_writeTo(addr, &data, 0, 1, 1)) {
-         //Serial.print("Found I2C 0x");  Serial.println(addr,HEX);
+         Serial.print("Found I2C 0x");  Serial.println(addr,HEX);
       }
     }
   }  
@@ -86,6 +86,8 @@ void loop() {
   Serial.print("Blue: "); Serial.print(b2, DEC); Serial.print(" ");
   Serial.print("Clear: "); Serial.print(c2, DEC); Serial.println(" ");
   Serial.print("ir: "); Serial.print(ir); Serial.println(" ");
+
+  sort_bottle = random(1, 5);
   
 //  if (lux < 100) {
 //    Serial.print("Detecting  ");
