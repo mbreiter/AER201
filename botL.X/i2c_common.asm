@@ -6,8 +6,6 @@ errorlevel -305
 errorlevel -205
 errorlevel -203
 errorlevel -207
-    
-;global labels
 
 variable _waitknt=0
 
@@ -24,18 +22,18 @@ global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
  
 extern delay44us
 
-i2c_common_check_ack macro err_address ;If bad ACK bit received, goto err_address
+i2c_common_check_ack macro err_address	;If bad ACK bit received, goto err_address
     btfsc   SSPCON2, ACKSTAT
     goto    err_address
 endm
 
 i2c_common_start macro 
     bsf	    SSPCON2, SEN
-    btfss   SSPCON1, WCOL	; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
+    btfss   SSPCON1, WCOL		; NOTE: I CHANGED THIS TO MAKE WORK, IDK Y THO
     bsf	    PIR1, SSPIF
     btfss   PIR1, SSPIF
     bra	    $-2    
-    bcf	    PIR1, SSPIF		; clear SSPIF interrupt bit
+    bcf	    PIR1, SSPIF			; clear SSPIF interrupt bit
 endm
 
 i2c_common_stop macro
@@ -50,7 +48,7 @@ i2c_common_repeatedstart macro
     btfss   PIR1, SSPIF
     bra	    $-2
 
-    bcf	    PIR1, SSPIF ;clear SSPIF interrupt bit
+    bcf	    PIR1, SSPIF			;clear SSPIF interrupt bit
 endm
 
 i2c_common_ack macro
@@ -76,11 +74,11 @@ i2c_common_write macro
     movwf   SSPBUF
     btfss   PIR1, SSPIF
     bra	    $-2
-    bcf	    PIR1, SSPIF		;clear SSPIF interrupt bit
+    bcf	    PIR1, SSPIF		; clear SSPIF interrupt bit
 endm
 
 i2c_common_read macro
-    bsf	    SSPCON2,RCEN	;Begin receiving byte from
+    bsf	    SSPCON2,RCEN	; begin receiving byte
     btfss   PIR1, SSPIF
     bra	    $-2
     bcf	    PIR1, SSPIF
@@ -91,107 +89,63 @@ code
 
 i2c_common_setup
     movlw   b'00000000'
-    movwf   SSPSTAT ;set I2C line leves, clear all flags.
+    movwf   SSPSTAT		; set I2C line leves, clear all flags.
 
-    movlw   b'00101000' ;Config SSP for Master Mode I2C
+    movlw   b'00101000'		; config SSP for Master Mode I2C
     movwf   SSPCON1
     
     movlw   b'00000000'
     movwf   SSPCON2
     
-    movlw   d'24' ;100kHz baud rate: 10000000 osc / [4*100000] -1
-    movwf   SSPADD ;RTC only supports 100kHz
+    movlw   d'24'		; 100kHz baud rate: 10000000 osc / [4*100000] -1
+    movwf   SSPADD		; rtc only supports 100kHz
 
-    bsf	    SSPCON1,SSPEN ;Enable SSP module
+    bsf	    SSPCON1, SSPEN	; enable SSP module
 
     bcf	    PIR2, SSPIE
     bcf	    PIR1, SSPIF
     bcf	    SSPSTAT, BF
-    i2c_common_stop ;Ensure the bus is free
+    i2c_common_stop		; ensure the bus is free
 return
 
 write_rtc
     i2c_common_start
 
-    movlw   0xd0 ;DS1307 address | WRITE bit
+    movlw   0xd0		; ds1307 address | WRITE bit
     i2c_common_write
-    i2c_common_check_ack WR_ERR1_RTC
 
-    ;Write data to I2C bus (Register Address in RTC)
-    movff   regaddress, WREG ;Set register pointer in RTC
+    ; write data to I2C bus
+    movff   regaddress, WREG	; set register pointer in RTC
     i2c_common_write
-    i2c_common_check_ack WR_ERR2_RTC
 
-    ;Write data to I2C bus (Data to be placed in RTC register)
-    movff   databyte, WREG ;Write data to register in RTC
+    ; write data to I2C bus
+    movff   databyte, WREG	; write data to register in RTC
     i2c_common_write
-    i2c_common_check_ack WR_ERR3_RTC
 
-    goto    WR_END_RTC
-
-    WR_ERR1_RTC
-	nop
-	movlw	b'00000001'
-	movwf	LATA	
-	goto	WR_END_RTC
-    
-    WR_ERR2_RTC
-	nop
-	movlw   b'00000010'
-	movwf   LATA
-	bsf	LATE,0
-	goto    WR_END_RTC
-	
-    WR_ERR3_RTC
-	nop
-	movlw	b'00000100'
-	movwf	LATA
-	goto	WR_END_RTC
-    WR_END_RTC
-	i2c_common_stop ;Release the I2C bus
+    i2c_common_stop		; release the I2C bus
 return
 
 read_rtc
     i2c_common_start
     
-    movlw   0xd0		;DS1307 address | WRITE bit
+    movlw   0xd0		; ds1307 address | WRITE bit
     i2c_common_write
-    i2c_common_check_ack RD_ERR1_RTC
         
-    ;Write data to I2C bus (Register Address in RTC)
-    movff   regaddress, WREG	; Set register pointer in RTC
+    ; write data to I2C bus
+    movff   regaddress, WREG	; set register pointer in RTC
     i2c_common_write
-    i2c_common_check_ack RD_ERR2_RTC
         
-    ;Re-Select the DS1307 on the bus, in READ mode
+    ; re-select the ds1307 on the bus, in READ mode
     i2c_common_repeatedstart
-    movlw   0xd1		; DS1307 address | READ bit
+    movlw   0xd1		; ds1307 address | READ bit
     i2c_common_write
-    i2c_common_check_ack RD_ERR3_RTC
     
-    ;Read data from I2C bus (Contents of Register in RTC)
+    ; read data from I2C bus
     i2c_common_read
     movwf   datachar
-    i2c_common_nack		;Send acknowledgement of data reception
-    goto RD_END_RTC
-
-    RD_ERR1_RTC
-	nop
-	movlw	b'00000011'
-	movwf	LATA
-	goto	RD_END_RTC
-    RD_ERR2_RTC
-	nop
-	movlw	b'00000111'
-	movwf	LATA
-	goto	RD_END_RTC
-    RD_ERR3_RTC
-	nop
-	movlw	b'00001111'
-	movwf	LATA
-	goto	RD_END_RTC
-    RD_END_RTC
-	i2c_common_stop
+    i2c_common_nack		; send acknowledgement of data reception
+    
+    i2c_common_stop
 return
 
 rtc_convert
@@ -209,12 +163,16 @@ return
 
 INIT_RTC
     i2c_common_start
+    
     movlw   0xd0
     i2c_common_write
+    
     movlw   0x0e
     i2c_common_write
+    
     movlw   0x04
     i2c_common_write
+    
     i2c_common_stop 
 return
     
@@ -223,45 +181,23 @@ READ_COLOUR_I2C
     
     movlw   0x52		; TCS34725 address 0x29 << 1, WRITE bit (+0)
     i2c_common_write  
-    i2c_common_check_ack RD_ERR1
     
-    ;Write command to I2C bus (Register Address in TCS34725)
+    ; write command to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
     iorlw   0x80		; command bit
-    
     i2c_common_write
-    i2c_common_check_ack RD_ERR2
     
-    ;Re-Select the TCS34725 on the bus, in READ mode
+    ; re-select the tcs34725 on the bus, in READ mode
     i2c_common_repeatedstart
-    movlw   0x53		; TCS34725 address 0x29 << 1, READ bit (+1)
+    movlw   0x53		; tcs34725 address 0x29 << 1, READ bit (+1)
     i2c_common_write
-    i2c_common_check_ack RD_ERR3
     
-    ;Read data from I2C bus (Contents of Register in TCS34725)
+    ; read data from I2C bus (Contents of Register in TCS34725)
     i2c_common_read
     movwf   databyte
-    i2c_common_nack		; Send acknowledgement of data reception
+    i2c_common_nack		; send acknowledgement of data receipt
     
-    goto RD_END
-
-    RD_ERR1
-	nop
-	movlw	b'00000011'
-	movwf	LATA
-	goto	RD_END
-    RD_ERR2
-	nop
-	movlw	b'00000101'
-	movwf	LATA
-	goto	RD_END
-    RD_ERR3
-	nop
-	movlw	b'00000111'
-	movwf	LATA
-	goto	RD_END
-    RD_END
-	i2c_common_stop
+    i2c_common_stop
 return	
 	
 WRITE_COLOUR_I2C
@@ -269,42 +205,18 @@ WRITE_COLOUR_I2C
 
     movlw   0x52		; TCS34725 address | WRITE bit
     i2c_common_write
-    i2c_common_check_ack WR_ERR1
 
-    ;Write data to I2C bus (Register Address in TCS34725)
+    ; write data to I2C bus (Register Address in TCS34725)
     movff   regaddress, WREG
     iorlw   0x80		; command bits
     i2c_common_write
-    i2c_common_check_ack WR_ERR2
 
-    ;Write data to I2C bus (Data to be placed in TCS34725 register)
+    ; write data to I2C bus (Data to be placed in TCS34725 register)
     movff   databyte, WREG
     andlw   0xff
     i2c_common_write
-    i2c_common_check_ack WR_ERR3
 
-    goto    WR_END
-
-    WR_ERR1
-	nop
-	movlw	b'00001101'
-	movwf	LATA	
-	goto	WR_END
-    
-    WR_ERR2
-	nop
-	movlw   b'00001111'
-	movwf   LATA
-	bsf	LATE,0
-	goto    WR_END
-	
-    WR_ERR3
-	nop
-	movlw	b'00001001'
-	movwf	LATA
-	goto	WR_END
-    WR_END
-	i2c_common_stop		; Release the I2C bus
+    i2c_common_stop		; Release the I2C bus
 	
 return
 
@@ -313,8 +225,7 @@ INIT_ARDUINO
     
     movlw   0x10		; Arudino address << 1 + WRITE
     i2c_common_write
-    i2c_common_check_ack WR_ERR1
-
+    
     i2c_common_stop
 return
 	
@@ -323,14 +234,13 @@ READ_ARDUINO
     i2c_common_start
 
     i2c_common_repeatedstart
-    movlw   0x11		; Arudino address << 1 + READ
+    movlw   0x11		; arudino address << 1 + READ
     i2c_common_write
     
     i2c_common_read
     i2c_common_nack
     
     i2c_common_stop
-    
 return
 
     end
