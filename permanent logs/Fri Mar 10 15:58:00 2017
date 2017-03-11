@@ -1,0 +1,19 @@
+botL
+Fri Mar 10 15:58:00 2017
+
+Guide: 
+18 bits of data are saved for every run. this log will display data for the 9 latest runs. here is the bit breakdown: 
+   0-9 are the date (hourhour/minmin/yy/mm/dd)
+   10-12 are the operation time in seconds (100x/10x/1x)
+   13-16 are the sorting statistics (ESKA/ESKANOCAP/YOP/YOPNOCAP)
+   17 is the stop condition (0: Normal, 1: Emergency Stop, 2: Execution Timeout, 3: Optimized Stop)
+
+152617031000410001
+152617031000410001
+150117030703224120
+150017030704411021
+145817030703052200
+145617030703013500
+145517030703431500
+145517030701320201
+
