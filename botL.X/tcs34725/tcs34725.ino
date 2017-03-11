@@ -1,10 +1,8 @@
-//Interface Arduino with PIC over I2C Connection
-//Remember to enable the Arduino-PIC switches on RC3 and RC4! 
-
 #include <Wire.h>
 #include "Adafruit_TCS34725.h"
+
 extern "C" { 
-#include "utility/twi.h"  // from Wire library, so we can do bus scanning
+  #include "utility/twi.h"  // from Wire library, so we can do bus scanning
 }
  
 #define TCAADDR 0x70
@@ -14,12 +12,14 @@ Adafruit_TCS34725 tcs2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34
 
 int state = 1;
 char incomingByte;
-char sort_bottle = 2;   // 1=eksa cap, 2=eksa no cap, 3=yop cap, 4=yop no cap 
-int irPin = 2;
+char sort_bottle = 2;   // 1=eksa cap, 2=eksa no cap, 3=yop cap, 4=yop no cap, 5=no bottle 
+int irPin = 2;          // ir sensor on digital pin 2
 int ir = 0;
+uint16_t r1, g1, b1, c1, colorTemp1, lux1, r2, g2, b2, c2, colorTemp2, lux2;
+
 
 void setup() {
-  Wire.begin(8);                // join i2c bus with address 8
+  Wire.begin(8);        // join i2c bus with address 8
   Wire.onReceive(receiveEvent); 
   Wire.onRequest(requestEvent); 
 
@@ -40,10 +40,8 @@ void setup() {
     }
   }  
 }
-  
-void loop() {
-  uint16_t r1, g1, b1, c1, colorTemp1, lux1, r2, g2, b2, c2, colorTemp2, lux2;
 
+void detection() {
   // read from IR sensor
   ir = digitalRead(irPin);
 
@@ -87,78 +85,41 @@ void loop() {
   Serial.print("Clear: "); Serial.print(c2, DEC); Serial.println(" ");
   Serial.print("ir: "); Serial.print(ir); Serial.println(" ");
 
-  sort_bottle = random(1, 5);
-  
-//  if (lux < 100) {
-//    Serial.print("Detecting  ");
-//  }
-//  
-//  // TODO: test plain white yop bottle
-//
-//  // yop bottles almost always have a very high lux
-//  if (lux > 1500) {
-//    if (((sensorValue1 == 0) & (sensorValue2 == 0))) {
-//      // there is a cap detected
-//      if ((r > g) & (r > b) & r>2000){
-//        //  red is detected, and it is intense enough to register a yop
-//        sort_bottle = 3;
-//        Serial.println("RED YOP CAP");
-//      } else if(((b > r) & (b > g) & b>2000)) {
-//      //  blue is detected, and it is intense enough to register a yop
-//          sort_bottle = 3;
-//          Serial.println("BLUE YOP CAP");
-//      }
-//      else if (c > 10000) {
-//      // iffy on if this works how i want it to, but it will be yop
-//          sort_bottle = 3;
-//          Serial.println("YOP CAP");
-//      }
-//      else {
-//        // eska with cap
-//        sort_bottle = 1;
-//        Serial.println("ESKA CAP");
-//      }      
-//    } else if( ((sensorValue1 == 0) & (sensorValue2 == 1)) | ((sensorValue1 == 1) & (sensorValue2 == 0))){
-//      // here no cap is detection, go through same protocal as above
-//      if ((r > g) & (r > b) & r>2000){
-//        //  red is detected, and it is intense enough to register a yop
-//        sort_bottle = 4;
-//        Serial.println("RED YOP NO CAP");
-//      } else if(((b > r) & (b > g) & b>2000)) {
-//      //  blue is detected, and it is intense enough to register a yop
-//          sort_bottle = 4;
-//          Serial.println("BLUE YOP NO CAP");
-//      }
-//      else if (c > 10000) {
-//      // iffy on if this works how i want it to, but it will be yop
-//          sort_bottle = 4;
-//          Serial.println("YOP NO CAP");
-//      }
-//      else {
-//        // eska without cap
-//        sort_bottle = 2;
-//        Serial.println("ESKA NO CAP");
-//      }      
-//    }     
-//  } else {
-//    if (((sensorValue1 == 0) & (sensorValue2 == 0))) {
-//        // eska with cap
-//        sort_bottle = 1;
-//        Serial.println("ESKA CAP");    
-//    } else {
-//        sort_bottle = 2;
-//        Serial.println("ESKA NO CAP");    
-//    }   
-//  }
-//
-//  if (((sensorValue1 == 1) & (sensorValue2 == 1))) {
-//        // eska with cap
-//        sort_bottle = 5;
-//        Serial.println("NO BOTTLE!");    
-//    }  
-//
-//    Serial.println(" ____ ");
+  //sort_bottle = random(1, 5);   // use this for testing
+  if(ir == 0) {
+    // there is a cap detected
+    
+    if (((r1 > g1) & (r1 > b1) & r1>2000) | ((r2 > g2) & (r2 > b2) & r2>2000)){
+      //  red is detected, means it is a yop with a cap
+      sort_bottle = 3;
+      
+    } else if(((b1 > r1) & (b1 > g1) & b1>2000) & ((c2 > r2) & (c2 > g2) & (c2 > b2) & b1>2000)) {
+      //  blue is detected and white is detected. yop with cap.
+        sort_bottle = 3;
+    } else if(((b2 > r2) & (b2 > g2) & b2>2000) & ((c1 > r1) & (c1 > g1) & (c1 > b1) & b1>2000)) {
+      //  blue is detected and white is detected. yop with cap.
+        sort_bottle = 3;
+        
+    } else if(((c1 > r1) & (c1 > g1) & (c1 > b1) & c1>2000) & ((c2 > r2) & (c2 > g2) & (c2 > b2) & c2>2000)) {
+      //  only white is detected. yop without cap.
+        sort_bottle = 4;
+    } 
 
+    else if(((b1 > r1) & (b1 > g1) & b1>2000) & ((b2 > r2) & (b2 > g2) & b2>2000)) {
+      //  eska with a cap.
+        sort_bottle = 1;
+    } 
+
+    else {
+        sort_bottle = 2;
+    }   
+  } else {
+      sort_bottle = 5;
+  }
+}
+  
+void loop() {
+  detection()
 }
 
 char buf[3];
@@ -178,6 +139,7 @@ void receiveEvent(int howMany) {
 }
 
 void requestEvent() {
+  detection()
   Wire.write(sort_bottle); // respond with message of 1 byte
 }
 
