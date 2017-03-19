@@ -4,9 +4,9 @@
 ;    Date: 2 Feb 2017
 ;    File Version: 1.0
 ;    Author: Matthew Reiter
-;    Course: aer201
-;    Description: botL - an attempt at a pastic bottle sorting machine (does it 
-;			 have to work in order for me to call it a machine?)    
+;    Course: AER201
+;    Description: botL - a pastic bottle sorting machine
+ 
 ;*******************************************************************************
 ; configuration settings
 ;*******************************************************************************
@@ -107,6 +107,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     StandBy	db	    "Standing by ... ... Standing by ... ...", 0
     StandbyInfo db	    "<A>Sort <B>Last Log <C>Perm Logs <D>PC", 0
     Log1	db	    "Time:",0
+    Log2	db	    "12:00 2/3/14", 0
     LogInfo1	db	    "Saved:", 0
     LogInfo2	db	    "Back <0>", 0
     PermLog1	db	    "Permanent Logs", 0
@@ -134,16 +135,6 @@ ConfigLCD   macro
           call      WR_INS
 	  endm
 
-Delay50Nf macro count, N
-	local	loop
-	movff	N, count
-
-loop
-	call	Delay50ms
-	decfsz	count
-	goto	loop
-	endm
-
 Delay50N macro count, N
 	local	loop
 	movlw	N
@@ -157,13 +148,13 @@ loop
 
 Display	macro   Message
 	local   loop
-	movlw   upper Message	; move table<20:16>
+	movlw   upper Message	; Move Table<20:16>
 	movwf   TBLPTRU
-	movlw   high Message	; move table<15:8>
+	movlw   high Message	; Move Table<15:8>
 	movwf   TBLPTRH
-	movlw   low Message	; move table<7:0>
+	movlw   low Message	; Move Table<7:0>
 	movwf   TBLPTRL
-	tblrd*			; read byte from TBLPTRL to TABLAT
+	tblrd*			; Read byte from TBLPTRL to TABLAT
 	movf    TABLAT, W
 loop
 	call    WR_DATA		; write to LCD
@@ -264,7 +255,6 @@ restoreContext macro
     swapf   temp_W, 0               ; restore W first
     movff   temp_S, STATUS	    ; restore STATUS last without affecting W
     endm
-    
 ;*******************************************************************************
 ; reset vector and isrs
 ;*******************************************************************************
@@ -292,38 +282,9 @@ LOAD_EXE_TIME
 	movwf	TMR0L
 	
 	return
-
-EMERGENCY_STOP
-	; first check if we're currently sorting - else, no need to restart
-	movlw	0xff		    ; if in operation, skip return
-	cpfseq	inExecution
-	goto	END_ISR_HIGH
 	
-	; reset program counter - emergency stop recorded. 
-	bcf	T0CON, TMR0ON
-	call	SAVE_EXE_TIME
-	
-	; reset emergency stop interrupt bit
-	bcf	INTCON, INT0IF
-		
-	; clear inExecution flag
-	clrf	inExecution
-	movlw	d'1'
-	movwf	STOP_CONDITION
-	call	SaveData
-	
-	clrf	TOSU
-	clrf	TOSH
-	clrf	TOSL
-	bcf	INTCON3, INT1IF         ; Clear flag for next interrupt
-	restoreContext
-	retfie
-
 ISR_HIGH
 	saveContext
-	
-;	btfsc	INTCON, INT0IF
-;	call	EMERGENCY_STOP
 	
 	movlw	0x00
 	cpfseq	inStandby
@@ -337,6 +298,35 @@ ISR_HIGH
 	movlw	0xff
 	cpfseq	inStandby
 	call	LOAD_EXE_TIME
+
+		
+	; displaying the execution time in seconds
+;	swapf	OP_sec, 0	; 100's seconds
+;	movwf	temp
+;	movlw	0x0f
+;	andwf	temp
+;	movff	temp, WREG
+;	addlw	0x30
+;	call	WR_DATA
+;
+;	movff	OP_sec, temp	; 10's seconds
+;	movlw	0x0f
+;	andwf	temp		; Temp = lower nibble of Op_sec
+;	movff	temp, WREG	; W = Temp
+;	addlw	0x30		; Convert to ASCII
+;	call	WR_DATA
+;	
+;	swapf	OP_INT, WREG	;1's seconds
+;	movwf	temp
+;	movlw	0x0f
+;	andwf	temp
+;	movff	temp, WREG
+;	addlw	0x30
+;	call	WR_DATA
+;
+;	movlw	0x73		; Write 's'
+;	call	WR_DATA
+;	call	LCD_L2
 		
 	;timer interrupt
 	btfss	INTCON, TMR0IF
@@ -355,7 +345,6 @@ END_ISR_HIGH
 
 ISR_LOW
 	saveContext
-	
 	; KEYPAD INTERRUPT
 	btfss	INTCON3, INT1IF		; If KEYPAD interrupt, skip return
 	goto	END_ISR_LOW
@@ -388,9 +377,11 @@ ISR_LOW
 	clrf	TOSH
 	clrf	TOSL
 	bcf	INTCON3, INT1IF         ; Clear flag for next interrupt
+	restoreContext
+	retfie
 
 END_ISR_LOW
-	bcf	INTCON3, INT1IF         ; Clear flag for next interrupt
+	bcf			INTCON3, INT1IF         ; Clear flag for next interrupt
 	restoreContext
 	retfie
 
@@ -398,14 +389,14 @@ END_ISR_LOW
 ; main
 ;*******************************************************************************
 INIT
-	movlw	b'01110000'	; set internal oscillator frequency to 8MHz
+	movlw	b'01110000'	;Set internal oscillator frequency to 8MHz
 	movwf	OSCCON
 	
 	; i/o
 	movlw	b'00000000'
 	movwf	TRISA
 	movlw	b'11111111'
-	movwf	TRISB
+	movwf	TRISB		    ; keypad
 	movlw	b'00000000'
 	movwf	TRISC
 	movlw	b'00000000'
@@ -445,8 +436,11 @@ INIT
 	; initializations
 	call	InitLCD
 	ConfigLCD
+	
 	call	i2c_common_setup
+	
 	call	RTC_INIT
+	;COLOUR_INIT
 	call	INIT_USART
 
 	; interrupts
@@ -454,19 +448,15 @@ INIT
 	clrf	INTCON
 	clrf	INTCON2
 	clrf	INTCON3
-	
-	bsf	RCON, IPEN	    ; allow priority mode
-	bsf	INTCON, GIEH	    ; permit global interrupts, set high and low
+	bsf	RCON, IPEN	    ; priority mode
+	bsf	INTCON, GIEH	    ; permit global interrupts
 	bsf	INTCON, GIEL
-	
 	bsf	INTCON2, INTEDG1    ; INTEDG1 on rising edge
 	bsf	INTCON, TMR0IE	    ; clear timer0 overflow interrupt flag
 	bsf	INTCON, TMR0IF	    ; clear timer0 overflow interrupt flag
 	bsf	INTCON2, TMR0IP	    ; set to high priority
-	bsf	INTCON3, INT1IE	    ; enable interrupts on rb1 for keyboard
-	bcf	INTCON3, INT1IP	    ; keyboard to low priority
-	bsf	INTCON, INT0IE	    ; enable high interrupts on rb0 for emergency stop
-	bcf	INTCON, INT0IF	    ; clear emergency stop interrupt
+	bsf	INTCON3, INT1IE
+	bcf	INTCON3, INT1IP
 	
 	; setting up timer to sychronize with 1 second clock intervals
 	bcf	T0CON, TMR0ON
@@ -474,7 +464,7 @@ INIT
 	bcf	T0CON, T0CS
 	bcf	T0CON, T0SE
 	bcf	T0CON, PSA
-	bcf	T0CON, T0PS2	    ; set prescaling to 1:16
+	bcf	T0CON, T0PS2	    ; set prescaling to 1:16.
 	bsf	T0CON, T0PS1
 	bsf	T0CON, T0PS0
 
@@ -491,7 +481,7 @@ INIT
 	clrf	TOTAL_BOTTLES
 	clrf	COLLECTIONS_COUNT
 	
-	movlw     b'11110011'    ; set required keypad inputs
+	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
 	
 	call	ClrLCD
@@ -505,7 +495,6 @@ INIT
 ; standby mode
 ;*******************************************************************************
 STANDBY
-	; ensure that stepper motor is demagnetized and dc motor is off.
 	movlw	b'00000000'
 	movwf	PORTE
 	movlw	b'00000000'
@@ -521,11 +510,11 @@ STANDBY
 	movwf	TMR0H
 	movlw	0xff
 	movwf	TMR0L
-	bsf	T0CON, TMR0ON	    ; turning on timer for scrolling lcd
+	bsf	T0CON, TMR0ON	    ; turning on timer
 
 
 HOLD_STANDBY
-	call	READ_KEY
+	call	READ_KEY_TIME
 
 	ChangeMode  key1, COLOUR_TEST
 	ChangeMode  key2, STEP_TEST
@@ -542,37 +531,34 @@ HOLD_STANDBY
 ;*******************************************************************************
 
 DC_TEST_CW
-	clrf	inStandby
 	movlw	b'00000000'
 	movwf	PORTE
-	Delay50N    delayR, 0x0a   
+	Delay50N    delayR, 0x14
+
 DC_TEST_CW_HOLD
 	movlw	b'00000001'
 	movwf	PORTE
-
-	call	READ_KEY
-	ChangeMode  key0, STANDBY
-	bra	DC_TEST_CW_HOLD
+	
+	Delay50N    delayR, 0x0a
+	bra	DC_TEST_CW
 	
 DC_TEST_CCW
-	clrf	inStandby
 	movlw	b'00000000'
 	movwf	PORTE
-	Delay50N    delayR, 0x0a
+	Delay50N    delayR, 0x14
+
 DC_TEST_CCW_HOLD
 	movlw	b'00000010'
 	movwf	PORTE
 	
-	call	READ_KEY
-	ChangeMode  key0, STANDBY
-	bra	DC_TEST_CCW_HOLD
-		
+	Delay50N    delayR, 0x0a
+	bra	DC_TEST_CCW
+	
 STEP_TEST
-	clrf	inStandby
 	clrf	COLLECTIONS_COUNT
 	Delay50N    delayR, 0x14
     
-ROTATE_90_TEST			    ; actually 45, but dont care to change label
+ROTATE_90_TEST
 	movlw	b'00100011'
 	movwf	PORTA
 	call	delay5ms
@@ -590,14 +576,13 @@ ROTATE_90_TEST			    ; actually 45, but dont care to change label
 	call	delay5ms
 	
 	incf	COLLECTIONS_COUNT
-	movlw	d'8'		    ; supposed to be 45 degrees...
+	movlw	d'120'
 	cpfseq	COLLECTIONS_COUNT
 	bra	ROTATE_90_TEST
 	
 	bra STEP_TEST
 
 COLOUR_TEST
-	clrf	inStandby
 
 LOOPING
 	Delay50N delayR, 0x28
@@ -612,9 +597,9 @@ LOOPING
 ;*******************************************************************************
 	
 EXECUTION
-	bcf	    T0CON, TMR0ON	    ; turning on timer
+	bcf	T0CON, TMR0ON	    ; turning on timer
 	clrf	inStandby	
-	call	    ClearEEPROM_21
+	call	ClearEEPROM_21
 	
 	; save the starting time
 	call	    SAVE_TIME
@@ -635,6 +620,7 @@ EXECUTION
 	; initialize variables
 	clrf	    OP_sec
 	clrf	    OP_INT
+	
 	clrf	    ESKA
 	clrf	    ESKA_NOCAP
 	clrf	    YOP
@@ -645,40 +631,34 @@ EXECUTION
 	clrf	    TRAY_DELAY
 	
 	; todo: make sure tray is in position one on reset, add some delay
-	;	perhaps only do this at the end... 
-	;	ya okay, but what about emergency stop?
 	
 	goto	    COLLECTIONS_STEP
 
 COLLECTIONS_STEP
 	clrf	    COLLECTIONS_COUNT
 
-ROTATE_90
+ROTATE_90				    ; actually 45 but who is count am i right??
 	movlw	b'00100011'
 	movwf	PORTA
-	call	delay5ms
 
 	movlw	b'00100110'
 	movwf	PORTA
-	call	delay5ms
 	
 	movlw	b'00101100'
 	movwf	PORTA
-	call	delay5ms
 
 	movlw	b'00101001'
 	movwf	PORTA
-	call	delay5ms
 	
 	incf	COLLECTIONS_COUNT
-	movlw	d'120'
+	movlw	d'25'			    ; 1.8 degrees per step, 45/1.8=25
 	cpfseq	COLLECTIONS_COUNT
 	bra	ROTATE_90
 	
 	bra DETECTIONS
 	
 DETECTIONS
-
+	Delay50N    delayR, 0x0a
 ;	movlw	d'1000'
 ;	movwf	TRAY_DELAY
 	
@@ -695,7 +675,7 @@ DETECTIONS
 	; first check if there was a bottle detected, if go to COLLECTIONS_STEP
 	movlw	d'5'
 	subwf	DETECTION_VAL, 0
-	bz	INC_YOPNOCAP
+	bz	COLLECTIONS_STEP
 	
 	; okay we have a bottle, first increment total count then see what it is
 	incf	TOTAL_BOTTLES
@@ -730,21 +710,15 @@ INC_YOPNOCAP
 	movwf	TRAY_GOTO		; new position will be 4
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
 	bz	TRAY_STEP_END
-
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT
+	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CW
 	bz	TRAY_STEP_CW		
-
-	movlw	0x14
-	movff	WREG, TRAY_COUNT
+	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 2 spots over CW
 	bz	TRAY_STEP_CW
-
-	movlw	0x1e
-	movff	WREG, TRAY_COUNT
+	
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 3 spots over CW
 	bz	TRAY_STEP_CW
@@ -758,20 +732,14 @@ INC_YOPCAP
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
 	bz	TRAY_STEP_END
 	
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 1 spot over CCW
 	bz	TRAY_STEP_CCW	
-
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT
+	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CW
 	bz	TRAY_STEP_CW
 	
-	movlw	0x14
-	movff	WREG, TRAY_COUNT
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 2 spots over CW
 	bz	TRAY_STEP_CW
@@ -784,21 +752,15 @@ INC_ESKANOCAP
 	movwf	TRAY_GOTO
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
 	bz	TRAY_STEP_END
-
-	movlw	0x14
-	movff	WREG, TRAY_COUNT
+	
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 2 spots over CCW
 	bz	TRAY_STEP_CCW	
-
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT
+	
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CCW
 	bz	TRAY_STEP_CCW
 	
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT
 	movlw	d'1'
 	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 1 spot over CW
 	bz	TRAY_STEP_CW
@@ -812,25 +774,20 @@ INC_ESKACAP
 	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
 	bz	TRAY_STEP_END
 	
-	movlw	0x1e
-	movff	WREG, TRAY_COUNT
 	movlw	d'4'
 	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 3 spots over CCW
-	bz	TRAY_STEP_CCW
+	bz	TRAY_STEP_CCW	
 	
-	movlw	0x14
-	movff	WREG, TRAY_COUNT
 	movlw	d'3'
 	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 2 spots over CCW
 	bz	TRAY_STEP_CCW
-
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT	
+	
 	movlw	d'2'
 	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CCW
 	bz	TRAY_STEP_CCW
 
 TRAY_STEP_CW
+	clrf	TRAY_COUNT
 	movlw	b'00000000'
 	movwf	PORTE
 
@@ -838,10 +795,16 @@ TRAY_CW_HOLD
 	movlw	b'00000001'
 	movwf	PORTE
 
-	Delay50Nf    delayR, TRAY_COUNT
+;	incf	TRAY_COUNT
+;	movff	TRAY_COUNT, WREG
+;	cpfseq	TRAY_DELAY
+;	goto	TRAY_CW_HOLD
+	Delay50N    delayR, 0x05
+	
 	bra	TRAY_STEP_END
 	
 TRAY_STEP_CCW
+	clrf	TRAY_COUNT
 	movlw	b'00000000'
 	movwf	PORTE
 	
@@ -849,17 +812,18 @@ TRAY_CCW_HOLD
 	movlw	b'00000010'
 	movwf	PORTE
 
-	Delay50Nf    delayR, TRAY_COUNT
+;	incf	TRAY_COUNT
+;	movff	TRAY_COUNT, WREG
+;	cpfseq	TRAY_DELAY
+;	bra	TRAY_CCW_HOLD
+	Delay50N    delayR, 0x05
+
 	bra	TRAY_STEP_END
 	
 TRAY_STEP_END
 	movff	TRAY_GOTO, TRAY_CURRENT
 	movlw	b'00000000'
 	movwf	PORTE
-	
-	movlw	0x00
-	cpfseq	inExecution
-	goto	EXIT_EXE_SAVE
 	
 CHECK_DONE
 	
@@ -868,7 +832,7 @@ CHECK_DONE
 	
 	; NUMBER: 
 	; if the total bottle count is 10, then we are done (most basic end condition)
-	clrf	STOP_CONDITION	; denote regular stop, saved in eeprom as 0
+	clrf	    STOP_CONDITION	; denote regular stop, saved in eeprom as 0
 	movlw	d'9'
 	subwf	TOTAL_BOTTLES, 0
 	bz	EXIT_EXE
@@ -922,34 +886,14 @@ CHECK_DONE
 	movwf	STOP_CONDITION	; optimized stop, saved in eeprom as 3
 	goto	EXIT_EXE
 	
-EXIT_EXE	
+EXIT_EXE
 	; stop timer and save the execution time to eeprom
-	bcf	T0CON, TMR0ON
-	call	SAVE_EXE_TIME
+	bcf	    T0CON, TMR0ON
+	call	    SAVE_EXE_TIME
+		
+	; Clear inExecution flag to stop '*' interrupts
+	clrf	    inExecution
 	
-	; clear inExecution flag to stop '*' interrupts
-	clrf	inExecution
-	
-	; get the tray ready for next the next run
-	movlw	0x1e
-	movff	WREG, TRAY_COUNT
-	movlw	d'4'
-	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 3 spot over CCW
-	bz	TRAY_STEP_CCW		
-	
-	movlw	0x14
-	movff	WREG, TRAY_COUNT
-	movlw	d'3'
-	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 2 spots over CCW
-	bz	TRAY_STEP_CCW
-	
-	movlw	0x0a
-	movff	WREG, TRAY_COUNT
-	movlw	d'2'
-	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CCW
-	bz	TRAY_STEP_CCW
-
-EXIT_EXE_SAVE
 	call	    ClrLCD
 	Display	    SAVE
 	call        SaveData
@@ -1419,10 +1363,24 @@ READ_KEY
 	btfss	PORTB, 1	; check for keypad interrupt
 	goto	READ_KEY
 	swapf	PORTB, W
-	andlw	0x0f
+	andlw	0x0F
 	movwf	KEY
 	btfsc	PORTB, 1
 	goto	$-2
+	return
+
+READ_KEY_TIME
+	call	    LCD_L2	    ; go to second line to print RTC	
+	; display the time
+	; call	    DISPLAY_RTC	
+
+	btfss	    PORTB, 1	; keypad interrupt
+	goto	    READ_KEY_TIME
+	swapf	    PORTB, W	; copy PORTB7:4 to W3:0
+	andlw	    0x0F	; only want W3:0
+	movwf	    KEY		; write this value to the KEY
+	btfsc	    PORTB, 1	; wait for release
+	goto	    $-2		; go back one instruction
 	return
 
 DisplayExeTime
@@ -1449,7 +1407,7 @@ NoSkipDispExeTime
 	call	WR_DATA
 	incf	L_EE
 
-	movlw	0x73
+	movlw	0x73		; Write 's'
 	call	WR_DATA
 	call	LCD_L2
 SkipDispExeTime
