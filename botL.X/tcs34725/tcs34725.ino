@@ -15,8 +15,18 @@ Adafruit_TCS34725 tcs2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34
 int state = 1;
 char incomingByte;
 char sort_bottle = 2;   // 1=eksa cap, 2=eksa no cap, 3=yop cap, 4=yop no cap
-int irPin = 2;
-int ir = 0;
+int switchPin = 2;
+int bump = 0;
+int servoPin = 4;
+int pulse = 1500;
+int pos1 = 550;
+int pos2 = 1300;
+int pos3 = 1700;
+int pos4 = 2450;
+int position = pos2;
+
+int servoState = LOW;
+long previousMillis = 0;
 
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -29,6 +39,9 @@ void tcaselect(uint8_t i) {
 void setup() {
   while (!Serial);
   delay(1000);
+
+  pinMode(switchPin, INPUT);
+  pinMode(servoPin, OUTPUT);
 
   Wire.begin(8);                // join i2c bus with address 8
   Wire.onReceive(receiveEvent);
@@ -49,10 +62,28 @@ void setup() {
       }
     }
   }
+
+  OCR0A = 0xAF;
+  TIMSK0 |= _BV(OCIE0A);
 }
 
+// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
+SIGNAL(TIMER0_COMPA_vect) {
+    if(millis() - previousMillis > 20) {
+      servoControl(position);
+      previousMillis = millis();
+  }
+} 
+
 void loop() {
-  detections();
+    detections();
+}
+
+void servoControl(int position) {
+  digitalWrite(servoPin, HIGH);
+  delayMicroseconds(position);
+  digitalWrite(servoPin, LOW);
+  delay(20);
 }
 
 char buf[3];
@@ -61,9 +92,8 @@ int counter = 0;
 void detections() {
   uint16_t r1, g1, b1, c1, colorTemp1, lux1, r2, g2, b2, c2, colorTemp2, lux2;
 
-  // read from IR sensor
-  ir = digitalRead(irPin);
-
+  // read from bump switch
+  bump = digitalRead(switchPin);
   // select colour sensor number 1
   tcaselect(2);
 
@@ -71,7 +101,7 @@ void detections() {
   tcs1.getRawData(&r1, &g1, &b1, &c1);
   colorTemp1 = tcs1.calculateColorTemperature(r1, g1, b1);
   lux1 = tcs1.calculateLux(r1, g1, b1);
-
+  
   // select colour sensor number 2
   tcaselect(6);
 
@@ -79,26 +109,30 @@ void detections() {
   tcs2.getRawData(&r2, &g2, &b2, &c2);
   colorTemp2 = tcs2.calculateColorTemperature(r2, g2, b2);
   lux2 = tcs2.calculateLux(r2, g2, b2);
+  
+  if (bump == HIGH) {
+    if (((float)r1 / (float)b1 > 1.6 && (r2 + g2 + b2) > 6500) || ((float)r2 / (float)b2 > 1.6 && (r1 + g1 + b1) > 7000)) {
+      sort_bottle = 3;      // yop with cap
+      position = pos3;
+    }
+    else if ((r1 + g1 + b1) > 7000 || (r2 + g2 + b2) > 6500) {
+      sort_bottle = 4;      // yop without cap
+      position = pos4;
+    }
 
-  //if (ir == 0) {
-  if (((float)r1 / (float)b1 > 1.6 && (r2 + g2 + b2) > 6500) || ((float)r2 / (float)b2 > 1.6 && (r1 + g1 + b1) > 7000)) {
-    sort_bottle = 3;      // yop with cap
-  }
-  else if ((r1 + g1 + b1) > 7000 || (r2 + g2 + b2) > 6500) {
-    sort_bottle = 4;      // yop without cap
-  }
+    else if ((r1 + g1 + b1) > 3600 || (r2 + g2 + b2) > 3600) {
+      sort_bottle = 2;
+      position = pos2;
+    }
 
-  else if ((r1 + g1 + b1) > 3600 || (r2 + g2 + b2) > 3600) {
-    sort_bottle = 2;
+    if ( ((float)b1 / (float)r1) > 1.25 || ((float)b2 / (float)r2) > 1.25 ) {
+      sort_bottle = 1;
+      position = pos1;
+    }
   }
-
-  if ( ((float)b1 / (float)r1) > 1.25 || ((float)b2 / (float)r2) > 1.25 ) {
-    sort_bottle = 1;
+  else {
+    sort_bottle = 5;
   }
-  //  }
-  //  else {
-  //    sort_bottle = 5;
-  //  }
 
   Serial.println((uint8_t)sort_bottle);
 }

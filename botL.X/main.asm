@@ -267,6 +267,32 @@ restoreContext macro
 	ORG	0x018
 	goto    ISR_LOW
 
+EMERGENCY_STOP
+	; first check if we're currently sorting - else, no need to restart
+	movlw	0xff		    ; if in operation, skip return
+	cpfseq	inExecution
+	goto	END_ISR_HIGH
+	
+	; reset program counter - emergency stop recorded. 
+	bcf	T0CON, TMR0ON
+	call	SAVE_EXE_TIME
+	
+	; reset emergency stop interrupt bit
+	bcf	INTCON, INT0IF
+		
+	; clear inExecution flag
+	clrf	inExecution
+	movlw	d'1'
+	movwf	STOP_CONDITION
+	call	SaveData
+	
+	clrf	TOSU
+	clrf	TOSH
+	clrf	TOSL
+	bcf	INTCON3, INT1IF         ; Clear flag for next interrupt
+	restoreContext
+	retfie
+
 LOAD_STANDBY_TIME
 	movlw	0xff
 	movwf	TMR0H
@@ -285,6 +311,9 @@ LOAD_EXE_TIME
 	
 ISR_HIGH
 	saveContext
+	
+;	btfsc	INTCON, INT0IF
+;	call	EMERGENCY_STOP
 	
 	movlw	0x00
 	cpfseq	inStandby
@@ -455,8 +484,10 @@ INIT
 	bsf	INTCON, TMR0IE	    ; clear timer0 overflow interrupt flag
 	bsf	INTCON, TMR0IF	    ; clear timer0 overflow interrupt flag
 	bsf	INTCON2, TMR0IP	    ; set to high priority
-	bsf	INTCON3, INT1IE
-	bcf	INTCON3, INT1IP
+	bsf	INTCON3, INT1IE	    ; enable interrupts on rb1 for keyboard
+	bcf	INTCON3, INT1IP	    ; keyboard to low priority
+;	bsf	INTCON, INT0IE	    ; enable high interrupts on rb0 for emergency stop
+;	bcf	INTCON, INT0IF	    ; clear emergency stop interrupt
 	
 	; setting up timer to sychronize with 1 second clock intervals
 	bcf	T0CON, TMR0ON
@@ -518,8 +549,6 @@ HOLD_STANDBY
 
 	ChangeMode  key1, COLOUR_TEST
 	ChangeMode  key2, STEP_TEST
-	ChangeMode  key3, DC_TEST_CW
-	ChangeMode  key4, DC_TEST_CCW
 	ChangeMode  keyA, EXECUTION
 	ChangeMode  keyB, LOG
 	ChangeMode  keyC, PERM_LOG
@@ -529,68 +558,96 @@ HOLD_STANDBY
 ;*******************************************************************************
 ; super fun awesome tests that are my favorite thing to do at 3am yay fun great
 ;*******************************************************************************
-
-DC_TEST_CW
-	movlw	b'00000000'
-	movwf	PORTE
-	Delay50N    delayR, 0x14
-
-DC_TEST_CW_HOLD
-	movlw	b'00000001'
-	movwf	PORTE
-	
-	Delay50N    delayR, 0x0a
-	bra	DC_TEST_CW
-	
-DC_TEST_CCW
-	movlw	b'00000000'
-	movwf	PORTE
-	Delay50N    delayR, 0x14
-
-DC_TEST_CCW_HOLD
-	movlw	b'00000010'
-	movwf	PORTE
-	
-	Delay50N    delayR, 0x0a
-	bra	DC_TEST_CCW
 	
 STEP_TEST
+	clrf	inStandby
 	clrf	COLLECTIONS_COUNT
 	Delay50N    delayR, 0x14
     
-ROTATE_90_TEST
+ROTATE_90_TEST			    ; actually 45, but dont care to change label
 	movlw	b'00100011'
 	movwf	PORTA
 	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	incf	COLLECTIONS_COUNT
 	
+	movlw	d'25'
+	subwf	COLLECTIONS_COUNT, 0
+	bz	STEP_TEST
+
 	movlw	b'00100110'
 	movwf	PORTA
 	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	incf	COLLECTIONS_COUNT
 	
 	movlw	b'00101100'
 	movwf	PORTA
 	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	incf	COLLECTIONS_COUNT
 
 	movlw	b'00101001'
 	movwf	PORTA
 	call	delay5ms
-	
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms	
 	incf	COLLECTIONS_COUNT
-	movlw	d'120'
-	cpfseq	COLLECTIONS_COUNT
-	bra	ROTATE_90_TEST
 	
-	bra STEP_TEST
+;	movlw	d'8'			    ; 7 ~ 45 degrees
+;	cpfseq	COLLECTIONS_COUNT
+;	bra	ROTATE_90_TEST
+	bra	ROTATE_90_TEST
 
 COLOUR_TEST
+	call	ClrLCD
+	clrf	inStandby
+	movlw	b'00000001'
+	movwf	PORTE
 
 LOOPING
 	Delay50N delayR, 0x28
-	call	ClrLCD
+
+;	movlw	d'1000'
+;	movwf	TRAY_DELAY
+	
+	; reading data from arduino 
+	; expect:   1 for eska cap
+	;	    2 for eska no cap
+	;	    3 for yop cap
+	;	    4 for yop no cap
+	;	    5 for no bottle, get outta here
 	call	READ_ARDUINO
+	;movlw	d'2'			; testing!!!
+	movwf	DETECTION_VAL
 	addlw	0x30
 	call	WR_DATA
-	bra LOOPING
+	Delay50N delayR, 0x28
+	
+	bra COLOUR_TEST
 
 ;*******************************************************************************
 ; execution mode
@@ -630,6 +687,9 @@ EXECUTION
 	movwf	    TRAY_CURRENT
 	clrf	    TRAY_DELAY
 	
+	movlw	b'00000001'
+	movwf	PORTE
+	
 	; todo: make sure tray is in position one on reset, add some delay
 	
 	goto	    COLLECTIONS_STEP
@@ -637,30 +697,63 @@ EXECUTION
 COLLECTIONS_STEP
 	clrf	    COLLECTIONS_COUNT
 
-ROTATE_90				    ; actually 45 but who is count am i right??
+ROTATE_45
 	movlw	b'00100011'
 	movwf	PORTA
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	incf	COLLECTIONS_COUNT
+	
+	movlw	d'25'
+	subwf	COLLECTIONS_COUNT, 0
+	bz	DETECTIONS
 
 	movlw	b'00100110'
 	movwf	PORTA
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	incf	COLLECTIONS_COUNT
 	
 	movlw	b'00101100'
 	movwf	PORTA
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	incf	COLLECTIONS_COUNT
 
 	movlw	b'00101001'
 	movwf	PORTA
-	
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms
+	call	delay5ms	
 	incf	COLLECTIONS_COUNT
-	movlw	d'25'			    ; 1.8 degrees per step, 45/1.8=25
-	cpfseq	COLLECTIONS_COUNT
-	bra	ROTATE_90
 	
-	bra DETECTIONS
-	
+	bra	ROTATE_45
+
 DETECTIONS
-	Delay50N    delayR, 0x0a
-;	movlw	d'1000'
-;	movwf	TRAY_DELAY
+	Delay50N    delayR, 0x14
 	
 	; reading data from arduino 
 	; expect:   1 for eska cap
@@ -704,135 +797,27 @@ DETECTIONS
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
-
-	; determine what position to rotate the tray to: brute force, but w/e
-	movlw	d'4'
-	movwf	TRAY_GOTO		; new position will be 4
-	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
-	
-	movlw	d'3'
-	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CW
-	bz	TRAY_STEP_CW		
-	
-	movlw	d'2'
-	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 2 spots over CW
-	bz	TRAY_STEP_CW
-	
-	movlw	d'1'
-	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 3 spots over CW
-	bz	TRAY_STEP_CW
+	bra	CHECK_DONE
 	
 INC_YOPCAP
 	incf	YOP
-	
-	; determine what position to rotate the tray to: brute force, but w/e
-	movlw	d'3'
-	movwf	TRAY_GOTO
-	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
-	
-	movlw	d'4'
-	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 1 spot over CCW
-	bz	TRAY_STEP_CCW	
-	
-	movlw	d'2'
-	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CW
-	bz	TRAY_STEP_CW
-	
-	movlw	d'1'
-	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 2 spots over CW
-	bz	TRAY_STEP_CW
+	bra	CHECK_DONE
 	
 INC_ESKANOCAP
 	incf	ESKA_NOCAP
-	
-	; determine what position to rotate the tray to: brute force, but w/e
-	movlw	d'2'
-	movwf	TRAY_GOTO
-	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
-	
-	movlw	d'4'
-	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 2 spots over CCW
-	bz	TRAY_STEP_CCW	
-	
-	movlw	d'3'
-	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 1 spot over CCW
-	bz	TRAY_STEP_CCW
-	
-	movlw	d'1'
-	subwf	TRAY_CURRENT, 0		; if in positon 1, rotate 1 spot over CW
-	bz	TRAY_STEP_CW
+	bra	CHECK_DONE
 	
 INC_ESKACAP
 	incf	ESKA
-	
-	; determine what position to rotate the tray to: brute force, but w/e
-	movlw	d'1'
-	movwf	TRAY_GOTO
-	subwf	TRAY_CURRENT, 0		; if tray is where we need it, advance right away
-	bz	TRAY_STEP_END
-	
-	movlw	d'4'
-	subwf	TRAY_CURRENT, 0		; if in positon 4, rotate 3 spots over CCW
-	bz	TRAY_STEP_CCW	
-	
-	movlw	d'3'
-	subwf	TRAY_CURRENT, 0		; if in positon 3, rotate 2 spots over CCW
-	bz	TRAY_STEP_CCW
-	
-	movlw	d'2'
-	subwf	TRAY_CURRENT, 0		; if in positon 2, rotate 1 spot over CCW
-	bz	TRAY_STEP_CCW
-
-TRAY_STEP_CW
-	clrf	TRAY_COUNT
-	movlw	b'00000000'
-	movwf	PORTE
-
-TRAY_CW_HOLD
-	movlw	b'00000001'
-	movwf	PORTE
-
-;	incf	TRAY_COUNT
-;	movff	TRAY_COUNT, WREG
-;	cpfseq	TRAY_DELAY
-;	goto	TRAY_CW_HOLD
-	Delay50N    delayR, 0x05
-	
-	bra	TRAY_STEP_END
-	
-TRAY_STEP_CCW
-	clrf	TRAY_COUNT
-	movlw	b'00000000'
-	movwf	PORTE
-	
-TRAY_CCW_HOLD
-	movlw	b'00000010'
-	movwf	PORTE
-
-;	incf	TRAY_COUNT
-;	movff	TRAY_COUNT, WREG
-;	cpfseq	TRAY_DELAY
-;	bra	TRAY_CCW_HOLD
-	Delay50N    delayR, 0x05
-
-	bra	TRAY_STEP_END
-	
-TRAY_STEP_END
-	movff	TRAY_GOTO, TRAY_CURRENT
-	movlw	b'00000000'
-	movwf	PORTE
+	bra	CHECK_DONE
 	
 CHECK_DONE
-	
 	; Challenging:	logic to figure out when the machine is done sorting 
 	;		if the TOTAL_BOTTLES count is less than 10. 
 	
 	; NUMBER: 
 	; if the total bottle count is 10, then we are done (most basic end condition)
-	clrf	    STOP_CONDITION	; denote regular stop, saved in eeprom as 0
+	clrf	STOP_CONDITION	; denote regular stop, saved in eeprom as 0
 	movlw	d'9'
 	subwf	TOTAL_BOTTLES, 0
 	bz	EXIT_EXE
