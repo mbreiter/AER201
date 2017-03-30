@@ -575,11 +575,11 @@ ROTATE_90_TEST			    ; actually 45, but dont care to change label
 	call	delay5ms
 	call	delay5ms
 	call	delay5ms
-	incf	COLLECTIONS_COUNT
-	
-	movlw	d'25'
-	subwf	COLLECTIONS_COUNT, 0
-	bz	STEP_TEST
+;	incf	COLLECTIONS_COUNT
+;	
+;	movlw	d'15'
+;	subwf	COLLECTIONS_COUNT, 0
+;	bz	STEP_TEST
 
 	movlw	b'00100110'
 	movwf	PORTA
@@ -591,7 +591,7 @@ ROTATE_90_TEST			    ; actually 45, but dont care to change label
 	call	delay5ms
 	call	delay5ms
 	call	delay5ms
-	incf	COLLECTIONS_COUNT
+;	incf	COLLECTIONS_COUNT
 	
 	movlw	b'00101100'
 	movwf	PORTA
@@ -603,7 +603,7 @@ ROTATE_90_TEST			    ; actually 45, but dont care to change label
 	call	delay5ms
 	call	delay5ms
 	call	delay5ms
-	incf	COLLECTIONS_COUNT
+;	incf	COLLECTIONS_COUNT
 
 	movlw	b'00101001'
 	movwf	PORTA
@@ -617,10 +617,11 @@ ROTATE_90_TEST			    ; actually 45, but dont care to change label
 	call	delay5ms	
 	incf	COLLECTIONS_COUNT
 	
-;	movlw	d'8'			    ; 7 ~ 45 degrees
-;	cpfseq	COLLECTIONS_COUNT
-;	bra	ROTATE_90_TEST
+	movlw	d'2'			    ; 7 ~ 45 degrees
+	cpfseq	COLLECTIONS_COUNT
 	bra	ROTATE_90_TEST
+	
+	bra	STEP_TEST
 
 COLOUR_TEST
 	call	ClrLCD
@@ -694,66 +695,81 @@ EXECUTION
 	
 	goto	    COLLECTIONS_STEP
 
+COLLECTIONS_CORRECTION
+	movlw	    d'0'
+	movwf	    TRAY_COUNT
+	
+	movlw	    d'26'
+	movwf	    TRAY_DELAY
+	bra	    ROTATE_45
+	
+COLLECTIONS_VALUE
+	movlw	    d'1'
+	movwf	    TRAY_COUNT
+	
+	movlw	    d'25'
+	movwf	    TRAY_DELAY
+	bra	    ROTATE_45
+	
 COLLECTIONS_STEP
 	clrf	    COLLECTIONS_COUNT
+	movlw	    d'0'
+;	cpfseq	    TRAY_COUNT
+;	bra	    COLLECTIONS_CORRECTION
+;	bra 	    COLLECTIONS_VALUE
+	Delay50N    delayR, 0x14
 
-ROTATE_45
+
+ROTATE_45			; count needs to be 25 for 45 (45/1.8=25)
 	movlw	b'00100011'
 	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
+	Delay50N    delayR, 0x03
 	incf	COLLECTIONS_COUNT
 	
+	movff	TRAY_DELAY, WREG
 	movlw	d'25'
 	subwf	COLLECTIONS_COUNT, 0
 	bz	DETECTIONS
 
 	movlw	b'00100110'
 	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
+	Delay50N    delayR, 0x03
 	incf	COLLECTIONS_COUNT
+	
+;	movff	TRAY_DELAY, WREG
+;	subwf	COLLECTIONS_COUNT, 0
+;	bz	DETECTIONS
 	
 	movlw	b'00101100'
 	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
+	Delay50N    delayR, 0x03
 	incf	COLLECTIONS_COUNT
+	
+;	movff	TRAY_DELAY, WREG
+;	subwf	COLLECTIONS_COUNT, 0
+;	bz	DETECTIONS
 
 	movlw	b'00101001'
 	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms	
+	Delay50N    delayR, 0x03
 	incf	COLLECTIONS_COUNT
 	
-	bra	ROTATE_45
-
+;	movff	TRAY_DELAY, WREG
+;	subwf	COLLECTIONS_COUNT, 0
+;	bz	DETECTIONS
+	goto	ROTATE_45
+	
 DETECTIONS
-	Delay50N    delayR, 0x14
+	movlw	b'00001001'
+	movwf	PORTA
+	call	CHECK_DONE
+	
+	movff	OP_sec, temp	; 10's seconds
+	movlw	0x0f
+	andwf	temp
+	movlw	d'1'
+	subwf	temp, 0
+	bz	EXIT_EXE	; if 150 second, terminate
 	
 	; reading data from arduino 
 	; expect:   1 for eska cap
@@ -764,8 +780,9 @@ DETECTIONS
 	call	READ_ARDUINO
 	;movlw	d'2'			; testing!!!
 	movwf	DETECTION_VAL
+	Delay50N    delayR, 0x28
 	
-	; first check if there was a bottle detected, if go to COLLECTIONS_STEP
+	; first check if there was a bottle detected, if so go to COLLECTIONS_STEP
 	movlw	d'5'
 	subwf	DETECTION_VAL, 0
 	bz	COLLECTIONS_STEP
@@ -793,6 +810,7 @@ DETECTIONS
 	subwf	DETECTION_VAL, 0
 	bz	INC_ESKACAP
 	
+	; edge case, cant determine bottle so check if done sorting
 	bra	DETECTIONS
 	
 INC_YOPNOCAP
@@ -815,13 +833,6 @@ CHECK_DONE
 	; Challenging:	logic to figure out when the machine is done sorting 
 	;		if the TOTAL_BOTTLES count is less than 10. 
 	
-	; NUMBER: 
-	; if the total bottle count is 10, then we are done (most basic end condition)
-	clrf	STOP_CONDITION	; denote regular stop, saved in eeprom as 0
-	movlw	d'9'
-	subwf	TOTAL_BOTTLES, 0
-	bz	EXIT_EXE
-	
 	; OPTIMAL/MAX QUALIFIED TIME: 
 	; if the execution time exceeds the optimal threshold of 120s, check for 
 	; qualified run and then stop. if the time exceeds the max threshold of 
@@ -843,6 +854,13 @@ CHECK_DONE
 	movlw	d'5'
 	subwf	temp, 0
 	bz	EXIT_EXE	; if 150 second, terminate
+	
+	; NUMBER: 
+	; if the total bottle count is 10, then we are done (most basic end condition)
+	clrf	STOP_CONDITION	; denote regular stop, saved in eeprom as 0
+	movlw	d'10'
+	subwf	TOTAL_BOTTLES, 0
+	bz	EXIT_EXE
 	
 	; here we know that bottles < 10 and 100 < time < 150, so check for qualified run
 	; qualified run has at least 4 bottles, with 1 of each different kind
