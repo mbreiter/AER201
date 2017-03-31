@@ -6,7 +6,9 @@
 extern "C" {
 #include "utility/twi.h"  // from Wire library, so we can do bus scanning
 }
+#include <Stepper.h>
 
+#define STEPS 200
 #define TCAADDR 0x70
 
 Adafruit_TCS34725 tcs1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X);
@@ -24,9 +26,14 @@ int pos2 = 1550;
 int pos3 = 1850;
 int pos4 = 2150;
 int position = pos1;
-
 int servoState = LOW;
 long previousMillis = 0;
+
+// digital pins for the stepper motor
+Stepper stepper(STEPS, 5, 6, 7, 8);
+int enable = 9;
+
+int proceed_detection = 0;
 
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -42,6 +49,9 @@ void setup() {
 
   pinMode(switchPin, INPUT);
   pinMode(servoPin, OUTPUT);
+  pinMode(enable, OUTPUT);
+  digitalWrite(enable, HIGH);
+  stepper.setSpeed(8);
 
   Wire.begin(8);                // join i2c bus with address 8
   Wire.onReceive(receiveEvent);
@@ -76,7 +86,13 @@ SIGNAL(TIMER0_COMPA_vect) {
 }
 
 void loop() {
+  if (proceed_detection == 1) {
+    proceed_detection = 0;
+    stepper.step(25);
+  }
+
   detections();
+//  Serial.println((int)sort_bottle);
 }
 
 void servoControl(int position) {
@@ -133,23 +149,18 @@ void detections() {
   else {
     sort_bottle = 5;
   }
-
-  Serial.println((uint8_t)sort_bottle);
 }
 
 void receiveEvent(int howMany) {
-
   char x = Wire.read();      // receive byte as char
-  Serial.println(x);       // print to serial output
-
-  buf[counter++] = x;
-  counter = counter == 3 ? 0 : counter;
-
-  if (buf[0] == 'A' && buf[1] == 'A' && buf[2] == 'A') {
-    state = 1;
-  }
 }
 
+//void requestEvent() {
+// // proceed_detection = 1;
+//   Wire.write(sort_bottle); // respond with message of 1 byte, in this case, the detected bottle
+//}
+
 void requestEvent() {
+  proceed_detection = 1;
   Wire.write(sort_bottle); // respond with message of 1 byte, in this case, the detected bottle
 }

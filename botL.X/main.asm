@@ -642,11 +642,10 @@ LOOPING
 	;	    4 for yop no cap
 	;	    5 for no bottle, get outta here
 	call	READ_ARDUINO
-	;movlw	d'2'			; testing!!!
 	movwf	DETECTION_VAL
 	addlw	0x30
 	call	WR_DATA
-	Delay50N delayR, 0x28
+	Delay50N delayR, 0x3c
 	
 	bra COLOUR_TEST
 
@@ -693,7 +692,7 @@ EXECUTION
 	
 	; todo: make sure tray is in position one on reset, add some delay
 	
-	goto	    COLLECTIONS_STEP
+	goto	    DETECTIONS
 
 COLLECTIONS_CORRECTION
 	movlw	    d'0'
@@ -759,17 +758,13 @@ ROTATE_45			; count needs to be 25 for 45 (45/1.8=25)
 ;	bz	DETECTIONS
 	goto	ROTATE_45
 	
-DETECTIONS
-	movlw	b'00001001'
-	movwf	PORTA
-	call	CHECK_DONE
-	
-	movff	OP_sec, temp	; 10's seconds
-	movlw	0x0f
-	andwf	temp
-	movlw	d'1'
-	subwf	temp, 0
-	bz	EXIT_EXE	; if 150 second, terminate
+DETECTIONS	
+;	movff	OP_sec, temp	; 10's seconds
+;	movlw	0x0f
+;	andwf	temp
+;	movlw	d'1'
+;	subwf	temp, 0
+;	bz	EXIT_EXE	; if 150 second, terminate
 	
 	; reading data from arduino 
 	; expect:   1 for eska cap
@@ -778,9 +773,11 @@ DETECTIONS
 	;	    4 for yop no cap
 	;	    5 for no bottle, get outta here
 	call	READ_ARDUINO
+	Delay50N    delayR, 0x28
+	Delay50N    delayR, 0x28
+
 	;movlw	d'2'			; testing!!!
 	movwf	DETECTION_VAL
-	Delay50N    delayR, 0x28
 	
 	; first check if there was a bottle detected, if so go to COLLECTIONS_STEP
 	movlw	d'5'
@@ -811,7 +808,7 @@ DETECTIONS
 	bz	INC_ESKACAP
 	
 	; edge case, cant determine bottle so check if done sorting
-	bra	DETECTIONS
+	bra	CHECK_DONE
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
@@ -843,7 +840,7 @@ CHECK_DONE
 	andwf	temp
 	movlw	d'0'
 	cpfsgt	temp
-	goto	COLLECTIONS_STEP; if 100 second, continue to check for 150s then 120s.
+	goto	DETECTIONS	; if 100 second, continue to check for 150s then 120s.
 
 	; MAX
 	movlw	d'2'
@@ -866,23 +863,23 @@ CHECK_DONE
 	; qualified run has at least 4 bottles, with 1 of each different kind
 	movlw	d'3'
 	cpfsgt	TOTAL_BOTTLES
-	goto	COLLECTIONS_STEP
+	goto	DETECTIONS
 
 	movlw	d'0'
 	cpfsgt	YOP_NOCAP, 0
-	goto	COLLECTIONS_STEP
+	goto	DETECTIONS
 	
 	movlw	d'0'
 	cpfsgt	YOP, 0
-	goto	COLLECTIONS_STEP
+	goto	DETECTIONS
 	
 	movlw	d'0'
 	cpfsgt	ESKA_NOCAP, 0
-	goto	COLLECTIONS_STEP
+	goto	DETECTIONS
 	
 	movlw	d'0'
 	cpfsgt	ESKA, 0
-	goto	COLLECTIONS_STEP
+	goto	DETECTIONS
 	
 	; finally, if we get here then consider the termination optimized.
 	movlw	d'3'
