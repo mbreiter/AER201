@@ -762,7 +762,7 @@ DETECTIONS
 	; first check if there was a bottle detected, if so go to COLLECTIONS_STEP
 	movlw	d'5'
 	subwf	DETECTION_VAL, 0
-	bz	COLLECTIONS_STEP
+	bz	DETECTIONS
 	
 	; okay we have a bottle, first increment total count then see what it is
 	incf	TOTAL_BOTTLES

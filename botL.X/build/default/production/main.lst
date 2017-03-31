@@ -1,4 +1,4 @@
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  1
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -78,7 +78,7 @@ Warning[205]: Found directive in column 1. (endm)
 Warning[205]: Found directive in column 1. (endm)
                       00033 endm
                       00018 #include <colour.inc>
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  2
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -158,7 +158,7 @@ Warning[207]: Found label after column 1. (COLOUR_READ)
                       00070     endm
                       00071     
 Warning[207]: Found label after column 1. (COLOUR_WRITE)
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  3
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -238,7 +238,7 @@ Warning[207]: Found label after column 1. (ARDUINO_READ)
   00000006            00046         key6
   00000007            00047         keyB
   00000008            00048         key7
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  4
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -318,7 +318,7 @@ Warning[207]: Found label after column 1. (StandbyInfo)
        2074 423C 4C3E 
        7361 2074 6F4C 
        2067 433C 503E 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  5
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -398,7 +398,7 @@ Warning[207]: Found label after column 1. (NoData)
                       00147         endm
                       00148 
                       00149 Display macro   Message
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  6
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -478,7 +478,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00221 
                       00222 READEE  macro   file, addH, addL
                       00223         movff   addH, EEADRH        ; read to high
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  7
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -558,7 +558,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000040 C013 FFD8          M     movff   temp_S, STATUS          ; restore STATUS last without affecting W
 000044 0010           00294         retfie
                       00295 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  8
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -638,7 +638,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
   0000                    M         local ones, endBCD
 00007E C019 F017          M         movff   OP_INT, temp
                           M         
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE  9
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -718,7 +718,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00381         ; check operation status
 0000F0 0EFF           00382         movlw   0xff                    ; If in operation, skip return
 0000F2 621E           00383         cpfseq  inExecution
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 10
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -798,7 +798,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00451 ;       movwf   ADCON1
                       00452         
                       00453         ; setting up pwm
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 11
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 11
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -878,7 +878,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0001C6 EC?? F???      00518         call    ClrLCD
                       00519         Display Welcome
   0000                    M         local   loop
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 12
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 12
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -958,7 +958,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000240 0E??               M         movlw   high StandbyInfo ; Move Table<15:8>
 000242 6EF7               M         movwf   TBLPTRH
 000244 0E??               M         movlw   low StandbyInfo ; Move Table<7:0>
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 13
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 13
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1038,7 +1038,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0002A8 6210               M         cpfseq  KEY                 ; check this against key press
 0002AA EF?? F???          M         goto    Exit
                           M 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 14
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 14
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1118,7 +1118,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00578 ;       incf    COLLECTIONS_COUNT
                       00579 ;       
                       00580 ;       movlw   d'15'
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 15
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 15
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1198,7 +1198,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0003BE EC?? F???          M         call    Delay50ms
 0003C2 2E1A               M         decfsz  delayR
 0003C4 EF?? F???          M         goto    loop
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 16
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 16
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1278,7 +1278,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00042A 0E01           00696         movlw       d'1'
 00042C 6E33           00697         movwf       TRAY_COUNT
                       00698         
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 17
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 17
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1358,7 +1358,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00738 ;       subwf   COLLECTIONS_COUNT, 0
                       00739 ;       bz      DETECTIONS
                       00740 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 18
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 18
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1404,7 +1404,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00762         ; first check if there was a bottle detected, if so go to COLLECTIONS_STEP
 0004B8 0E05           00763         movlw   d'5'
 0004BA 5C2C           00764         subwf   DETECTION_VAL, 0
-0004BC E0??           00765         bz      COLLECTIONS_STEP
+0004BC E0??           00765         bz      DETECTIONS
                       00766         
                       00767         ; okay we have a bottle, first increment total count then see what it is
 0004BE 2A31           00768         incf    TOTAL_BOTTLES
@@ -1438,7 +1438,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00796         
 0004DE                00797 INC_YOPCAP
 0004DE 2A2F           00798         incf    YOP
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 19
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 19
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1518,7 +1518,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00870         ; stop timer and save the execution time to eeprom
 000544 9ED5           00871         bcf         T0CON, TMR0ON
 000546 EC?? F???      00872         call        SAVE_EXE_TIME
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 20
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 20
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1598,7 +1598,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                           M 
 0005BE                    M Exit
 0005BE 0000               M         nop
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 21
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 21
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1678,7 +1678,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000628 6EF8               M         movwf   TBLPTRU
 00062A 0E??               M         movlw   high PermLog1   ; Move Table<15:8>
 00062C 6EF7               M         movwf   TBLPTRH
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 22
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 22
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1758,7 +1758,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00069C 6A8C               M         clrf    LATD
 00069E EF?? F???          M         goto    PLOG
                           M 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 23
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 23
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1838,7 +1838,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000700 EF?? F???          M         goto    Exit
                           M 
 000704                    M Next
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 24
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 24
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1918,7 +1918,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000774 C017 F011      00961         movff   temp, temp_KEY
 000778 0D15           00962         mullw   d'21'       ; indexed as mutliples of 21
                       00963 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 25
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 25
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -1998,7 +1998,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00993         
 000806                00994 PLOG_DETAILS
 000806 EC?? F???      00995         call    ClrLCD
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 26
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 26
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2078,7 +2078,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00087A 6EF6               M         movwf   TBLPTRL
 00087C 0008               M         tblrd*                  ; Read byte from TBLPTRL to TABLAT
 00087E 50F5               M         movf    TABLAT, W
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 27
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 27
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2158,7 +2158,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0008F2                01040 SaveData
 0008F2 C02D FFE8      01041         movff       ESKA, WREG
 0008F6 0F30           01042         addlw       0x30
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 28
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 28
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2238,7 +2238,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00097C 6EA7               M         movwf   EECON2              ; write 55h
 00097E 0EAA               M         movlw   0xaa
 000980 6EA7               M         movwf   EECON2              ; write 0xaa
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 29
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 29
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2318,7 +2318,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000A04 6E24           01073         movwf       tempL_EE
                       01074         
 000A06 6A16           01075         clrf        counter2
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 30
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 30
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2398,7 +2398,7 @@ Warning[203]: Found opcode in column 1. (return)
 000A7E 0E02               M     movlw   0x02
 000A80 6E??               M     movwf   regaddress
 000A82 EC?? F???          M     call    read_rtc
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 31
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 31
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2478,7 +2478,7 @@ Warning[202]: Argument out of range.  Least significant bits used.
 000B2A 8EF2               M         bsf     INTCON, GIE         ; enable interrupts after write
 000B2C 94A6               M         bcf     EECON1, WREN        ; disable writes
 000B2E 2A21           01138         incf    L_EE
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 32
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 32
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2558,7 +2558,7 @@ Warning[203]: Found opcode in column 1. (return)
                       01162         rtc_read    0x02            ; 0x02 from DS1307 - hours
 000BAA 0E02               M     movlw   0x02
 000BAC 6E??               M     movwf   regaddress
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 33
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 33
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2638,7 +2638,7 @@ Warning[203]: Found opcode in column 1. (return)
 000C82 0012           01205 return
                       01206         
 000C84                01207 SET_TIME
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 34
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 34
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2718,7 +2718,7 @@ Warning[203]: Found opcode in column 1. (return)
 000CF8 8EAB           01230         bsf     RCSTA,SPEN      ; asynchronous serial port enable
 000CFA 88AB           01231         bsf     RCSTA,CREN      ; continous receive
                       01232         
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 35
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 35
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2798,7 +2798,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000D78 EF?? F???      01276         goto    $-2
 000D7C 0012           01277         return
                       01278 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 36
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 36
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2878,7 +2878,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000DF6 B2A6               M         btfsc   EECON1, WR          ; test if WR=0, skip if so
 000DF8 D???               M         bra     $-2
                           M 
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 37
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 37
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -2958,7 +2958,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       01355         ; call      DISPLAY_RTC 
                       01356 
 000E78 A281           01357         btfss       PORTB, 1    ; keypad interrupt
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 38
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 38
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -3038,7 +3038,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000F14 EC?? F???      01391         call    WR_DATA
 000F18 EC?? F???      01392         call    LCD_L2
 000F1C                01393 SkipDispExeTime
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 39
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 39
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -3118,7 +3118,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 000FB0 C020 FFAA          M         movff   H_EE, EEADRH        ; read to high
 000FB4 C021 FFA9          M         movff   L_EE, EEADR         ; read to low
 000FB8 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 40
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 40
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -3198,7 +3198,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 001052 C021 FFA9          M         movff   L_EE, EEADR         ; read to low
 001056 9EA6               M         bcf     EECON1, EEPGD       ; point to data memory
 001058 9CA6               M         bcf     EECON1, CFGS        ; access to EEPROM
-MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:15:28         PAGE 41
+MPASM 5.72  /USERS/MREITER/DESKTOP/AER201/BO   3-30-2017  22:27:18         PAGE 41
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
