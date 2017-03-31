@@ -630,17 +630,7 @@ COLOUR_TEST
 	movwf	PORTE
 
 LOOPING
-	Delay50N delayR, 0x28
-
-;	movlw	d'1000'
-;	movwf	TRAY_DELAY
-	
-	; reading data from arduino 
-	; expect:   1 for eska cap
-	;	    2 for eska no cap
-	;	    3 for yop cap
-	;	    4 for yop no cap
-	;	    5 for no bottle, get outta here
+	Delay50N delayR, 0x3c
 	call	READ_ARDUINO
 	movwf	DETECTION_VAL
 	addlw	0x30
@@ -758,25 +748,15 @@ ROTATE_45			; count needs to be 25 for 45 (45/1.8=25)
 ;	bz	DETECTIONS
 	goto	ROTATE_45
 	
-DETECTIONS	
-;	movff	OP_sec, temp	; 10's seconds
-;	movlw	0x0f
-;	andwf	temp
-;	movlw	d'1'
-;	subwf	temp, 0
-;	bz	EXIT_EXE	; if 150 second, terminate
-	
+DETECTIONS
 	; reading data from arduino 
 	; expect:   1 for eska cap
 	;	    2 for eska no cap
 	;	    3 for yop cap
 	;	    4 for yop no cap
 	;	    5 for no bottle, get outta here
+	Delay50N delayR, 0x3c
 	call	READ_ARDUINO
-	Delay50N    delayR, 0x28
-	Delay50N    delayR, 0x28
-
-	;movlw	d'2'			; testing!!!
 	movwf	DETECTION_VAL
 	
 	; first check if there was a bottle detected, if so go to COLLECTIONS_STEP
