@@ -1,5 +1,5 @@
 botL
-Mon Mar 13 21:32:47 2017
+Sun Apr  2 09:22:20 2017
 
 Guide: 
 18 bits of data are saved for every run. this log will display data for the 9 latest runs. here is the bit breakdown: 
@@ -8,3 +8,12 @@ Guide:
    13-16 are the sorting statistics (ESKA/ESKANOCAP/YOP/YOPNOCAP)
    17 is the stop condition (0: Normal, 1: Emergency Stop, 2: Execution Timeout, 3: Optimized Stop)
 
+0930170402ÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ
+

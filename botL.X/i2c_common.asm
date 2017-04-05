@@ -17,7 +17,7 @@ tens_digit res 1
 ones_digit res 1
 convert_buffer res 1
 
-global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C, READ_ARDUINO, INIT_ARDUINO, INIT_RTC
+global write_rtc,read_rtc,rtc_convert,i2c_common_setup, READ_COLOUR_I2C, WRITE_COLOUR_I2C, WRITE_ARDUINO, READ_ARDUINO, INIT_ARDUINO, INIT_RTC
 global regaddress, databyte, datachar, tens_digit, ones_digit, convert_buffer
  
 extern delay44us
@@ -228,7 +228,19 @@ INIT_ARDUINO
     
     i2c_common_stop
 return
-	
+
+WRITE_ARDUINO
+    i2c_common_start
+
+    movlw   0x10		; arudino address << 1 + READ
+    i2c_common_write
+    
+    movff   databyte, WREG
+    i2c_common_write
+    
+    i2c_common_stop
+return
+    
 	
 READ_ARDUINO
     i2c_common_start

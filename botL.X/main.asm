@@ -96,30 +96,30 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	inStandby
     endc
     
-    extern tens_digit, ones_digit
-    extern READ_ARDUINO, INIT_RTC
+    extern tens_digit, ones_digit, databyte
+    extern WRITE_ARDUINO, READ_ARDUINO, INIT_RTC
     
 ;*******************************************************************************
 ; tables
 ;*******************************************************************************
     Welcome	db	    "botL", 0
     Team	db	    "mr hl hg", 0
-    StandBy	db	    "Standing by ... ... Standing by ... ...", 0
-    StandbyInfo db	    "<A>Sort <B>Last Log <C>Perm Logs <D>PC", 0
-    Log1	db	    "Time:",0
+    StandBy	db	    "standing by ... ... standing by ... ...", 0
+    StandbyInfo db	    "<a>sort <b>last log <c>perm logs <d>pc", 0
+    Log1	db	    "time:",0
     Log2	db	    "12:00 2/3/14", 0
-    LogInfo1	db	    "Saved:", 0
-    LogInfo2	db	    "Back <0>", 0
-    PermLog1	db	    "Permanent Logs", 0
-    PermLog2	db	    "<1> ... <9>", 0	
-    Exe1	db	    "Sorting...", 0
-    Exe2	db	    "END <*>", 0
-    PC1		db	    "PC Interface", 0
-    PC2		db	    "Begin <#>", 0
-    PCTransfer	db	    "Transferring...", 0
-    PCComplete	db	    "Complete!", 0
-    SAVE	db	    "Saving...", 0
-    NoData	db	    "N/A", 0
+    LogInfo1	db	    "saved:", 0
+    LogInfo2	db	    "back <0>", 0
+    PermLog1	db	    "permanent logs ", 0
+    PermLog2	db	    "access up to 9 logs, press <1> ... <9>", 0	
+    Exe1	db	    "sorting...", 0
+    Exe2	db	    "end <*>", 0
+    PC1		db	    "pc interface ... pc interface ... ", 0
+    PC2		db	    "press <#> to begin log transfer", 0
+    PCTransfer	db	    "transferring...", 0
+    PCComplete	db	    "complete!", 0
+    SAVE	db	    "saving...", 0
+    NoData	db	    "n/a", 0
 	
 ;*******************************************************************************
 ; macros
@@ -286,6 +286,10 @@ EMERGENCY_STOP
 	movwf	STOP_CONDITION
 	call	SaveData
 	
+	movlw	d'0'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	
 	clrf	TOSU
 	clrf	TOSH
 	clrf	TOSL
@@ -304,7 +308,7 @@ LOAD_STANDBY_TIME
 LOAD_EXE_TIME
 	movlw	0xc3
 	movwf	TMR0H
-	movlw	0x25
+	movlw	0x27
 	movwf	TMR0L
 	
 	return
@@ -312,8 +316,8 @@ LOAD_EXE_TIME
 ISR_HIGH
 	saveContext
 	
-;	btfsc	INTCON, INT0IF
-;	call	EMERGENCY_STOP
+	btfsc	INTCON, INT0IF
+	call	EMERGENCY_STOP
 	
 	movlw	0x00
 	cpfseq	inStandby
@@ -327,35 +331,6 @@ ISR_HIGH
 	movlw	0xff
 	cpfseq	inStandby
 	call	LOAD_EXE_TIME
-
-		
-	; displaying the execution time in seconds
-;	swapf	OP_sec, 0	; 100's seconds
-;	movwf	temp
-;	movlw	0x0f
-;	andwf	temp
-;	movff	temp, WREG
-;	addlw	0x30
-;	call	WR_DATA
-;
-;	movff	OP_sec, temp	; 10's seconds
-;	movlw	0x0f
-;	andwf	temp		; Temp = lower nibble of Op_sec
-;	movff	temp, WREG	; W = Temp
-;	addlw	0x30		; Convert to ASCII
-;	call	WR_DATA
-;	
-;	swapf	OP_INT, WREG	;1's seconds
-;	movwf	temp
-;	movlw	0x0f
-;	andwf	temp
-;	movff	temp, WREG
-;	addlw	0x30
-;	call	WR_DATA
-;
-;	movlw	0x73		; Write 's'
-;	call	WR_DATA
-;	call	LCD_L2
 		
 	;timer interrupt
 	btfss	INTCON, TMR0IF
@@ -400,6 +375,12 @@ ISR_LOW
 	clrf	inExecution
 	movlw	d'1'
 	movwf	STOP_CONDITION
+	
+	; turn off the motor
+	movlw	d'0'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	
 	call	SaveData
 	
 	clrf	TOSU
@@ -486,8 +467,8 @@ INIT
 	bsf	INTCON2, TMR0IP	    ; set to high priority
 	bsf	INTCON3, INT1IE	    ; enable interrupts on rb1 for keyboard
 	bcf	INTCON3, INT1IP	    ; keyboard to low priority
-;	bsf	INTCON, INT0IE	    ; enable high interrupts on rb0 for emergency stop
-;	bcf	INTCON, INT0IF	    ; clear emergency stop interrupt
+	bsf	INTCON, INT0IE	    ; enable high interrupts on rb0 for emergency stop
+	bcf	INTCON, INT0IF	    ; clear emergency stop interrupt
 	
 	; setting up timer to sychronize with 1 second clock intervals
 	bcf	T0CON, TMR0ON
@@ -503,6 +484,11 @@ INIT
 	clrf	L_EE
 	clrf	tens_digit
 	clrf	ones_digit
+	
+	;ensure that the motor is indeed off
+	movlw	d'0'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
 	
 	clrf	DETECTION_VAL
 	clrf	ESKA
@@ -530,6 +516,7 @@ STANDBY
 	movwf	PORTE
 	movlw	b'00000000'
 	movwf	PORTA
+	
 	
 	setf	inStandby	
 	call	ClrLCD
@@ -652,101 +639,49 @@ EXECUTION
 	call	    SAVE_TIME
 		
 	; display
-        setf	    inExecution
-	call	    ClrLCD
-	Display	    Exe1
-	call	    LCD_L2
+        setf	inExecution
+	call	ClrLCD
+	Display	Exe1
+	call	LCD_L2
 	
 	movlw	0xc3
 	movwf	TMR0H
-	movlw	0x25
+	movlw	0x27
 	movwf	TMR0L
 	
-	bsf	    T0CON, TMR0ON	    ; turning on timer
+	bsf	T0CON, TMR0ON	    ; turning on timer
 	
 	; initialize variables
-	clrf	    OP_sec
-	clrf	    OP_INT
+	clrf	OP_sec
+	clrf	OP_INT
 	
-	clrf	    ESKA
-	clrf	    ESKA_NOCAP
-	clrf	    YOP
-	clrf	    YOP_NOCAP
-	clrf	    TOTAL_BOTTLES
-	movlw	    d'1'
-	movwf	    TRAY_CURRENT
-	clrf	    TRAY_DELAY
+	clrf	ESKA
+	clrf	ESKA_NOCAP
+	clrf	YOP
+	clrf	YOP_NOCAP
+	clrf	TOTAL_BOTTLES
+	movlw	d'1'
+	movwf	TRAY_CURRENT
+	clrf	TRAY_DELAY
 	
-	movlw	b'00000001'
-	movwf	PORTE
+	movlw	d'1'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
 	
 	; todo: make sure tray is in position one on reset, add some delay
 	
 	goto	    DETECTIONS
+	
+CHECK_TIMEOUT
+    swapf	OP_sec, 0; 100's seconds
+    movwf	temp
+    movlw	0x0f
+    andwf	temp
+    movlw	d'1'
+    subwf	temp
+    bz	EXIT_EXE	; if 100 second, continue to check for 150s then 120s.
 
-COLLECTIONS_CORRECTION
-	movlw	    d'0'
-	movwf	    TRAY_COUNT
-	
-	movlw	    d'26'
-	movwf	    TRAY_DELAY
-	bra	    ROTATE_45
-	
-COLLECTIONS_VALUE
-	movlw	    d'1'
-	movwf	    TRAY_COUNT
-	
-	movlw	    d'25'
-	movwf	    TRAY_DELAY
-	bra	    ROTATE_45
-	
-COLLECTIONS_STEP
-	clrf	    COLLECTIONS_COUNT
-	movlw	    d'0'
-;	cpfseq	    TRAY_COUNT
-;	bra	    COLLECTIONS_CORRECTION
-;	bra 	    COLLECTIONS_VALUE
-	Delay50N    delayR, 0x14
-
-
-ROTATE_45			; count needs to be 25 for 45 (45/1.8=25)
-	movlw	b'00100011'
-	movwf	PORTA
-	Delay50N    delayR, 0x03
-	incf	COLLECTIONS_COUNT
-	
-	movff	TRAY_DELAY, WREG
-	movlw	d'25'
-	subwf	COLLECTIONS_COUNT, 0
-	bz	DETECTIONS
-
-	movlw	b'00100110'
-	movwf	PORTA
-	Delay50N    delayR, 0x03
-	incf	COLLECTIONS_COUNT
-	
-;	movff	TRAY_DELAY, WREG
-;	subwf	COLLECTIONS_COUNT, 0
-;	bz	DETECTIONS
-	
-	movlw	b'00101100'
-	movwf	PORTA
-	Delay50N    delayR, 0x03
-	incf	COLLECTIONS_COUNT
-	
-;	movff	TRAY_DELAY, WREG
-;	subwf	COLLECTIONS_COUNT, 0
-;	bz	DETECTIONS
-
-	movlw	b'00101001'
-	movwf	PORTA
-	Delay50N    delayR, 0x03
-	incf	COLLECTIONS_COUNT
-	
-;	movff	TRAY_DELAY, WREG
-;	subwf	COLLECTIONS_COUNT, 0
-;	bz	DETECTIONS
-	goto	ROTATE_45
+    return
 	
 DETECTIONS
 	; reading data from arduino 
@@ -755,7 +690,22 @@ DETECTIONS
 	;	    3 for yop cap
 	;	    4 for yop no cap
 	;	    5 for no bottle, get outta here
-	Delay50N delayR, 0x3c
+	
+	movlw	d'2'
+	movwf	STOP_CONDITION	; timeout stop, saved in eeprom as 2
+	movff	OP_sec, temp	; 10's seconds
+	movlw	0x0f
+	andwf	temp
+	movlw	d'5'
+	cpfslt	temp, 0
+	call	CHECK_TIMEOUT	; if 150 second, terminate
+	
+	clrf	STOP_CONDITION	; regular stop, saved in eeprom as 0
+	movlw	d'10'
+	subwf	TOTAL_BOTTLES, 0
+	bz	EXIT_EXE
+	
+	Delay50N delayR, 0x0a	; originally 3c
 	call	READ_ARDUINO
 	movwf	DETECTION_VAL
 	
@@ -788,7 +738,7 @@ DETECTIONS
 	bz	INC_ESKACAP
 	
 	; edge case, cant determine bottle so check if done sorting
-	bra	CHECK_DONE
+	bra	DETECTIONS
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
@@ -814,31 +764,15 @@ CHECK_DONE
 	; if the execution time exceeds the optimal threshold of 120s, check for 
 	; qualified run and then stop. if the time exceeds the max threshold of 
 	; 150s then stop.
-	swapf	OP_sec, 0	; 100's seconds
-	movwf	temp
-	movlw	0x0f
-	andwf	temp
-	movlw	d'0'
-	cpfsgt	temp
-	goto	DETECTIONS	; if 100 second, continue to check for 150s then 120s.
-
-	; MAX
-	movlw	d'2'
-	movwf	STOP_CONDITION	; timeout stop, saved in eeprom as 2
-	movff	OP_sec, temp	; 10's seconds
-	movlw	0x0f
-	andwf	temp
-	movlw	d'5'
-	subwf	temp, 0
-	bz	EXIT_EXE	; if 150 second, terminate
 	
 	; NUMBER: 
 	; if the total bottle count is 10, then we are done (most basic end condition)
-	clrf	STOP_CONDITION	; denote regular stop, saved in eeprom as 0
+	clrf	STOP_CONDITION	; regular stop, saved in eeprom as 0
 	movlw	d'10'
 	subwf	TOTAL_BOTTLES, 0
 	bz	EXIT_EXE
 	
+	bra	DETECTIONS
 	; here we know that bottles < 10 and 100 < time < 150, so check for qualified run
 	; qualified run has at least 4 bottles, with 1 of each different kind
 	movlw	d'3'
@@ -873,6 +807,11 @@ EXIT_EXE
 		
 	; Clear inExecution flag to stop '*' interrupts
 	clrf	    inExecution
+		
+	; turn off the dc motor
+	movlw	d'0'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
 	
 	call	    ClrLCD
 	Display	    SAVE
@@ -923,7 +862,7 @@ HOLD_LOG_INFO
 ;*******************************************************************************
 
 PERM_LOG
-	clrf	inStandby
+	setf	inStandby
 	call	ClrLCD
 	Display	PermLog1
 	call	LCD_L2
@@ -944,6 +883,7 @@ HOLD_PERM_LOG
 	bra HOLD_PERM_LOG
 	
 PLOG
+	clrf	inStandby
 	call	ClrLCD
 	Display	PermLog1
 	
@@ -1010,7 +950,7 @@ HOLD_PLOG_DETAILS
 ;*******************************************************************************
 
 PC_MODE
-	clrf	inStandby
+	setf	inStandby
 	call	ClrLCD
 	Display	PC1
 	call	LCD_L2
@@ -1026,6 +966,7 @@ HOLD_PC
 	bra	HOLD_PC
 
 PC_TRANSFER
+	clrf	inStandby
 	setf	transferring
 	call	ClrLCD
 	Display	PCTransfer
