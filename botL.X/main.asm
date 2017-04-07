@@ -267,36 +267,6 @@ restoreContext macro
 	ORG	0x018
 	goto    ISR_LOW
 
-EMERGENCY_STOP
-	; first check if we're currently sorting - else, no need to restart
-	movlw	0xff		    ; if in operation, skip return
-	cpfseq	inExecution
-	goto	END_ISR_HIGH
-	
-	; reset program counter - emergency stop recorded. 
-	bcf	T0CON, TMR0ON
-	call	SAVE_EXE_TIME
-	
-	; reset emergency stop interrupt bit
-	bcf	INTCON, INT0IF
-		
-	; clear inExecution flag
-	clrf	inExecution
-	movlw	d'1'
-	movwf	STOP_CONDITION
-	call	SaveData
-	
-	movlw	d'0'
-	movff	WREG, databyte
-	call	WRITE_ARDUINO
-	
-	clrf	TOSU
-	clrf	TOSH
-	clrf	TOSL
-	bcf	INTCON3, INT1IF         ; Clear flag for next interrupt
-	restoreContext
-	retfie
-
 LOAD_STANDBY_TIME
 	movlw	0xff
 	movwf	TMR0H
@@ -308,16 +278,13 @@ LOAD_STANDBY_TIME
 LOAD_EXE_TIME
 	movlw	0xc3
 	movwf	TMR0H
-	movlw	0x27
+	movlw	0x28
 	movwf	TMR0L
 	
 	return
 	
 ISR_HIGH
 	saveContext
-	
-	btfsc	INTCON, INT0IF
-	call	EMERGENCY_STOP
 	
 	movlw	0x00
 	cpfseq	inStandby
@@ -428,20 +395,6 @@ INIT
 	
 	movlw	b'00000000'
 	movwf	ADCON0
-;	movlw	b'11111111'
-;	movwf	ADCON1
-	
-	; setting up pwm
-;	clrf	CM1CONO		; disable comparators
-;	clrf	CM2CONO
-;	movlw	0x3c		; pwm mode and 2 lsb of duty cycle
-;	movwf	CCP2CON
-;	movlw	0x00		; bits 9:2 of pwm duty cycle
-;	movwf	CCPR2L
-;	
-;	bcf	PIR1, TMR2IF
-;	bcf	T2CON, T2CKPS1
-;	bsf	T2CON, TMR2ON
 	
 	; initializations
 	call	InitLCD
@@ -467,8 +420,6 @@ INIT
 	bsf	INTCON2, TMR0IP	    ; set to high priority
 	bsf	INTCON3, INT1IE	    ; enable interrupts on rb1 for keyboard
 	bcf	INTCON3, INT1IP	    ; keyboard to low priority
-	bsf	INTCON, INT0IE	    ; enable high interrupts on rb0 for emergency stop
-	bcf	INTCON, INT0IF	    ; clear emergency stop interrupt
 	
 	; setting up timer to sychronize with 1 second clock intervals
 	bcf	T0CON, TMR0ON
@@ -535,81 +486,12 @@ HOLD_STANDBY
 	call	READ_KEY_TIME
 
 	ChangeMode  key1, COLOUR_TEST
-	ChangeMode  key2, STEP_TEST
 	ChangeMode  keyA, EXECUTION
 	ChangeMode  keyB, LOG
 	ChangeMode  keyC, PERM_LOG
 	ChangeMode  keyD, PC_MODE
 	bra	HOLD_STANDBY
 	
-;*******************************************************************************
-; super fun awesome tests that are my favorite thing to do at 3am yay fun great
-;*******************************************************************************
-	
-STEP_TEST
-	clrf	inStandby
-	clrf	COLLECTIONS_COUNT
-	Delay50N    delayR, 0x14
-    
-ROTATE_90_TEST			    ; actually 45, but dont care to change label
-	movlw	b'00100011'
-	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-;	incf	COLLECTIONS_COUNT
-;	
-;	movlw	d'15'
-;	subwf	COLLECTIONS_COUNT, 0
-;	bz	STEP_TEST
-
-	movlw	b'00100110'
-	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-;	incf	COLLECTIONS_COUNT
-	
-	movlw	b'00101100'
-	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-;	incf	COLLECTIONS_COUNT
-
-	movlw	b'00101001'
-	movwf	PORTA
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms
-	call	delay5ms	
-	incf	COLLECTIONS_COUNT
-	
-	movlw	d'2'			    ; 7 ~ 45 degrees
-	cpfseq	COLLECTIONS_COUNT
-	bra	ROTATE_90_TEST
-	
-	bra	STEP_TEST
-
 COLOUR_TEST
 	call	ClrLCD
 	clrf	inStandby
@@ -636,7 +518,7 @@ EXECUTION
 	call	ClearEEPROM_21
 	
 	; save the starting time
-	call	    SAVE_TIME
+	call	SAVE_TIME
 		
 	; display
         setf	inExecution
@@ -646,7 +528,7 @@ EXECUTION
 	
 	movlw	0xc3
 	movwf	TMR0H
-	movlw	0x27
+	movlw	0x28
 	movwf	TMR0L
 	
 	bsf	T0CON, TMR0ON	    ; turning on timer
@@ -667,10 +549,9 @@ EXECUTION
 	movlw	d'1'
 	movff	WREG, databyte
 	call	WRITE_ARDUINO
+	Delay50N delayR, 0x03
 	
-	; todo: make sure tray is in position one on reset, add some delay
-	
-	goto	    DETECTIONS
+	goto	DETECTIONS
 	
 CHECK_TIMEOUT
     swapf	OP_sec, 0; 100's seconds
@@ -684,6 +565,9 @@ CHECK_TIMEOUT
     return
 	
 DETECTIONS
+	call	ClrLCD
+	Display	Welcome
+
 	; reading data from arduino 
 	; expect:   1 for eska cap
 	;	    2 for eska no cap
@@ -696,16 +580,16 @@ DETECTIONS
 	movff	OP_sec, temp	; 10's seconds
 	movlw	0x0f
 	andwf	temp
-	movlw	d'5'
+	movlw	d'2'
 	cpfslt	temp, 0
-	call	CHECK_TIMEOUT	; if 150 second, terminate
+	call	CHECK_TIMEOUT	; if 120 second, terminate
 	
 	clrf	STOP_CONDITION	; regular stop, saved in eeprom as 0
 	movlw	d'10'
 	subwf	TOTAL_BOTTLES, 0
 	bz	EXIT_EXE
 	
-	Delay50N delayR, 0x0a	; originally 3c
+	Delay50N delayR, 0x0a
 	call	READ_ARDUINO
 	movwf	DETECTION_VAL
 	
@@ -742,19 +626,19 @@ DETECTIONS
 	
 INC_YOPNOCAP
 	incf	YOP_NOCAP
-	bra	CHECK_DONE
+	bra	DETECTIONS
 	
 INC_YOPCAP
 	incf	YOP
-	bra	CHECK_DONE
+	bra	DETECTIONS
 	
 INC_ESKANOCAP
 	incf	ESKA_NOCAP
-	bra	CHECK_DONE
+	bra	DETECTIONS
 	
 INC_ESKACAP
 	incf	ESKA
-	bra	CHECK_DONE
+	bra	DETECTIONS
 	
 CHECK_DONE
 	; Challenging:	logic to figure out when the machine is done sorting 
@@ -1150,12 +1034,12 @@ SET_TIME
 	
 	rtc_set	0x00,	b'10000000'
 
-	rtc_set	0x06,	b'00010111'		; Year 17
-	rtc_set	0x05,	b'00000011'		; Month 03
-	rtc_set	0x04,	b'00000100'		; Date 04
-	rtc_set	0x02,	b'00010010'		; Hours 12
-	rtc_set	0x01,	b'01001000'		; Minutes 27
-	rtc_set	0x00,	b'00000000'		; Seconds 0
+	rtc_set	0x06,	b'00010111'		; year 17
+	rtc_set	0x05,	b'00000100'		; month 04
+	rtc_set	0x04,	b'00000110'		; day of month 06
+	rtc_set	0x02,	b'00100010'		; hours 22
+	rtc_set	0x01,	b'00010101'		; minutes 13
+	rtc_set	0x00,	b'00000000'		; seconds 0
 return
 	
 INIT_USART

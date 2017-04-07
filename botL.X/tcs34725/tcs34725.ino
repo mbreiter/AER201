@@ -106,7 +106,7 @@ void loop() {
 
   if (dcOn == 1) {
     digitalWrite(dcPin, HIGH);
-  } else if(dcOn == 0)  {
+  } else {
     digitalWrite(dcPin, LOW);
   }
 
@@ -211,9 +211,9 @@ void receiveEvent(int howMany) {
   char x = Wire.read();      // receive byte as char
 
   if ((int) x == 1) {
-    dcOn = 1;
+    dcOn = (int) 1;
   } else if ((int) x == 0) {
-    dcOn = 0;
+    dcOn = (int) 0;
   }
 }
 
