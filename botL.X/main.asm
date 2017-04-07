@@ -97,7 +97,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     endc
     
     extern tens_digit, ones_digit, databyte
-    extern WRITE_ARDUINO, READ_ARDUINO, INIT_RTC
+    extern WRITE_ARDUINO, READ_ARDUINO, INIT_RTC, INIT_ARDUINO
     
 ;*******************************************************************************
 ; tables
@@ -268,6 +268,9 @@ restoreContext macro
 	goto    ISR_LOW
 
 LOAD_STANDBY_TIME
+	btfss	T0CON, TMR0ON
+	return
+	
 	movlw	0xff
 	movwf	TMR0H
 	movlw	0xff
@@ -276,6 +279,9 @@ LOAD_STANDBY_TIME
 	return	
 
 LOAD_EXE_TIME
+	btfss	T0CON, TMR0ON
+	return
+	
 	movlw	0xc3
 	movwf	TMR0H
 	movlw	0x28
@@ -342,12 +348,7 @@ ISR_LOW
 	clrf	inExecution
 	movlw	d'1'
 	movwf	STOP_CONDITION
-	
-	; turn off the motor
-	movlw	d'0'
-	movff	WREG, databyte
-	call	WRITE_ARDUINO
-	
+
 	call	SaveData
 	
 	clrf	TOSU
@@ -378,7 +379,7 @@ INIT
 	movwf	TRISC
 	movlw	b'00000000'
 	movwf	TRISD
-	movlw	b'00000000'
+	movlw	b'00000011'
 	movwf	TRISE
 
 	; clear ports
@@ -401,8 +402,9 @@ INIT
 	ConfigLCD
 	
 	call	i2c_common_setup
-	
 	call	RTC_INIT
+	call	INIT_ARDUINO
+
 	;COLOUR_INIT
 	call	INIT_USART
 
@@ -437,6 +439,7 @@ INIT
 	clrf	ones_digit
 	
 	;ensure that the motor is indeed off
+	Delay50N delayR, 0x03
 	movlw	d'0'
 	movff	WREG, databyte
 	call	WRITE_ARDUINO
@@ -451,6 +454,8 @@ INIT
 	
 	movlw     b'11110010'    ; Set required keypad inputs
         movwf     TRISB
+	movlw	b'00000011'
+	movwf	TRISE
 	
 	call	ClrLCD
 	Display	Welcome
@@ -480,7 +485,6 @@ STANDBY
 	movlw	0xff
 	movwf	TMR0L
 	bsf	T0CON, TMR0ON	    ; turning on timer
-
 
 HOLD_STANDBY
 	call	READ_KEY_TIME
@@ -513,7 +517,7 @@ LOOPING
 ;*******************************************************************************
 	
 EXECUTION
-	bcf	T0CON, TMR0ON	    ; turning on timer
+	;bcf	T0CON, TMR0ON	    ; turning off standby timer
 	clrf	inStandby	
 	call	ClearEEPROM_21
 	
@@ -524,7 +528,6 @@ EXECUTION
         setf	inExecution
 	call	ClrLCD
 	Display	Exe1
-	call	LCD_L2
 	
 	movlw	0xc3
 	movwf	TMR0H
@@ -558,41 +561,63 @@ CHECK_TIMEOUT
     movwf	temp
     movlw	0x0f
     andwf	temp
-    movlw	d'1'
+    movlw	d'0'
     subwf	temp
     bz	EXIT_EXE	; if 100 second, continue to check for 150s then 120s.
 
     return
 	
 DETECTIONS
-	call	ClrLCD
-	Display	Welcome
-
-	; reading data from arduino 
-	; expect:   1 for eska cap
-	;	    2 for eska no cap
-	;	    3 for yop cap
-	;	    4 for yop no cap
-	;	    5 for no bottle, get outta here
-	
-	movlw	d'2'
-	movwf	STOP_CONDITION	; timeout stop, saved in eeprom as 2
-	movff	OP_sec, temp	; 10's seconds
+    ;	movlw	d'2'
+;	movwf	STOP_CONDITION	; timeout stop, saved in eeprom as 2
+;	movff	OP_sec, temp	; 10's seconds
+;	movlw	0x0f
+;	andwf	temp
+;	movlw	d'2'
+;	cpfslt	temp, 0
+;	call	CHECK_TIMEOUT	; if 150 second, terminate
+    
+	; displaying the execution time in seconds
+	call	LCD_L2
+	swapf	OP_sec, 0	; 100's seconds
+	movwf	temp
 	movlw	0x0f
 	andwf	temp
-	movlw	d'2'
-	cpfslt	temp, 0
-	call	CHECK_TIMEOUT	; if 120 second, terminate
+	movff	temp, WREG
+	addlw	0x30
+	call	WR_DATA
+
+	movff	OP_sec, temp	; 10's seconds
+	movlw	0x0f
+	andwf	temp		; Temp = lower nibble of Op_sec
+	movff	temp, WREG	; W = Temp
+	addlw	0x30		; Convert to ASCII
+	call	WR_DATA
 	
-	clrf	STOP_CONDITION	; regular stop, saved in eeprom as 0
-	movlw	d'10'
-	subwf	TOTAL_BOTTLES, 0
-	bz	EXIT_EXE
+	swapf	OP_INT, WREG	;1's seconds
+	movwf	temp
+	movlw	0x0f
+	andwf	temp
+	movff	temp, WREG
+	addlw	0x30
+	call	WR_DATA
+
+	movlw	0x73		; Write 's'
+	call	WR_DATA
 	
-	Delay50N delayR, 0x0a
-	call	READ_ARDUINO
-	movwf	DETECTION_VAL
+	movff	PORTA, temp
+	btfsc	temp, 4
+	bra	DETECTIONS
+
+	bra	EXIT_EXE
 	
+;	Delay50N delayR, 0x28
+;	call	READ_ARDUINO
+;	movwf	DETECTION_VAL
+;	bra DETECTIONS
+;	
+;	bra DETECTIONS
+
 	; first check if there was a bottle detected, if so go to COLLECTIONS_STEP
 	movlw	d'5'
 	subwf	DETECTION_VAL, 0
@@ -686,21 +711,61 @@ CHECK_DONE
 	
 EXIT_EXE
 	; stop timer and save the execution time to eeprom
-	bcf	    T0CON, TMR0ON
-	call	    SAVE_EXE_TIME
+	bcf	T0CON, TMR0ON
+	call	SAVE_EXE_TIME
+	call	ClrLCD
+	Display	SAVE
 		
 	; Clear inExecution flag to stop '*' interrupts
-	clrf	    inExecution
+	clrf	inExecution
 		
 	; turn off the dc motor
 	movlw	d'0'
 	movff	WREG, databyte
 	call	WRITE_ARDUINO
 	
-	call	    ClrLCD
-	Display	    SAVE
-	call        SaveData
-	goto	    LOG
+	Delay50N delayR, 0x05
+	; request eska
+	movlw	d'2'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get eska
+	call	READ_ARDUINO
+	movwf	ESKA
+	
+	Delay50N delayR, 0x05
+	; request eska without a cap
+	movlw	d'3'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get eska without a cap
+	call	READ_ARDUINO
+	movwf	ESKA_NOCAP
+	
+	Delay50N delayR, 0x05
+	; request yop
+	movlw	d'4'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get yop
+	call	READ_ARDUINO
+	movwf	YOP
+	
+	Delay50N delayR, 0x05
+	; request eska
+	movlw	d'5'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get yop without a cap
+	call	READ_ARDUINO
+	movwf	YOP_NOCAP
+	
+	call    SaveData
+	goto	LOG
 
 ;*******************************************************************************
 ; sorting statistics log mode
@@ -1175,13 +1240,12 @@ READ_KEY
 	return
 
 READ_KEY_TIME
-	call	    LCD_L2	    ; go to second line to print RTC	
 	; display the time
 	; call	    DISPLAY_RTC	
 
 	btfss	    PORTB, 1	; keypad interrupt
 	goto	    READ_KEY_TIME
-	swapf	    PORTB, W	; copy PORTB7:4 to W3:0
+	swapf	    PORTB, 0	; copy PORTB7:4 to W3:0
 	andlw	    0x0F	; only want W3:0
 	movwf	    KEY		; write this value to the KEY
 	btfsc	    PORTB, 1	; wait for release

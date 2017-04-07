@@ -232,7 +232,7 @@ return
 WRITE_ARDUINO
     i2c_common_start
 
-    movlw   0x10		; arudino address << 1 + READ
+    movlw   0x10		; arudino address << 1 + WRITE
     i2c_common_write
     
     movff   databyte, WREG
@@ -242,9 +242,9 @@ WRITE_ARDUINO
 return
     
 	
-READ_ARDUINO
+READ_ARDUINO    
     i2c_common_start
-
+  
     i2c_common_repeatedstart
     movlw   0x11		; arudino address << 1 + READ
     i2c_common_write
@@ -254,5 +254,5 @@ READ_ARDUINO
     
     i2c_common_stop
 return
-
+    
     end
