@@ -11,10 +11,9 @@ extern "C" {
 #define STEPS 200
 #define TCAADDR 0x70
 
-Adafruit_TCS34725 tcs1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
-Adafruit_TCS34725 tcs2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+Adafruit_TCS34725 tcs1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_4X);
+Adafruit_TCS34725 tcs2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_4X);
 
-int state = 1;
 char incomingByte;
 char sort_bottle = 2;   // 1=eksa cap, 2=eksa no cap, 3=yop cap, 4=yop no cap
 
@@ -56,7 +55,9 @@ int YOP_NC = 0;
 int TOTAL = 0;
 int DONE_PIN = 3;
 char TRANSFER_INFO = 0;
+int last_bottle = 0;
 unsigned long START_TIME;
+int state = 1;
 
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -73,18 +74,22 @@ void setup() {
   pinMode(switchPin, INPUT);
   pinMode(servoPin, OUTPUT);
   pinMode(dcPinFor, OUTPUT);
+  digitalWrite(dcPinFor, LOW);
+  digitalWrite(dcPinBack, LOW);
   pinMode(dcPinBack, OUTPUT);
   pinMode(enable, OUTPUT);
 
   pinMode(DONE_PIN, OUTPUT);
   digitalWrite(DONE_PIN, HIGH);
-    
+
   digitalWrite(enable, HIGH);
   stepper.setSpeed(8);
 
   Wire.begin(8);                // join i2c bus with address 8
   Wire.onReceive(receiveEvent);
   Wire.onRequest(requestEvent);
+
+  state = 1;
 
   Serial.begin(9600);
 
@@ -115,48 +120,46 @@ SIGNAL(TIMER0_COMPA_vect) {
 }
 
 void loop() {
-  Serial.println("ESKA");
-  Serial.print(ESKA);
-  Serial.println("ESKA NO CAP");
-  Serial.print(ESKA_NC);
-  Serial.println("YOP");
-  Serial.print(YOP);
-  Serial.println("YOP CAP");
-  Serial.print(YOP_NC);
+
+  Serial.println("======= BOTTLE COUNTS =======");
+  Serial.print("ESKA WITH CAP "); Serial.println(ESKA);
+  Serial.print("ESKA WITHOUT CAP "); Serial.println(ESKA_NC);
+  Serial.print("YOP WIT CAP "); Serial.println(YOP);
+  Serial.print("YOP WITHOUT CAP "); Serial.println(YOP_NC);
   Serial.println();
 
   if (proceed_detection == 1) {
-    if(dcDirection == 1) {
-      dcDirection = 0;
-      digitalWrite(dcPinFor, HIGH);
-      digitalWrite(dcPinBack, LOW);
-    } else {
-      dcDirection = 1;
-      digitalWrite(dcPinFor, LOW);
-      digitalWrite(dcPinBack, HIGH);
-    }
+    //    if(dcDirection == 1) {
+    //      dcDirection = 0;
+    //      digitalWrite(dcPinFor, HIGH);   // do analog
+    //      digitalWrite(dcPinBack, LOW);
+    //    } else {
+    //      dcDirection = 1;
+    //      digitalWrite(dcPinFor, LOW);
+    //      digitalWrite(dcPinBack, HIGH);
+    //    }
+
+    digitalWrite(dcPinFor, HIGH);   // do analog
 
     stepper.step(5);
     detections();
-    checkDone(); 
+    checkDone();
   } else {
     digitalWrite(dcPinFor, LOW);
     digitalWrite(dcPinBack, LOW);
-    digitalWrite(DONE_PIN, HIGH);
   }
 
-  delay(1000);
+  delay(100);
 }
 
 void checkDone() {
-
-  if(TOTAL == 10 || (millis() - START_TIME)/1000 > 90) {
-    digitalWrite(DONE_PIN, LOW);
-  } else if(TOTAL >= 6 && (millis() - START_TIME)/1000 > 120) {
-    digitalWrite(DONE_PIN, LOW);
-  } else if(TOTAL >= 8 && (millis() - START_TIME)/1000 > 60) {
-    digitalWrite(DONE_PIN, LOW);
-  }
+    if (TOTAL == 10 || (millis() - START_TIME) / 1000 > 90) {
+      digitalWrite(DONE_PIN, LOW);
+    } else if (TOTAL >= 6 && (millis() - START_TIME) / 1000 > 120) {
+      digitalWrite(DONE_PIN, LOW);
+    } else if (TOTAL >= 8 && (millis() - START_TIME) / 1000 > 60) {
+      digitalWrite(DONE_PIN, LOW);
+    }
 }
 
 void servoControl(int position) {
@@ -193,7 +196,8 @@ void detections() {
   colour_sum1 = r1 + g1 + b1;
   colour_sum2 = r2 + g2 + b2;
 
-  if (bump == HIGH) {
+  //  if (((float)lux1/(float)lux2 > 1.8 || (float)lux2/(float)lux1 > 1.8) && sort_bottle == 5 ) {
+  if (bump == HIGH && sort_bottle == 5) {
     TOTAL += 1;
 
     if (colour_sum1 + colour_sum2 > 3000) {
@@ -220,75 +224,84 @@ void detections() {
         // without a cap
         sort_bottle = 2;
         position = pos2;
-        ESKA += 1;
+        ESKA_NC += 1;
       }
     }
   }
   else {
     sort_bottle = 5;
   }
-//
-//  Serial.println("======= COLOUR SENSOR 1 =======");
-//  Serial.print("RED "); Serial.println(r1);
-//  Serial.print("GREEN "); Serial.println(g1);
-//  Serial.print("BLUE "); Serial.println(b1);
-//  Serial.print("TEMP "); Serial.println(colorTemp1);
-//  Serial.print("LUX "); Serial.println(lux1);
-//
-//  Serial.println("======= COLOUR SENSOR 2 =======");
-//  Serial.print("RED "); Serial.println(r2);
-//  Serial.print("GREEN "); Serial.println(g2);
-//  Serial.print("BLUE "); Serial.println(b2);
-//  Serial.print("TEMP "); Serial.println(colorTemp2);
-//  Serial.print("LUX "); Serial.println(lux2);
-//
-//  Serial.println("======= TEST CRITERIA =======");
-//  Serial.print(" r1 + g1 + b1 = "); Serial.println(r1 + g1 + b1);
-//  Serial.print(" r2 + g2 + b2 = "); Serial.println(r2 + g2 + b2);
-//  Serial.print(" r1/b1 = "); Serial.println((float)r1 / (float)b1);
-//  Serial.print(" r2/b2 = "); Serial.println((float)r2 / (float)b2);
-//  Serial.print(" b1/r1 = "); Serial.println((float)b1 / (float)r1);
-//  Serial.print(" b2/r2 = "); Serial.println((float)b2 / (float)r2);
+
+  Serial.println("======= COLOUR SENSOR 1 =======");
+  Serial.print("RED "); Serial.println(r1);
+  Serial.print("GREEN "); Serial.println(g1);
+  Serial.print("BLUE "); Serial.println(b1);
+  Serial.print("TEMP "); Serial.println(colorTemp1);
+  Serial.print("LUX "); Serial.println(lux1);
+  Serial.println();
+
+  Serial.println("======= COLOUR SENSOR 2 =======");
+  Serial.print("RED "); Serial.println(r2);
+  Serial.print("GREEN "); Serial.println(g2);
+  Serial.print("BLUE "); Serial.println(b2);
+  Serial.print("TEMP "); Serial.println(colorTemp2);
+  Serial.print("LUX "); Serial.println(lux2);
+  Serial.println();
+
+  Serial.println("======= TEST CRITERIA =======");
+  Serial.print(" r1 + g1 + b1 = "); Serial.println(r1 + g1 + b1);
+  Serial.print(" r2 + g2 + b2 = "); Serial.println(r2 + g2 + b2);
+  Serial.print(" r1/b1 = "); Serial.println((float)r1 / (float)b1);
+  Serial.print(" r2/b2 = "); Serial.println((float)r2 / (float)b2);
+  Serial.print(" b1/r1 = "); Serial.println((float)b1 / (float)r1);
+  Serial.print(" b2/r2 = "); Serial.println((float)b2 / (float)r2);
+  Serial.print(" lux1/lux2 = "); Serial.println((float)lux1 / (float)lux2);
+  Serial.print(" lux2/lux1 = "); Serial.println((float)lux2 / (float)lux1);
+  Serial.println();
 
   Serial.println("======= DETERMINATION =======");
   Serial.println((int) sort_bottle);
+  Serial.println();
 }
 
 void receiveEvent(int howMany) {
   char x = Wire.read();      // receive byte as char
 
   if ((int) x == 1) {
-    proceed_detection = (int) 1;
-    TRANSFER_INFO = 0;
     START_TIME = millis();
 
-    int ESKA = 0;
-    int ESKA_NC = 0;
-    int YOP = 0;
-    int YOP_NC = 0;
-    int TOTAL = 0;
-  } else if ((int) x == 0) {
-    proceed_detection = (int) 0;
-    TRANSFER_INFO = 0;
-  } 
+    ESKA = 0;
+    ESKA_NC = 0;
+    YOP = 0;
+    YOP_NC = 0;
+    TOTAL = 0;
 
-  else if ((int) x == 2) {
+    proceed_detection = (int) 1;
+  } else if ((int) x == 2) {
+    state = 1;
     proceed_detection = 0;
-    TRANSFER_INFO = (char) ESKA;
   } else if ((int) x == 3) {
+    state = 2;
     proceed_detection = 0;
-    TRANSFER_INFO = (char)ESKA_NC;
   } else if ((int) x == 4) {
+    state = 3;
     proceed_detection = 0;
-    TRANSFER_INFO = (char) YOP;
   } else if ((int) x == 5) {
+    state = 4;
     proceed_detection = 0;
-    TRANSFER_INFO = (char) YOP_NC;
   }
-  
+
 }
 
 void requestEvent() {
-  proceed_detection = 0;
-  Wire.write(TRANSFER_INFO); // respond with message of 1 byte, in this case, the detected bottle
+
+  if (state == 1) {
+    Wire.write((char) ESKA);
+  } else if (state == 2) {
+    Wire.write((char) ESKA_NC);
+  } else if (state == 3) {
+    Wire.write((char) YOP);
+  } else {
+    Wire.write((char) YOP_NC);
+  }
 }
