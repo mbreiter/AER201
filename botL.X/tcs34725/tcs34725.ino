@@ -23,7 +23,7 @@ int bump = 0;
 int servoPin = 4;
 int pulse = 1500;
 int pos1 = 1300;
-int pos2 = 1600;
+int pos2 = 1570;
 int pos3 = 1800;
 int pos4 = 2150;
 int position = pos1;
@@ -46,6 +46,7 @@ int dcPinFor = 11;
 int dcPinBack = 12;
 int stepCount = 0;
 int stepDiff;
+int bumpStillPressed = 0;
 
 // sorting information
 int ESKA = 0;
@@ -55,7 +56,7 @@ int YOP_NC = 0;
 int TOTAL = 0;
 int DONE_PIN = 3;
 char TRANSFER_INFO = 0;
-int last_bottle = 0;
+int miss_count = 0;
 unsigned long START_TIME;
 int state = 1;
 
@@ -83,7 +84,7 @@ void setup() {
   digitalWrite(DONE_PIN, HIGH);
 
   digitalWrite(enable, HIGH);
-  stepper.setSpeed(8);
+  stepper.setSpeed(10);
 
   Wire.begin(8);                // join i2c bus with address 8
   Wire.onReceive(receiveEvent);
@@ -95,14 +96,14 @@ void setup() {
 
   for (uint8_t t = 0; t < 8; t++) {
     tcaselect(t);
-    Serial.print("TCA Port #"); Serial.println(t);
+//    Serial.print("TCA Port #"); Serial.println(t);
 
     for (uint8_t addr = 0; addr <= 127; addr++) {
       if (addr == TCAADDR) continue;
 
       uint8_t data;
       if (! twi_writeTo(addr, &data, 0, 1, 1)) {
-        Serial.print("Found I2C 0x");  Serial.println(addr, HEX);
+//        Serial.print("Found I2C 0x");  Serial.println(addr, HEX);
       }
     }
   }
@@ -121,13 +122,15 @@ SIGNAL(TIMER0_COMPA_vect) {
 
 void loop() {
 
-  Serial.println("======= BOTTLE COUNTS =======");
-  Serial.print("ESKA WITH CAP "); Serial.println(ESKA);
-  Serial.print("ESKA WITHOUT CAP "); Serial.println(ESKA_NC);
-  Serial.print("YOP WIT CAP "); Serial.println(YOP);
-  Serial.print("YOP WITHOUT CAP "); Serial.println(YOP_NC);
-  Serial.println();
-
+//  comment this out during the demo
+//  Serial.println("======= BOTTLE COUNTS =======");
+//  Serial.print("ESKA WITH CAP "); Serial.println(ESKA);
+//  Serial.print("ESKA WITHOUT CAP "); Serial.println(ESKA_NC);
+//  Serial.print("YOP WIT CAP "); Serial.println(YOP);
+//  Serial.print("YOP WITHOUT CAP "); Serial.println(YOP_NC);
+//  Serial.print("CONSECUTIVE MISSES "); Serial.println(miss_count);
+//  Serial.println();
+  
   if (proceed_detection == 1) {
     //    if(dcDirection == 1) {
     //      dcDirection = 0;
@@ -140,26 +143,55 @@ void loop() {
     //    }
 
     digitalWrite(dcPinFor, HIGH);   // do analog
-
+    
     stepper.step(5);
     detections();
     checkDone();
   } else {
+    digitalWrite(DONE_PIN, LOW);
     digitalWrite(dcPinFor, LOW);
     digitalWrite(dcPinBack, LOW);
   }
 
-  delay(100);
+  delay(125);
+//  detections();
 }
 
 void checkDone() {
-    if (TOTAL == 10 || (millis() - START_TIME) / 1000 > 90) {
-      digitalWrite(DONE_PIN, LOW);
-    } else if (TOTAL >= 6 && (millis() - START_TIME) / 1000 > 120) {
-      digitalWrite(DONE_PIN, LOW);
-    } else if (TOTAL >= 8 && (millis() - START_TIME) / 1000 > 60) {
-      digitalWrite(DONE_PIN, LOW);
-    }
+  // MAX BOTTLE CONDITION
+  if (TOTAL == 10) {
+    digitalWrite(DONE_PIN, LOW);
+//    Serial.println("======= REASON FOR STOP =======");
+//    Serial.println("max bottle condition ");
+  }
+
+  // MAXIMUM ALLOWED TIME CONDITION
+  else if ((millis() - START_TIME) / 1000 > 160) {
+    digitalWrite(DONE_PIN, LOW);
+//    Serial.println("======= REASON FOR STOP =======");
+//    Serial.println("max time allowed ");
+  }
+
+  // JAMMING CONDITION
+  else if (miss_count > 80) {
+    digitalWrite(DONE_PIN, LOW);
+//    Serial.println("======= REASON FOR STOP =======");
+//    Serial.println("jamming condition ");
+  }
+
+//  // OPTIMIZED CONDITION #1
+//  else if (TOTAL >= 6 && (millis() - START_TIME) / 1000 > 90) {
+//    digitalWrite(DONE_PIN, LOW);
+//    Serial.println("optimized stop, 6 bottles in 90s ");
+//  }
+//
+//  // OPTIMIZED CONDITION #2
+//  else if (TOTAL >= 8 && (millis() - START_TIME) / 1000 > 60) {
+//    digitalWrite(DONE_PIN, LOW);
+//    Serial.println("optimized stop, 8 bottles in 60s ");
+//  } else {
+//    Serial.println("no stop");
+//  }
 }
 
 void servoControl(int position) {
@@ -197,42 +229,50 @@ void detections() {
   colour_sum2 = r2 + g2 + b2;
 
   //  if (((float)lux1/(float)lux2 > 1.8 || (float)lux2/(float)lux1 > 1.8) && sort_bottle == 5 ) {
-  if (bump == HIGH && sort_bottle == 5) {
-    TOTAL += 1;
+  if (bump == HIGH) {
+    if (bumpStillPressed == 0) {
+      bumpStillPressed = 1;
+      TOTAL += 1;
+      miss_count = 0;
 
-    if (colour_sum1 + colour_sum2 > 3000) {
-      // yop bottle
-      if ((float)r1 / (float)b1 > 1.6 || (float)r2 / (float)b2 > 1.6) {
-        // with a cap
-        sort_bottle = 3;
-        position = pos3;
-        YOP += 1;
+      if ((long)c1 + (long)c2 > 8000) {
+        // this is a yop bottle
+        if ((float)r1 / (float)b1 > 1.6 || (float)r2 / (float)b2 > 1.6) {
+          // with a cap
+          sort_bottle = 3;
+          position = pos3;
+          YOP += 1;
+        } else {
+          // without a cap
+          sort_bottle = 4;
+          position = pos4;
+          YOP_NC += 1;
+        }
+
       } else {
-        // without a cap
-        sort_bottle = 4;
-        position = pos4;
-        YOP_NC += 1;
-      }
-    } else {
-      // eska bottle
-      if ( ((float)b1 / (float)r1) > 1 || ((float)b2 / (float)r2) > 1) {
-        // with a cap
-        sort_bottle = 1;
-        position = pos1;
-        ESKA += 1;
-      } else {
-        // without a cap
-        sort_bottle = 2;
-        position = pos2;
-        ESKA_NC += 1;
+        // this is an eska bottle
+        if ( (long)colorTemp1 + (long)colorTemp2 > 12000) {
+          // with a cap
+          sort_bottle = 1;
+          position = pos1;
+          ESKA += 1;
+        } else {
+          // without a cap
+          sort_bottle = 2;
+          position = pos2;
+          ESKA_NC += 1;
+        }
       }
     }
-  }
-  else {
+  } else {
+    bumpStillPressed = 0;
     sort_bottle = 5;
+    miss_count += 1;
   }
 
+//  for testing, comment out during demo
   Serial.println("======= COLOUR SENSOR 1 =======");
+  Serial.print("CLEAR "); Serial.println(c1);
   Serial.print("RED "); Serial.println(r1);
   Serial.print("GREEN "); Serial.println(g1);
   Serial.print("BLUE "); Serial.println(b1);
@@ -241,6 +281,7 @@ void detections() {
   Serial.println();
 
   Serial.println("======= COLOUR SENSOR 2 =======");
+  Serial.print("CLEAR "); Serial.println(c2);
   Serial.print("RED "); Serial.println(r2);
   Serial.print("GREEN "); Serial.println(g2);
   Serial.print("BLUE "); Serial.println(b2);
@@ -268,6 +309,8 @@ void receiveEvent(int howMany) {
   char x = Wire.read();      // receive byte as char
 
   if ((int) x == 1) {
+    digitalWrite(DONE_PIN, HIGH);
+    
     START_TIME = millis();
 
     ESKA = 0;
@@ -275,18 +318,23 @@ void receiveEvent(int howMany) {
     YOP = 0;
     YOP_NC = 0;
     TOTAL = 0;
+    miss_count = 0;
 
     proceed_detection = (int) 1;
   } else if ((int) x == 2) {
+    digitalWrite(DONE_PIN, LOW);
     state = 1;
     proceed_detection = 0;
   } else if ((int) x == 3) {
+    digitalWrite(DONE_PIN, LOW);
     state = 2;
     proceed_detection = 0;
   } else if ((int) x == 4) {
+    digitalWrite(DONE_PIN, LOW);
     state = 3;
     proceed_detection = 0;
   } else if ((int) x == 5) {
+    digitalWrite(DONE_PIN, LOW);
     state = 4;
     proceed_detection = 0;
   }

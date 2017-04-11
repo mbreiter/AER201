@@ -94,6 +94,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
 	TRAY_GOTO
 	STOP_CONDITION
 	inStandby
+	fromEXE
     endc
     
     extern tens_digit, ones_digit, databyte
@@ -105,7 +106,7 @@ list    P=18F4620, F=INHX32, C=160, N=80, ST=OFF, MM=OFF, R=DEC
     Welcome	db	    "botL", 0
     Team	db	    "mr hl hg", 0
     StandBy	db	    "standing by ... ... standing by ... ...", 0
-    StandbyInfo db	    "<a>sort <b>last log <c>perm logs <d>pc", 0
+    StandbyInfo db	    "<sort> or <stats> or <logs> or <pc> or", 0
     Log1	db	    "time:",0
     Log2	db	    "12:00 2/3/14", 0
     LogInfo1	db	    "saved:", 0
@@ -367,7 +368,8 @@ END_ISR_LOW
 ; main
 ;*******************************************************************************
 INIT
-	movlw	b'01110000'	;Set internal oscillator frequency to 8MHz
+	clrf	fromEXE
+	movlw	b'01110000'	    ; set internal oscillator frequency to 8MHz
 	movwf	OSCCON
 	
 	; i/o
@@ -406,6 +408,10 @@ INIT
 	call	INIT_ARDUINO
 	call	INIT_USART
 	
+	bra	RESETS
+
+RESETS
+		
 	call	ClrLCD
 	Display	Welcome
 	call	LCD_L2
@@ -450,6 +456,10 @@ INIT
 	; get yop without a cap
 	call	READ_ARDUINO
 	movwf	YOP_NOCAP
+	
+	movlw	0x00
+	cpfseq	fromEXE
+	call    SaveData	; save the data
 	
 	; interrupts
 	clrf	RCON
@@ -607,8 +617,53 @@ EXIT_EXE
 	Display	SAVE
 		
 	clrf	inExecution	; clear inExecution flag to disable software resets
+	setf	fromEXE
+	
+	Delay50N delayR, 0x05
+	; request eska
+	movlw	d'2'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get eska
+	call	READ_ARDUINO
+	movwf	ESKA
+	
+	Delay50N delayR, 0x05
+	; request eska without a cap
+	movlw	d'3'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get eska without a cap
+	call	READ_ARDUINO
+	movwf	ESKA_NOCAP
+	
+	Delay50N delayR, 0x05
+	; request yop
+	movlw	d'4'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get yop
+	call	READ_ARDUINO
+	movwf	YOP
+	
+	Delay50N delayR, 0x05
+	; request yop without a cap
+	movlw	d'5'
+	movff	WREG, databyte
+	call	WRITE_ARDUINO
+	Delay50N delayR, 0x05
+	; get yop without a cap
+	call	READ_ARDUINO
+	movwf	YOP_NOCAP
+	
+	movlw	0x00
+	cpfseq	fromEXE
 	call    SaveData	; save the data
-	bra	INIT		; branch to init
+	
+	bra	RESETS		; branch to reset to re-initialize everything
 
 ;*******************************************************************************
 ; sorting statistics log mode
